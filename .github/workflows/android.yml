@@ -1,0 +1,39 @@
+name: Android
+
+on:
+  pull_request:
+    paths:
+      - 'android/**'
+      - 'docs/android.md'
+      - '.github/workflows/android.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - '.github/workflows/android.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android SDK packages
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Lint, test and build APKs
+        working-directory: android
+        run: ./gradlew lintDebug testDebugUnitTest assembleDebug assembleRelease
+      - name: Upload installable debug preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: MazkiplayAgentOffice-Android-debug-preview
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
