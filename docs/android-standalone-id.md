@@ -39,3 +39,12 @@ Endpoint LLM lokal/custom: provider custom OpenAI-compatible dapat dikonfigurasi
 - Patch Lab satu file dan multi-file hanya tersedia dalam API Mode karena membutuhkan model generatif yang mampu mengusulkan konten file.
 - **Kompatibilitas:** LiteRT-LM memerlukan Android 7.0/API 24 atau lebih baru; build ini menetapkan minimum SDK 24. Perangkat Android 6 tidak akan bisa memasang APK versi LLM ini.
 - **Status verifikasi:** integrasi kode bukan bukti bahwa model sudah berjalan pada semua perangkat. Build Android dan uji nyata tetap diperlukan; model 0.6B INT4 lebih kecil daripada varian 586 MB, tetapi penggunaan RAM dan kecepatan tetap bergantung pada perangkat. Pada ponsel RAM 4 GB, tutup aplikasi berat dan pastikan ruang kosong memadai sebelum mengaktifkan model.
+
+
+## Visual kantor hybrid (pembaruan)
+
+- Area HQ memakai foto interior kantor dari Unsplash sebagai latar, dengan overlay gelap agar tetap serasi dengan tema navy dan kontras teks.
+- Elemen meja, pekerja, badge status, dan efek kedalaman tetap berupa CSS ringan; animasi idle pekerja sengaja dibatasi agar tidak membebani perangkat.
+- Layout responsif untuk layar kecil dan mendukung `prefers-reduced-motion`.
+- Foto latar memerlukan koneksi internet. Jika gambar eksternal tidak tersedia/offline, warna dasar dan overlay CSS tetap memberi fallback visual; fitur AI lokal, Task Board, dan GitHub tidak bergantung pada gambar tersebut.
+- Visual ini adalah pendekatan hybrid UI/CSS dengan foto latar, bukan simulasi manusia 3D penuh atau video manusia nyata.
