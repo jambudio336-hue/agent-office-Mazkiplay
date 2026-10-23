@@ -1,1 +1,96 @@
-const KEY="mazkiplay-agent-office-v1",MAX=20;const P={openrouter:{label:"OpenRouter",url:"https://openrouter.ai/api/v1/chat/completions",model:"openrouter/auto"},openai:{label:"OpenAI",url:"https://api.openai.com/v1/chat/completions",model:"gpt-4o-mini"},gemini:{label:"Google Gemini",url:"https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",model:"gemini-2.5-flash"},deepseek:{label:"DeepSeek",url:"https://api.deepseek.com/chat/completions",model:"deepseek-chat"},anthropic:{label:"Anthropic Claude",url:"https://api.anthropic.com/v1/messages",model:"claude-3-5-haiku-latest"},custom:{label:"Endpoint custom",url:"",model:""}};const $=id=>document.getElementById(id);const parse=s=>{try{return JSON.parse(s)}catch{return null}};let data=parse(localStorage.getItem(KEY))||{workers:[],tasks:[],providers:{}};if(!Array.isArray(data.workers))data.workers=[];if(!Array.isArray(data.tasks))data.tasks=[];if(!data.providers)data.providers={};const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(data));return true}catch{status("Penyimpanan lokal penuh atau tidak tersedia.",true);return false}};function esc(s){return String(s).replace(/[&<>"\']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","\'":"&#39;"}[c]))}function status(s,bad=false){$("status").textContent=s;$("status").style.color=bad?"#ff7e8a":"#64e0a4"}function render(){$("worker-count").textContent=data.workers.length;$("task-count").textContent=data.tasks.length;$("provider-count").textContent=Object.values(data.providers).filter(x=>x&&x.key&&x.model).length;$("cap").textContent=data.workers.length+" / 20";$("add-worker").disabled=data.workers.length>=MAX;$("workers").innerHTML=data.workers.length?data.workers.map(w=>'<div class="card"><div class="avatar">'+esc(w.name.slice(0,2).toUpperCase())+'</div><div class="meta"><b>'+esc(w.name)+'</b><small>'+esc(w.role)+' · '+esc((P[w.provider]||P.custom).label)+'</small>'+(w.task?'<small>Tugas: '+esc(w.task)+'</small>':'<small>Profil tersimpan lokal</small>')+'</div><button class="remove" data-remove="'+esc(w.id)+'">×</button></div>').join(''):'<div class="empty">Belum ada pekerja. Tambahkan anggota tim pertamamu.</div>';$("tasks").innerHTML=data.tasks.length?data.tasks.map(t=>'<div class="task"><input type="checkbox" data-done="'+esc(t.id)+'" '+(t.done?"checked":"")+'><span class="'+(t.done?"done":"")+'">'+esc(t.text)+'</span><button class="delete" data-delete="'+esc(t.id)+'">Hapus</button></div>').join(''):'<div class="empty">Belum ada tugas. Tambahkan pekerjaan untuk timmu.</div>'}function openDialog(){if(data.workers.length>=MAX){alert("Maksimum 20 pekerja.");return}$("worker-name").value="";$("worker-task").value="";$("worker-dialog").showModal()}$("add-worker").onclick=openDialog;$("close-dialog").onclick=()=>$("worker-dialog").close();$("open-settings").onclick=()=>$("settings").scrollIntoView({behavior:"smooth"});$("worker-form").onsubmit=e=>{e.preventDefault();if(data.workers.length>=MAX)return alert("Maksimum 20 pekerja.");const w={id:String(Date.now())+Math.random().toString(16).slice(2),name:$("worker-name").value.trim(),role:$("worker-role").value,provider:$("worker-provider").value,task:$("worker-task").value.trim()};if(!w.name)return;data.workers.push(w);if(w.task)data.tasks.unshift({id:w.id,text:w.task,done:false});save();render();$("worker-dialog").close()};$("workers").onclick=e=>{const b=e.target.closest("[data-remove]");if(!b)return;const w=data.workers.find(x=>x.id===b.dataset.remove);if(w&&confirm("Hapus profil pekerja "+w.name+"?")){data.workers=data.workers.filter(x=>x.id!==w.id);save();render()}};$("task-form").onsubmit=e=>{e.preventDefault();const t=$("task-input").value.trim();if(!t)return;data.tasks.unshift({id:String(Date.now())+Math.random().toString(16).slice(2),text:t,done:false});$("task-input").value="";save();render()};$("tasks").onchange=e=>{if(!e.target.dataset.done)return;const t=data.tasks.find(x=>x.id===e.target.dataset.done);if(t)t.done=e.target.checked;save();render()};$("tasks").onclick=e=>{const b=e.target.closest("[data-delete]");if(!b)return;data.tasks=data.tasks.filter(x=>x.id!==b.dataset.delete);save();render()};function loadProvider(){const id=$("provider").value,p=P[id],s=data.providers[id]||{};$("api-key").value=s.key||"";$("model-id").value=s.model||p.model;$("endpoint").value=s.url||p.url;$("endpoint").readOnly=id!=="custom";$("endpoint-label").style.display=id==="custom"?"grid":"none"}$("provider").onchange=loadProvider;$("provider-form").onsubmit=e=>{e.preventDefault();const id=$("provider").value,p={key:$("api-key").value.trim(),model:$("model-id").value.trim(),url:$("endpoint").value.trim()};if(p.key&&(!p.model||!p.url))return status("API key, model, dan endpoint harus lengkap.",true);if(p.key)data.providers[id]=p;else delete data.providers[id];save();render();status(p.key?"Konfigurasi "+P[id].label+" disimpan lokal.":"Konfigurasi provider dihapus.")};async function request(url,options){const http=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.CapacitorHttp;if(http&&http.request){const r=await http.request({url,method:options.method||"GET",headers:options.headers,data:options.body?JSON.parse(options.body):undefined,connectTimeout:20000,readTimeout:30000});return{ok:r.status>=200&&r.status<300,status:r.status,data:r.data}}const r=await fetch(url,options);let d={};try{d=await r.json()}catch{}return{ok:r.ok,status:r.status,data:d}}$("test-provider").onclick=async()=>{const id=$("provider").value,p={key:$("api-key").value.trim(),model:$("model-id").value.trim(),url:$("endpoint").value.trim()};if(!p.key)return status("Masukkan API key terlebih dahulu.",true);if(!p.url||!p.model)return status("Model dan endpoint wajib diisi.",true);const b=$("test-provider");b.disabled=true;b.textContent="Menguji…";try{const headers={"Content-Type":"application/json"};let payload;if(id==="anthropic"){headers["x-api-key"]=p.key;headers["anthropic-version"]="2023-06-01";headers["anthropic-dangerous-direct-browser-access"]="true";payload={model:p.model,max_tokens:16,messages:[{role:"user",content:"Balas hanya: koneksi berhasil"}]}}else{headers.Authorization="Bearer "+p.key;payload={model:p.model,max_tokens:16,messages:[{role:"user",content:"Balas hanya: koneksi berhasil"}]}}const r=await request(p.url,{method:"POST",headers,body:JSON.stringify(payload)});if(!r.ok)throw Error("HTTP "+r.status+": "+((r.data&&r.data.error&&r.data.error.message)||"permintaan ditolak"));data.providers[id]=p;save();render();status("Koneksi "+P[id].label+" berhasil. Model merespons.")}catch(e){status("Uji gagal: "+(e.message||"jaringan/provider bermasalah")+". Periksa key, model, kuota, dan koneksi.",true)}finally{b.disabled=false;b.textContent="Uji koneksi"}};loadProvider();render();
+const KEY="mazkiplay-agent-office-v1",MAX=20;
+const P={
+ openrouter:{label:"OpenRouter",url:"https://openrouter.ai/api/v1/chat/completions",model:"openrouter/auto",format:"openai"},
+ openai:{label:"OpenAI",url:"https://api.openai.com/v1/chat/completions",model:"gpt-4o-mini",format:"openai"},
+ gemini:{label:"Google Gemini",url:"https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",model:"gemini-2.5-flash",format:"openai"},
+ deepseek:{label:"DeepSeek",url:"https://api.deepseek.com/chat/completions",model:"deepseek-chat",format:"openai"},
+ anthropic:{label:"Anthropic Claude",url:"https://api.anthropic.com/v1/messages",model:"claude-3-5-haiku-latest",format:"anthropic"},
+ custom:{label:"Endpoint custom",url:"",model:"",format:"openai"}
+};
+const $=id=>document.getElementById(id);
+const parse=s=>{try{return JSON.parse(s)}catch{return null}};
+let data=parse(localStorage.getItem(KEY))||{workers:[],tasks:[],providers:{}};
+if(!Array.isArray(data.workers))data.workers=[];
+if(!Array.isArray(data.tasks))data.tasks=[];
+if(!data.providers||typeof data.providers!=="object")data.providers={};
+function status(message,bad=false){$("status").textContent=message;$("status").style.color=bad?"#ff7e8a":"#64e0a4"}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(data));return true}catch{status("Penyimpanan lokal penuh atau tidak tersedia.",true);return false}}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function optionsForWorkers(selected=""){return '<option value="">Tanpa penugasan</option>'+data.workers.map(w=>'<option value="'+esc(w.id)+'" '+(w.id===selected?"selected":"")+'>'+esc(w.name)+" — "+esc(w.role)+"</option>").join("")}
+function render(){
+ $("worker-count").textContent=data.workers.length;$("task-count").textContent=data.tasks.length;
+ $("provider-count").textContent=Object.values(data.providers).filter(p=>p&&p.key&&p.model).length;
+ $("cap").textContent=data.workers.length+" / "+MAX;$("add-worker").disabled=data.workers.length>=MAX;
+ $("workers").innerHTML=data.workers.length?data.workers.map(w=>'<div class="card"><div class="avatar">'+esc(w.name.slice(0,2).toUpperCase())+'</div><div class="meta"><b>'+esc(w.name)+'</b><small>'+esc(w.role)+' · '+esc((P[w.provider]||P.custom).label)+'</small>'+(w.task?'<small>Tugas awal: '+esc(w.task)+'</small>':'<small>Profil tersimpan lokal</small>')+'</div><button class="remove" data-remove="'+esc(w.id)+'" aria-label="Hapus pekerja">×</button></div>').join(""):'<div class="empty">Belum ada pekerja. Tambahkan anggota tim pertamamu.</div>';
+ const assign=$("task-worker");if(assign){const previous=assign.value;assign.innerHTML=optionsForWorkers(previous);if([...assign.options].some(o=>o.value===previous))assign.value=previous}
+ $("tasks").innerHTML=data.tasks.length?data.tasks.map(t=>{
+ const worker=data.workers.find(w=>w.id===t.workerId);
+ return '<article class="task-card"><div class="task"><input type="checkbox" data-done="'+esc(t.id)+'" '+(t.done?"checked":"")+' aria-label="Tandai tugas selesai"><span class="'+(t.done?"done":"")+'">'+esc(t.text)+'</span><button class="delete" data-delete="'+esc(t.id)+'">Hapus</button></div><div class="task-tools"><label>Pekerja<select data-assign="'+esc(t.id)+'">'+optionsForWorkers(t.workerId||"")+'</select></label><button class="run-ai" data-run="'+esc(t.id)+'" '+(t.running?"disabled":"")+'>'+(t.running?"AI sedang bekerja…":"▶ Jalankan AI")+'</button></div>'+(t.output?'<pre class="task-output">'+esc(t.output)+'</pre>':"")+(t.error?'<p class="task-error">'+esc(t.error)+'</p>':"")+'</article>'
+ }).join(""):'<div class="empty">Belum ada tugas. Tambahkan pekerjaan untuk timmu.</div>';
+}
+function openDialog(){if(data.workers.length>=MAX){alert("Maksimum 20 pekerja. Hapus profil yang tidak dipakai dahulu.");return}$("worker-name").value="";$("worker-task").value="";$("worker-dialog").showModal()}
+$("add-worker").onclick=openDialog;$("close-dialog").onclick=()=>$("worker-dialog").close();
+$("open-settings").onclick=()=>$("settings").scrollIntoView({behavior:"smooth",block:"start"});
+$("worker-form").onsubmit=e=>{e.preventDefault();if(data.workers.length>=MAX)return alert("Maksimum 20 pekerja.");const name=$("worker-name").value.trim();if(!name)return;const w={id:String(Date.now())+Math.random().toString(16).slice(2),name,role:$("worker-role").value,provider:$("worker-provider").value,task:$("worker-task").value.trim()};data.workers.push(w);if(w.task)data.tasks.unshift({id:w.id,text:w.task,done:false,workerId:w.id});save();render();$("worker-dialog").close()};
+$("workers").onclick=e=>{const b=e.target.closest("[data-remove]");if(!b)return;const w=data.workers.find(x=>x.id===b.dataset.remove);if(w&&confirm("Hapus profil pekerja "+w.name+"?")){data.workers=data.workers.filter(x=>x.id!==w.id);save();render()}};
+$("task-form").onsubmit=e=>{e.preventDefault();const text=$("task-input").value.trim();if(!text)return;data.tasks.unshift({id:String(Date.now())+Math.random().toString(16).slice(2),text,done:false,workerId:$("task-worker")?.value||"",output:"",error:""});$("task-input").value="";save();render()};
+$("tasks").onchange=e=>{
+ if(e.target.dataset.done){const t=data.tasks.find(x=>x.id===e.target.dataset.done);if(t)t.done=e.target.checked}
+ if(e.target.dataset.assign){const t=data.tasks.find(x=>x.id===e.target.dataset.assign);if(t){t.workerId=e.target.value;t.output="";t.error=""}}
+ save();render()
+};
+$("tasks").onclick=async e=>{
+ const del=e.target.closest("[data-delete]");if(del){data.tasks=data.tasks.filter(x=>x.id!==del.dataset.delete);save();render();return}
+ const run=e.target.closest("[data-run]");if(run){await runTask(run.dataset.run)}
+};
+function loadProvider(){const id=$("provider").value,p=P[id],s=data.providers[id]||{};$("api-key").value=s.key||"";$("model-id").value=s.model||p.model;$("endpoint").value=s.url||p.url;$("endpoint").readOnly=id!=="custom";$("endpoint-label").style.display=id==="custom"?"grid":"none"}
+$("provider").onchange=loadProvider;
+$("provider-form").onsubmit=e=>{e.preventDefault();const id=$("provider").value,p={key:$("api-key").value.trim(),model:$("model-id").value.trim(),url:$("endpoint").value.trim(),format:P[id].format};if(p.key&&(!p.model||!p.url))return status("API key, model, dan endpoint harus lengkap.",true);if(p.key)data.providers[id]=p;else delete data.providers[id];save();render();status(p.key?"Konfigurasi "+P[id].label+" disimpan lokal.":"Konfigurasi provider dihapus.")};
+async function request(url,options){
+ const http=window.Capacitor?.Plugins?.CapacitorHttp;
+ if(http?.request){const r=await http.request({url,method:options.method||"GET",headers:options.headers,data:options.body?JSON.parse(options.body):undefined,connectTimeout:20000,readTimeout:60000});return{ok:r.status>=200&&r.status<300,status:r.status,data:r.data}}
+ const r=await fetch(url,options);let d={};try{d=await r.json()}catch{}return{ok:r.ok,status:r.status,data:d}
+}
+async function callModel(providerId,prompt,role){
+ const p=data.providers[providerId]||{};
+ if(!p.key||!p.model||!p.url)throw Error("Provider "+(P[providerId]?.label||providerId)+" belum dikonfigurasi. Buka Pengaturan AI dan simpan API key, model, serta endpoint.");
+ let headers={"Content-Type":"application/json"},body;
+ const system="Kamu adalah "+(role||"asisten")+" di Mazkiplay Agent Office. Jawab dalam Bahasa Indonesia, berikan hasil praktis, jujur tentang keterbatasan, dan jangan mengaku telah mengubah file/perangkat jika belum benar-benar melakukannya.";
+ if(p.format==="anthropic"||providerId==="anthropic"){
+   headers["x-api-key"]=p.key;headers["anthropic-version"]="2023-06-01";headers["anthropic-dangerous-direct-browser-access"]="true";
+   body={model:p.model,max_tokens:1200,system,messages:[{role:"user",content:prompt}]};
+ }else{
+   headers.Authorization="Bearer "+p.key;
+   body={model:p.model,max_tokens:1200,messages:[{role:"system",content:system},{role:"user",content:prompt}]};
+ }
+ const result=await request(p.url,{method:"POST",headers,body:JSON.stringify(body)});
+ if(!result.ok)throw Error("Provider mengembalikan HTTP "+result.status+": "+(result.data?.error?.message||result.data?.message||"periksa API key, model, kuota, dan izin jaringan"));
+ let answer="";
+ if(providerId==="anthropic"||p.format==="anthropic")answer=(result.data?.content||[]).map(c=>c.text||"").join("\\n");
+ else answer=result.data?.choices?.[0]?.message?.content||"";
+ if(!answer)throw Error("Respons provider kosong atau format respons belum didukung.");
+ return answer;
+}
+async function runTask(id){
+ const t=data.tasks.find(x=>x.id===id);if(!t||t.running)return;
+ const worker=data.workers.find(w=>w.id===t.workerId);
+ const providerId=worker?.provider||$("provider").value;
+ t.running=true;t.error="";t.output="";save();render();
+ try{
+   const prompt="Kerjakan permintaan/tugas berikut. Jika tugas berupa coding, berikan rancangan, kode yang relevan, file yang perlu dibuat/diubah, dan langkah uji. Kamu tidak memiliki akses otomatis ke repository, shell, atau perangkat ini; jangan mengklaim sudah menjalankan perubahan.\\n\\nTUGAS: "+t.text;
+   t.output=await callModel(providerId,prompt,worker?.role||"asisten umum");
+   t.done=true;
+ }catch(err){t.error=err?.message||"Gagal menjalankan tugas AI";}finally{t.running=false;save();render()}
+}
+$("test-provider").onclick=async()=>{
+ const id=$("provider").value,p={key:$("api-key").value.trim(),model:$("model-id").value.trim(),url:$("endpoint").value.trim(),format:P[$("provider").value].format};
+ if(!p.key)return status("Masukkan API key terlebih dahulu.",true);if(!p.url||!p.model)return status("Model dan endpoint wajib diisi.",true);
+ const b=$("test-provider");b.disabled=true;b.textContent="Menguji…";
+ try{
+  data.providers[id]=p;
+  const answer=await callModel(id,"Balas singkat hanya dengan: koneksi berhasil.","penguji koneksi");
+  save();render();status("Koneksi "+P[id].label+" berhasil. "+answer.slice(0,100));
+ }catch(err){delete data.providers[id];status("Uji gagal: "+(err?.message||"jaringan/provider bermasalah")+". Periksa key, model, kuota, dan koneksi.",true)}
+ finally{b.disabled=false;b.textContent="Uji koneksi"}
+};
+loadProvider();render();
