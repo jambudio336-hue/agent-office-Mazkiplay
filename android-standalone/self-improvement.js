@@ -73,7 +73,7 @@
     <h3 class="self-subhead">Antrean peningkatan</h3><div id="self-ideas" class="self-ideas"></div>
     <h3 class="self-subhead">Perencana kerja otomatis</h3>
     <p class="notice">Menyusun pekerjaan kecil berdasarkan temuan monitor, tugas gagal, dan antrean. Tugas dibuat di Task Board untuk dikerjakan/diperiksa; modul ini tidak menjalankan perubahan kode sendiri.</p>
-    <div class="actions"><button type="button" id="self-plan-work">Susun rencana perbaikan</button><button type="button" class="secondary" id="self-qa-plan">Buat tugas QA</button></div>
+    <div class="actions"><button type="button" id="self-plan-work">Susun rencana perbaikan</button><button type="button" class="secondary" id="self-feature-scan">Cari peluang fitur</button><button type="button" class="secondary" id="self-qa-plan">Buat tugas QA</button></div>
     <div id="self-plan-preview" class="self-findings"></div>
     <h3 class="self-subhead">Pustaka skill & pengetahuan</h3>
     <p class="notice">Catatan yang disimpan bisa dicari dan dimasukkan ke konteks tugas berikutnya. Jangan simpan password, API key, atau data pribadi sensitif.</p>
@@ -198,7 +198,19 @@
   panel.addEventListener("click", event => {
     const button = event.target.closest("button");
     if (!button) return;
-    if (button.id === "self-plan-work") {
+    if (button.id === "self-feature-scan") {
+      const catalog = [
+        ["Pemulihan tugas setelah aplikasi ditutup", "Simpan status tahap, waktu update, dan tombol lanjutkan untuk tugas yang terputus.", "Tinggi"],
+        ["Pusat privasi dan ekspor data", "Tampilkan data lokal apa saja yang disimpan, tombol ekspor/hapus terpilih, dan peringatan sebelum berbagi diagnostik.", "Tinggi"],
+        ["Mode hemat memori Android", "Tawarkan pengaturan konteks, batas riwayat, dan pesan yang jelas saat model lokal kehabisan memori.", "Tinggi"],
+        ["Uji jaringan dan unduh model yang tahan putus", "Tambahkan resume/retry terukur, validasi ukuran/hash bila tersedia, dan instruksi pemulihan setelah download gagal.", "Sedang"],
+        ["Aksesibilitas dan layar kecil", "Audit ukuran sentuh, fokus keyboard, kontras, label kontrol, dan teks panjang pada layar Android kecil.", "Sedang"],
+        ["Telemetri privat yang opt-in", "Jika dibutuhkan kelak, rancang laporan bug yang disanitasi dan dikirim hanya setelah pengguna menyetujui tiap pengiriman.", "Rendah"]
+      ];
+      catalog.forEach(([title, detail, priority]) => addIdea(title, detail, priority));
+      render();
+      status("Pemindaian peluang selesai: katalog saran ditinjau dan disimpan lokal. Usulan bukan bukti bahwa fitur belum tersedia; cek repo sebelum membuat patch.");
+    } else if (button.id === "self-plan-work") {
       makePlan();
     } else if (button.id === "self-qa-plan") {
       const qa = [
