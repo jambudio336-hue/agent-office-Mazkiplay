@@ -65,3 +65,22 @@
 .self-event-list p{font-size:12px;overflow-wrap:anywhere;margin:6px 0 0}
 #self-improvement summary{cursor:pointer;color:#a8bdd1;font-size:12px;padding:10px 0}
 @media(max-width:640px){.self-health-grid{grid-template-columns:1fr}.self-health-grid strong{font-size:15px}}
+
+/* Self-improvement engine: accessible diagnostic and learning panels. */
+.self-subhead{font-size:15px;margin:22px 0 10px;color:#d9ebfb}
+.self-learning-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end;margin:12px 0}
+.self-learning-form label{display:grid;gap:7px;font-size:12px;color:#a8bdd1;font-weight:700}
+.self-learning-form textarea{width:100%;resize:vertical;min-height:68px;background:#071421;color:var(--text);border:1px solid #29435d;border-radius:10px;padding:12px;font:inherit}
+.self-ideas{display:grid;gap:9px;margin-top:10px}
+.self-item-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.self-item-top b{overflow-wrap:anywhere}
+.self-item .actions{margin-top:8px}
+.self-item .pill{margin-left:0}
+.self-results{display:grid;gap:8px;margin:12px 0}
+.self-item{background:#091726;border:1px solid #243d55;border-radius:11px;padding:12px;margin:8px 0}
+.self-item p{font-size:12px;line-height:1.6;color:#a8bdd1;overflow-wrap:anywhere;margin:7px 0 0}
+.self-item small{font-size:10px;color:#829ab2}
+.self-ok{border-color:#245844}
+.self-error{border-color:#69404b}
+.self-actions{margin:12px 0}
+@media(max-width:640px){.self-learning-form{grid-template-columns:1fr}.self-learning-form button{width:100%}.self-item-top{align-items:flex-start;flex-direction:column}}
