@@ -9,7 +9,8 @@ const P={
 };
 const $=id=>document.getElementById(id);
 const parse=s=>{try{return JSON.parse(s)}catch{return null}};
-let data=parse(localStorage.getItem(KEY))||{workers:[],tasks:[],providers:{}};
+let data=parse(localStorage.getItem(KEY))||{workers:[],tasks:[],providers:{},aiMode:"local"};
+if(data.aiMode!=="local"&&data.aiMode!=="api")data.aiMode="local";
 let githubToken="";
 let githubLastFile=null;
 if(!Array.isArray(data.workers))data.workers=[];
@@ -229,6 +230,7 @@ const system="Kamu adalah "+(role||"Asisten umum")+" di Mazkiplay Agent Office. 
  return answer;
 }
 window.mazkiplayGeneratePatch = async ({ instruction, path, content }) => {
+ if(data.aiMode!=="api")throw Error("Patch Lab memerlukan Mode API. Pilih Mode API dan konfigurasi provider terlebih dahulu.");
  const providerId = $("provider").value;
  if (!data.providers[providerId]?.key) {
   throw Error("Simpan dan pilih provider AI di Pengaturan AI terlebih dahulu.");
@@ -262,6 +264,7 @@ window.mazkiplayGeneratePatch = async ({ instruction, path, content }) => {
  };
 };
 window.mazkiplayGenerateMultiPatch = async ({ instruction, files }) => {
+ if(data.aiMode!=="api")throw Error("Multi-file Patch Lab memerlukan Mode API. Pilih Mode API dan konfigurasi provider terlebih dahulu.");
  const providerId = $("provider").value;
  if (!data.providers[providerId]?.key) throw Error("Simpan dan pilih provider AI di Pengaturan AI terlebih dahulu.");
  if (!Array.isArray(files) || files.length < 1 || files.length > 5) throw Error("Pilih antara 1 sampai 5 file.");
@@ -298,17 +301,42 @@ window.mazkiplayGenerateMultiPatch = async ({ instruction, files }) => {
   risks: Array.isArray(result.risks) ? result.risks.map(String).slice(0, 12) : []
  };
 };
+function localLiteAnswer(prompt, role="Asisten umum"){
+ const text=String(prompt||"").trim(),lower=text.toLocaleLowerCase("id");
+ let focus="Pecah kebutuhan menjadi tujuan, langkah kecil, hasil yang bisa diperiksa, dan risiko.";
+ if(/kode|coding|aplikasi|website|web|android|program|bug|developer|repository|file/.test(lower))focus="Tentukan platform dan struktur proyek; buat perubahan kecil; validasi input dan error; lalu jalankan tes pada perangkat/lingkungan target.";
+ else if(/desain|ui|ux|tampilan|warna|layout/.test(lower))focus="Tentukan pengguna dan alur utama; susun hierarki informasi; pastikan responsif, mudah dibaca, dan punya state loading/kosong/error.";
+ else if(/bisnis|jualan|usaha|uang|harga|modal|marketing/.test(lower))focus="Tetapkan target dan pelanggan; hitung modal serta biaya rutin; uji dengan skala kecil; ukur hasil sebelum menambah pengeluaran.";
+ else if(/tes|test|qa|bug|error|gagal/.test(lower))focus="Reproduksi masalah; catat langkah dan hasil yang diharapkan; uji skenario normal, input salah, dan kondisi jaringan/perangkat berbeda.";
+ const bullets=["1. Tujuan: tulis hasil akhir yang ingin dicapai dalam satu kalimat.","2. Langkah awal: "+focus,"3. Validasi: periksa hasil, kasus gagal, keamanan, dan kompatibilitas sebelum menyatakan selesai.","4. Langkah berikutnya: bagi pekerjaan menjadi tugas kecil dan selesaikan satu per satu."];
+ if(text)bullets.push("5. Fokus permintaanmu: "+text.slice(0,600));
+ return "MAZKIPLAY AI LITE · LOKAL\nPeran: "+role+"\nStatus: berjalan tanpa API key dan tanpa mengirim data ke layanan cloud.\n\n"+bullets.join("\n\n")+"\n\nBatasan: mode Lite ini memakai aturan lokal, bukan LLM generatif. Ia tidak dapat memahami konteks kompleks seperti model cloud atau mengedit/menjalankan kode secara otomatis. Untuk jawaban generatif dan Patch Lab, pindah ke Mode API.";
+}
+function updateAiModeStatus(){
+ const mode=$("ai-mode")?.value||data.aiMode||"local";data.aiMode=mode;save();
+ const el=$("ai-mode-status");
+ if(el)el.textContent=mode==="local"?"Mode Gratis Lokal aktif. Tidak perlu API key atau internet; AI Lite menggunakan aturan lokal dan bukan LLM generatif.":(Object.values(data.providers).some(p=>p&&p.model&&(p.key||p.url))?"Mode API aktif. Tugas dan Patch Lab akan menggunakan provider yang dipilih; kuota/biaya mengikuti provider.":"Mode API aktif, tetapi belum ada provider siap. Simpan API key, model, dan endpoint di bawah.");
+ const note=$("free-chat-mode-note");if(note)note.textContent=mode==="local"?"Asisten Lokal Lite · tanpa API key · tidak mengirim prompt ke cloud":"Mode API dipilih. Chat di bawah tetap menggunakan Lite lokal; Task Board dan Patch Lab memakai provider API.";
+}
 async function runTask(id){
  const t=data.tasks.find(x=>x.id===id);if(!t||t.running)return;
- const worker=data.workers.find(w=>w.id===t.workerId);
- const providerId=worker?.provider||$("provider").value;
+ const worker=data.workers.find(w=>w.id===t.workerId),providerId=worker?.provider||$("provider").value;
  t.running=true;t.error="";t.output="";save();render();
  try{
-   const prompt="Kerjakan permintaan berikut dengan hasil yang bisa ditinjau. Untuk coding, berikan ringkasan pendek, daftar file beserta isi kode yang relevan, langkah pemasangan, cara uji, dan risiko/asumsi. Jika informasi kurang, sebutkan asumsi. Jangan mengklaim perubahan file atau pengujian sudah dilakukan. Jawaban AI bukan berarti tugas sudah benar-benar selesai; pengguna akan menandai selesai setelah memeriksa hasil.\n\nTUGAS: "+t.text+(t.context?"\n\nKONTEKS REPOSITORY/FILE:\n"+t.context:"");
-   t.output=await callModel(providerId,prompt,worker?.role||"Asisten umum");
-   t.done=false;
+  const prompt="Kerjakan permintaan berikut dengan hasil yang bisa ditinjau. Untuk coding, berikan ringkasan pendek, daftar file beserta isi kode yang relevan, langkah pemasangan, cara uji, dan risiko/asumsi. Jika informasi kurang, sebutkan asumsi. Jangan mengklaim perubahan file atau pengujian sudah dilakukan. Jawaban AI bukan berarti tugas sudah benar-benar selesai; pengguna akan menandai selesai setelah memeriksa hasil.\n\nTUGAS: "+t.text+(t.context?"\n\nKONTEKS REPOSITORY/FILE:\n"+t.context:"");
+  t.output=data.aiMode==="local"?localLiteAnswer(prompt,worker?.role||"Asisten umum"):await callModel(providerId,prompt,worker?.role||"Asisten umum");
+  t.done=false;
  }catch(err){t.error=err?.message||"Gagal menjalankan tugas AI";}finally{t.running=false;save();render()}
 }
+$("ai-mode").value=data.aiMode;
+$("ai-mode").addEventListener("change",updateAiModeStatus);
+$("free-chat-form").addEventListener("submit",e=>{
+ e.preventDefault();const prompt=$("free-chat-input").value.trim();if(!prompt)return;
+ const output=$("free-chat-output");output.textContent="Menyusun jawaban lokal…";$("free-chat-submit").disabled=true;
+ try{output.textContent=localLiteAnswer(prompt,$("free-chat-role").value);$("free-chat-input").value="";}
+ catch(err){output.textContent="Asisten lokal gagal: "+(err?.message||"kesalahan tidak diketahui");}
+ finally{$("free-chat-submit").disabled=false;}
+});
 $("test-provider").onclick=async()=>{
  const id=$("provider").value,p={key:$("api-key").value.trim(),model:$("model-id").value.trim(),url:$("endpoint").value.trim(),format:P[$("provider").value].format};
  if(!p.key&&id!=="custom")return status("Masukkan API key terlebih dahulu.",true);if(!p.url||!p.model)return status("Model dan endpoint wajib diisi.",true);
@@ -374,7 +402,7 @@ async function initializeApp(){
    catch(err){status("Gagal membaca API key dari Android Keystore. Periksa kembali konfigurasi AI.",true)}
   }
  }
- save();loadProvider();render();
+ save();loadProvider();render();updateAiModeStatus();
  if(store?.get&&store?.set)status("Penyimpanan rahasia Android Keystore tersedia.");
  else status("Mode browser/preview: API key hanya disimpan di memori sesi, bukan localStorage.",true);
 }
