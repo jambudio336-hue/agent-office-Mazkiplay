@@ -44,7 +44,8 @@ jobs:
             appId: 'id.mazkiplay.agentoffice',
             appName: 'Mazkiplay Agent Office',
             webDir: 'android-standalone',
-            android: { allowMixedContent: false }
+            android: { allowMixedContent: false },
+            plugins: { CapacitorHttp: { enabled: true } }
           }, null, 2) + '\n');
           NODE
           npx cap add android
