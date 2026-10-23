@@ -177,12 +177,13 @@ function loadProvider(){const id=$("provider").value,p=P[id],s=data.providers[id
 $("provider").onchange=loadProvider;
 $("provider-form").onsubmit=async e=>{
  e.preventDefault();const id=$("provider").value,p={key:$("api-key").value.trim(),model:$("model-id").value.trim(),url:$("endpoint").value.trim(),format:P[id].format};
- if(p.key&&(!p.model||!p.url))return status("API key, model, dan endpoint harus lengkap.",true);
+ if((p.key||id==="custom")&&(!p.model||!p.url))return status("Model dan endpoint harus lengkap; provider cloud juga memerlukan API key.",true);
  try{
-  if(p.key){
-   const encrypted=await saveProviderSecret(id,p.key);
+  if(p.key||id==="custom"){
+   let encrypted=false;
+   if(p.key)encrypted=await saveProviderSecret(id,p.key);else await removeProviderSecret(id);
    data.providers[id]=p;save();render();
-   status(encrypted?"Konfigurasi "+P[id].label+" disimpan terenkripsi dengan Android Keystore.":"Konfigurasi tersimpan untuk sesi ini saja. APK/Android Keystore tidak tersedia; key tidak disimpan di localStorage.",!encrypted);
+   status(p.key?(encrypted?"Konfigurasi "+P[id].label+" disimpan terenkripsi dengan Android Keystore.":"Konfigurasi tersimpan untuk sesi ini saja. APK/Android Keystore tidak tersedia; key tidak disimpan di localStorage."):"Endpoint custom disimpan tanpa API key. Gunakan hanya endpoint lokal/tepercaya dan pastikan jaringan mengizinkan koneksi.",p.key&&!encrypted);
   }else{
    await removeProviderSecret(id);delete data.providers[id];save();render();loadProvider();status("Konfigurasi provider dan API key dihapus.");
   }
@@ -195,7 +196,7 @@ async function request(url,options){
 }
 async function callModel(providerId,prompt,role,maxTokens=1200){
  const p=data.providers[providerId]||{};
- if(!p.key||!p.model||!p.url)throw Error("Provider "+(P[providerId]?.label||providerId)+" belum dikonfigurasi. Buka Pengaturan AI dan simpan API key, model, serta endpoint.");
+ if((!p.key&&providerId!=="custom")||!p.model||!p.url)throw Error("Provider "+(P[providerId]?.label||providerId)+" belum dikonfigurasi. Simpan API key (kecuali endpoint custom/local), model, dan endpoint.");
  let headers={"Content-Type":"application/json"},body;
  const roleGuidance={
  "Founder / Owner":"Bertindak sebagai pemilik produk: jelaskan prioritas, nilai bisnis, risiko, biaya, dan metrik keberhasilan.",
@@ -310,7 +311,7 @@ async function runTask(id){
 }
 $("test-provider").onclick=async()=>{
  const id=$("provider").value,p={key:$("api-key").value.trim(),model:$("model-id").value.trim(),url:$("endpoint").value.trim(),format:P[$("provider").value].format};
- if(!p.key)return status("Masukkan API key terlebih dahulu.",true);if(!p.url||!p.model)return status("Model dan endpoint wajib diisi.",true);
+ if(!p.key&&id!=="custom")return status("Masukkan API key terlebih dahulu.",true);if(!p.url||!p.model)return status("Model dan endpoint wajib diisi.",true);
  const b=$("test-provider"),previous=data.providers[id];b.disabled=true;b.textContent="Menguji…";data.providers[id]=p;
  try{
   const answer=await callModel(id,"Balas singkat hanya dengan: koneksi berhasil.","penguji koneksi");
