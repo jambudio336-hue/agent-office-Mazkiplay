@@ -232,7 +232,7 @@ const system="Kamu adalah "+(role||"Asisten umum")+" di Mazkiplay Agent Office. 
 window.mazkiplayGeneratePatch = async ({ instruction, path, content }) => {
  if(data.aiMode!=="api")throw Error("Patch Lab memerlukan Mode API. Pilih Mode API dan konfigurasi provider terlebih dahulu.");
  const providerId = $("provider").value;
- if (!data.providers[providerId]?.key) {
+ if (!data.providers[providerId]?.key && providerId !== "custom") {
   throw Error("Simpan dan pilih provider AI di Pengaturan AI terlebih dahulu.");
  }
  if (typeof content !== "string" || !content.trim()) throw Error("Isi file sumber kosong.");
@@ -266,7 +266,7 @@ window.mazkiplayGeneratePatch = async ({ instruction, path, content }) => {
 window.mazkiplayGenerateMultiPatch = async ({ instruction, files }) => {
  if(data.aiMode!=="api")throw Error("Multi-file Patch Lab memerlukan Mode API. Pilih Mode API dan konfigurasi provider terlebih dahulu.");
  const providerId = $("provider").value;
- if (!data.providers[providerId]?.key) throw Error("Simpan dan pilih provider AI di Pengaturan AI terlebih dahulu.");
+ if (!data.providers[providerId]?.key && providerId !== "custom") throw Error("Simpan dan pilih provider AI di Pengaturan AI terlebih dahulu.");
  if (!Array.isArray(files) || files.length < 1 || files.length > 5) throw Error("Pilih antara 1 sampai 5 file.");
  const total = files.reduce((n, file) => n + String(file.content || "").length, 0);
  if (total > 18000) throw Error("Total isi file melebihi 18.000 karakter.");
