@@ -84,3 +84,14 @@
 .self-error{border-color:#69404b}
 .self-actions{margin:12px 0}
 @media(max-width:640px){.self-learning-form{grid-template-columns:1fr}.self-learning-form button{width:100%}.self-item-top{align-items:flex-start;flex-direction:column}}
+
+.self-release-checks{display:grid;gap:8px;margin:12px 0}
+.self-release-item{display:flex;align-items:flex-start;gap:10px;padding:11px;border:1px solid #29435d;border-radius:10px;background:#091624;color:#c6d7e8;font-size:12px;line-height:1.5}
+.self-release-item input,.self-event-list input{accent-color:#68e0e8;flex:0 0 auto;margin-top:3px}
+#self-skill-search input{width:100%;background:#071421;color:var(--text);border:1px solid #29435d;border-radius:10px;padding:12px;font:inherit}
+#self-skill-search{grid-template-columns:minmax(0,1fr) auto auto}
+#self-skill-results article label{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:10px;align-items:start}
+#self-skill-results article label small,#self-skill-results article label p{grid-column:2}
+#self-skill-results article label p{overflow-wrap:anywhere}
+#self-plan-preview article button{margin-top:10px}
+@media(max-width:640px){#self-skill-search{grid-template-columns:1fr}#self-skill-search button{width:100%}}
