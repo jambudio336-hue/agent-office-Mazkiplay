@@ -8,7 +8,8 @@ Workflow `.github/workflows/android-apk.yml` sekarang membundel folder `android-
 
 - Dashboard kantor dengan ilustrasi ruang kantor bergaya 3D.
 - Profil pekerja lokal hingga maksimum 20 orang, dengan pilihan peran dan provider.
-- Task board lokal: tambah tugas, tandai selesai, dan hapus.
+- Task board lokal: tambah tugas, tandai selesai, hapus, dan tetapkan tugas ke pekerja.
+- Tombol Jalankan AI mengirimkan tugas ke model dari provider yang dikonfigurasi dan menyimpan responsnya pada task board.
 - Form konfigurasi OpenRouter, OpenAI, Google Gemini, DeepSeek, Claude, dan endpoint kompatibel OpenAI.
 - Pengaturan profil/tugas/provider tersimpan di penyimpanan lokal aplikasi.
 
