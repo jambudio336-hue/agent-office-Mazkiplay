@@ -312,11 +312,21 @@ function localLiteAnswer(prompt, role="Asisten umum"){
  if(text)bullets.push("5. Fokus permintaanmu: "+text.slice(0,600));
  return "MAZKIPLAY AI LITE · LOKAL\nPeran: "+role+"\nStatus: berjalan tanpa API key dan tanpa mengirim data ke layanan cloud.\n\n"+bullets.join("\n\n")+"\n\nBatasan: mode Lite ini memakai aturan lokal, bukan LLM generatif. Ia tidak dapat memahami konteks kompleks seperti model cloud atau mengedit/menjalankan kode secara otomatis. Untuk jawaban generatif dan Patch Lab, pindah ke Mode API.";
 }
+async function generateLocalAnswer(prompt,role="Asisten umum"){
+ const plugin=localLlmPlugin();
+ if(!plugin)return localLiteAnswer(prompt,role);
+ const state=await plugin.getStatus();
+ if(!state.downloaded)throw Error("AI generatif lokal belum diunduh. Unduh Qwen3 pada bagian AI Generatif Offline terlebih dahulu.");
+ const bounded=String(prompt||"").slice(0,3900);
+ const result=await plugin.generate({prompt:bounded,role});
+ if(!result?.answer)throw Error("Model lokal tidak mengembalikan jawaban.");
+ return "MAZKIPLAY AI · QWEN3 0.6B INT4 · OFFLINE\n\n"+result.answer;
+}
 function updateAiModeStatus(){
  const mode=$("ai-mode")?.value||data.aiMode||"local";data.aiMode=mode;save();
  const el=$("ai-mode-status");
- if(el)el.textContent=mode==="local"?"Mode Gratis Lokal aktif. Tidak perlu API key atau internet; AI Lite menggunakan aturan lokal dan bukan LLM generatif.":(Object.values(data.providers).some(p=>p&&p.model&&(p.key||p.url))?"Mode API aktif. Tugas dan Patch Lab akan menggunakan provider yang dipilih; kuota/biaya mengikuti provider.":"Mode API aktif, tetapi belum ada provider siap. Simpan API key, model, dan endpoint di bawah.");
- const note=$("free-chat-mode-note");if(note)note.textContent=mode==="local"?"AI generatif offline menggunakan model di perangkat setelah diunduh; tanpa API key dan tanpa mengirim prompt ke cloud.":"Chat, Task Board, dan Patch Lab menggunakan provider API yang dipilih; penggunaan dapat memakai kuota atau biaya provider.";
+ if(el)el.textContent=mode==="local"?"Mode Gratis Lokal aktif. APK Android memakai Qwen3 lokal setelah model diunduh; preview browser memakai AI Lite berbasis aturan.":(Object.values(data.providers).some(p=>p&&p.model&&(p.key||p.url))?"Mode API aktif. Tugas dan Patch Lab akan menggunakan provider yang dipilih; kuota/biaya mengikuti provider.":"Mode API aktif, tetapi belum ada provider siap. Simpan API key, model, dan endpoint di bawah.");
+ const note=$("free-chat-mode-note");if(note)note.textContent=mode==="local"?"Di APK: AI generatif offline setelah Qwen3 diunduh. Di preview browser: AI Lite berbasis aturan, bukan LLM.":"Chat, Task Board, dan Patch Lab menggunakan provider API yang dipilih; penggunaan dapat memakai kuota atau biaya provider.";
 }
 async function runTask(id){
  const t=data.tasks.find(x=>x.id===id);if(!t||t.running)return;
@@ -324,7 +334,7 @@ async function runTask(id){
  t.running=true;t.error="";t.output="";save();render();
  try{
   const prompt="Kerjakan permintaan berikut dengan hasil yang bisa ditinjau. Untuk coding, berikan ringkasan pendek, daftar file beserta isi kode yang relevan, langkah pemasangan, cara uji, dan risiko/asumsi. Jika informasi kurang, sebutkan asumsi. Jangan mengklaim perubahan file atau pengujian sudah dilakukan. Jawaban AI bukan berarti tugas sudah benar-benar selesai; pengguna akan menandai selesai setelah memeriksa hasil.\n\nTUGAS: "+t.text+(t.context?"\n\nKONTEKS REPOSITORY/FILE:\n"+t.context:"");
-  t.output=data.aiMode==="local"?localLiteAnswer(prompt,worker?.role||"Asisten umum"):await callModel(providerId,prompt,worker?.role||"Asisten umum");
+  t.output=data.aiMode==="local"?await generateLocalAnswer(prompt,worker?.role||"Asisten umum"):await callModel(providerId,prompt,worker?.role||"Asisten umum");
   t.done=false;
  }catch(err){t.error=err?.message||"Gagal menjalankan tugas AI";}finally{t.running=false;save();render()}
 }
