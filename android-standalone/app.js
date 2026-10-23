@@ -316,7 +316,7 @@ function updateAiModeStatus(){
  const mode=$("ai-mode")?.value||data.aiMode||"local";data.aiMode=mode;save();
  const el=$("ai-mode-status");
  if(el)el.textContent=mode==="local"?"Mode Gratis Lokal aktif. Tidak perlu API key atau internet; AI Lite menggunakan aturan lokal dan bukan LLM generatif.":(Object.values(data.providers).some(p=>p&&p.model&&(p.key||p.url))?"Mode API aktif. Tugas dan Patch Lab akan menggunakan provider yang dipilih; kuota/biaya mengikuti provider.":"Mode API aktif, tetapi belum ada provider siap. Simpan API key, model, dan endpoint di bawah.");
- const note=$("free-chat-mode-note");if(note)note.textContent=mode==="local"?"Asisten Lokal Lite · tanpa API key · tidak mengirim prompt ke cloud":"Chat, Task Board, dan Patch Lab menggunakan provider API yang dipilih; penggunaan dapat memakai kuota atau biaya provider.";
+ const note=$("free-chat-mode-note");if(note)note.textContent=mode==="local"?"AI generatif offline menggunakan model di perangkat setelah diunduh; tanpa API key dan tanpa mengirim prompt ke cloud.":"Chat, Task Board, dan Patch Lab menggunakan provider API yang dipilih; penggunaan dapat memakai kuota atau biaya provider.";
 }
 async function runTask(id){
  const t=data.tasks.find(x=>x.id===id);if(!t||t.running)return;
@@ -330,13 +330,68 @@ async function runTask(id){
 }
 $("ai-mode").value=data.aiMode;
 $("ai-mode").addEventListener("change",updateAiModeStatus);
+
+function localLlmPlugin(){return window.Capacitor?.Plugins?.MazkiplayLocalLLM||null;}
+async function refreshLocalLlmStatus(){
+ const plugin=localLlmPlugin(),label=$("local-llm-status"),download=$("local-llm-download"),prepare=$("local-llm-prepare");
+ if(!plugin){label.textContent="AI generatif native tersedia di APK Android. Di preview browser, Asisten Lite tetap dapat dipakai.";download.disabled=true;prepare.disabled=true;return;}
+ try{
+  const state=await plugin.getStatus();
+  download.disabled=false;prepare.disabled=!state.downloaded;
+  if(state.ready)label.textContent="AI generatif siap · Qwen3 0.6B INT4 · berjalan lokal/offline.";
+  else if(state.downloaded)label.textContent="Model sudah tersimpan ("+(state.sizeBytes/1048576).toFixed(0)+" MiB). Tekan Aktifkan model atau langsung ajukan pertanyaan.";
+  else label.textContent="Model belum diunduh. Butuh ruang kosong sekitar 400 MB untuk model, plus memori kerja saat inferensi.";
+ }catch(error){label.textContent="Gagal memeriksa model: "+(error?.message||"kesalahan native");}
+}
+const localLlmBridge=localLlmPlugin();
+if(localLlmBridge){
+ localLlmBridge.addListener("modelDownloadProgress",event=>{
+  const progress=$("local-llm-progress");
+  progress.hidden=false;
+  if(event.progress>=0){progress.value=event.progress;progress.setAttribute("value",String(event.progress));}
+  else{progress.removeAttribute("value");}
+  $("local-llm-status").textContent=event.totalBytes>0
+   ?"Mengunduh model: "+Math.floor(event.progress)+"% ("+(event.downloadedBytes/1048576).toFixed(0)+" / "+(event.totalBytes/1048576).toFixed(0)+" MiB)"
+   :"Mengunduh model: "+(event.downloadedBytes/1048576).toFixed(0)+" MiB";
+ });
+}
+$("local-llm-download").addEventListener("click",async()=>{
+ const plugin=localLlmPlugin();if(!plugin){$("local-llm-status").textContent="Unduhan model generatif hanya tersedia di APK Android.";return;}
+ const button=$("local-llm-download"),progress=$("local-llm-progress");
+ button.disabled=true;progress.hidden=false;progress.value=0;$("local-llm-status").textContent="Menyiapkan unduhan model dari Hugging Face…";
+ try{
+  const result=await plugin.downloadModel();
+  progress.value=100;progress.setAttribute("value","100");
+  $("local-llm-status").textContent="Model berhasil diunduh dan disimpan di perangkat ("+(result.sizeBytes/1048576).toFixed(0)+" MiB). Tekan Aktifkan model.";
+  $("local-llm-prepare").disabled=false;
+ }catch(error){$("local-llm-status").textContent="Unduhan gagal: "+(error?.message||"periksa koneksi dan ruang penyimpanan");}
+ finally{button.disabled=false;await refreshLocalLlmStatus();}
+});
+$("local-llm-prepare").addEventListener("click",async()=>{
+ const plugin=localLlmPlugin();if(!plugin){$("local-llm-status").textContent="Aktivasi model hanya tersedia di APK Android.";return;}
+ const button=$("local-llm-prepare");button.disabled=true;$("local-llm-status").textContent="Memuat model AI generatif. Pertama kali bisa memerlukan waktu beberapa detik…";
+ try{await plugin.prepareModel();$("local-llm-status").textContent="AI generatif siap digunakan secara offline.";}
+ catch(error){$("local-llm-status").textContent="Model gagal dimuat: "+(error?.message||"memori mungkin tidak cukup");}
+ finally{button.disabled=false;await refreshLocalLlmStatus();}
+});
+refreshLocalLlmStatus();
 $("free-chat-form").addEventListener("submit",async e=>{
  e.preventDefault();const prompt=$("free-chat-input").value.trim();if(!prompt)return;
  const output=$("free-chat-output"),button=$("free-chat-submit");
  output.textContent=data.aiMode==="local"?"Menyusun jawaban lokal…":"Menghubungi provider AI…";button.disabled=true;
  try{
   if(data.aiMode==="local"){
-   output.textContent=localLiteAnswer(prompt,$("free-chat-role").value);
+   const plugin=localLlmPlugin();
+   if(plugin){
+    const state=await plugin.getStatus();
+    if(!state.downloaded)throw Error("AI generatif belum diunduh. Tekan tombol Unduh model di atas terlebih dahulu (sekitar 347 MB, sekali saja).");
+    output.textContent="Menyiapkan AI generatif offline… model pertama kali dapat memerlukan waktu.";
+    const result=await plugin.generate({prompt,role:$("free-chat-role").value});
+    output.textContent="MAZKIPLAY AI · QWEN3 0.6B INT4 · OFFLINE\n\n"+result.answer;
+    await refreshLocalLlmStatus();
+   }else{
+    output.textContent=localLiteAnswer(prompt,$("free-chat-role").value);
+   }
   }else{
    const providerId=$("provider").value;
    const answer=await callModel(providerId,prompt,$("free-chat-role").value,1200);
