@@ -85,18 +85,15 @@ async function runTask(id){
 $("test-provider").onclick=async()=>{
  const id=$("provider").value,p={key:$("api-key").value.trim(),model:$("model-id").value.trim(),url:$("endpoint").value.trim(),format:P[$("provider").value].format};
  if(!p.key)return status("Masukkan API key terlebih dahulu.",true);if(!p.url||!p.model)return status("Model dan endpoint wajib diisi.",true);
- const b=$("test-provider");b.disabled=true;b.textContent="Menguji…";
+ const b=$("test-provider"),previous=data.providers[id];b.disabled=true;b.textContent="Menguji…";
+ data.providers[id]=p;
  try{
-  const previous=data.providers[id];
-  data.providers[id]=p;
-  try{
-   const answer=await callModel(id,"Balas singkat hanya dengan: koneksi berhasil.","penguji koneksi");
-   save();render();status("Koneksi "+P[id].label+" berhasil. "+answer.slice(0,100));
-  }catch(err){
-   if(previous)data.providers[id]=previous;else delete data.providers[id];
-   status("Uji gagal: "+(err?.message||"jaringan/provider bermasalah")+". Periksa key, model, kuota, dan koneksi.",true);
-  }
- finally{b.disabled=false;b.textContent="Uji koneksi"}
+  const answer=await callModel(id,"Balas singkat hanya dengan: koneksi berhasil.","penguji koneksi");
+  save();render();status("Koneksi "+P[id].label+" berhasil. "+answer.slice(0,100));
+ }catch(err){
+  if(previous)data.providers[id]=previous;else delete data.providers[id];
+  status("Uji gagal: "+(err?.message||"jaringan/provider bermasalah")+". Periksa key, model, kuota, dan koneksi.",true);
+ }finally{b.disabled=false;b.textContent="Uji koneksi"}
 };
 
 function backupStatus(message,bad=false){const el=$("backup-status");if(el){el.textContent=message;el.style.color=bad?"#ff7e8a":"#64e0a4"}}
