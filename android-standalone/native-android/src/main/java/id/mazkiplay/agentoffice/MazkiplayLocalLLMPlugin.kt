@@ -36,8 +36,8 @@ class MazkiplayLocalLLMPlugin : Plugin() {
     private val modelExecutor = Executors.newSingleThreadExecutor()
     private val downloadExecutor = Executors.newSingleThreadExecutor()
     private val downloading = AtomicBoolean(false)
-    private var engine: Engine? = null
-    private var conversation: Conversation? = null
+    @Volatile private var engine: Engine? = null
+    @Volatile private var conversation: Conversation? = null
 
     private fun modelFile(ctx: Context = context): File = File(ctx.filesDir, MODEL_FILE)
 
