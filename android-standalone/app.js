@@ -11,6 +11,7 @@ const $=id=>document.getElementById(id);
 const parse=s=>{try{return JSON.parse(s)}catch{return null}};
 let data=parse(localStorage.getItem(KEY))||{workers:[],tasks:[],providers:{}};
 let githubToken="";
+let githubLastFile=null;
 if(!Array.isArray(data.workers))data.workers=[];
 if(!Array.isArray(data.tasks))data.tasks=[];
 if(!data.providers||typeof data.providers!=="object")data.providers={};
@@ -133,7 +134,7 @@ async function runTask(id){
  const providerId=worker?.provider||$("provider").value;
  t.running=true;t.error="";t.output="";save();render();
  try{
-   const prompt="Kerjakan permintaan berikut dengan hasil yang bisa ditinjau. Untuk coding, berikan ringkasan pendek, daftar file beserta isi kode yang relevan, langkah pemasangan, cara uji, dan risiko/asumsi. Jika informasi kurang, sebutkan asumsi. Jangan mengklaim perubahan file atau pengujian sudah dilakukan. Jawaban AI bukan berarti tugas sudah benar-benar selesai; pengguna akan menandai selesai setelah memeriksa hasil.\n\nTUGAS: "+t.text;
+   const prompt="Kerjakan permintaan berikut dengan hasil yang bisa ditinjau. Untuk coding, berikan ringkasan pendek, daftar file beserta isi kode yang relevan, langkah pemasangan, cara uji, dan risiko/asumsi. Jika informasi kurang, sebutkan asumsi. Jangan mengklaim perubahan file atau pengujian sudah dilakukan. Jawaban AI bukan berarti tugas sudah benar-benar selesai; pengguna akan menandai selesai setelah memeriksa hasil.\n\nTUGAS: "+t.text+(t.context?"\n\nKONTEKS REPOSITORY/FILE:\n"+t.context:"");
    t.output=await callModel(providerId,prompt,worker?.role||"Asisten umum");
    t.done=false;
  }catch(err){t.error=err?.message||"Gagal menjalankan tugas AI";}finally{t.running=false;save();render()}
@@ -157,7 +158,7 @@ $("test-provider").onclick=async()=>{
 function backupStatus(message,bad=false){const el=$("backup-status");if(el){el.textContent=message;el.style.color=bad?"#ff7e8a":"#64e0a4"}}
 $("export-data").onclick=()=>{
  try{
-  const backup={format:"mazkiplay-agent-office-backup",version:1,createdAt:new Date().toISOString(),workers:data.workers.map(w=>({id:w.id,name:w.name,role:w.role,provider:w.provider,task:w.task||""})),tasks:data.tasks.map(t=>({id:t.id,text:t.text,done:!!t.done,workerId:t.workerId||"",output:t.output||"",error:t.error||""}))};
+  const backup={format:"mazkiplay-agent-office-backup",version:1,createdAt:new Date().toISOString(),workers:data.workers.map(w=>({id:w.id,name:w.name,role:w.role,provider:w.provider,task:w.task||""})),tasks:data.tasks.map(t=>({id:t.id,text:t.text,context:String(t.context||"").slice(0,12000),done:!!t.done,workerId:t.workerId||"",output:t.output||"",error:t.error||""}))};
   const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="mazkiplay-agent-office-backup.json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
   backupStatus("Cadangan dibuat. Simpan file JSON di lokasi aman; API key tidak ikut diekspor.");
@@ -175,7 +176,7 @@ $("import-file").onchange=async e=>{
   if(!confirm("Impor akan mengganti daftar pekerja dan tugas saat ini. Pengaturan AI dan API key tetap dipertahankan. Lanjutkan?"))return;
   data.workers=backup.workers.map(w=>({id:w.id.slice(0,100),name:w.name.slice(0,32),role:String(w.role||"Asisten umum").slice(0,80),provider:P[w.provider]?w.provider:"openrouter",task:String(w.task||"").slice(0,180)}));
   const workerIds=new Set(data.workers.map(w=>w.id));
-  data.tasks=backup.tasks.map(t=>({id:t.id.slice(0,100),text:t.text.slice(0,240),done:!!t.done,workerId:workerIds.has(t.workerId)?t.workerId:"",output:String(t.output||"").slice(0,20000),error:String(t.error||"").slice(0,1000),running:false}));
+  data.tasks=backup.tasks.map(t=>({id:t.id.slice(0,100),text:t.text.slice(0,240),done:!!t.done,workerId:workerIds.has(t.workerId)?t.workerId:"",context:String(t.context||"").slice(0,12000),output:String(t.output||"").slice(0,20000),error:String(t.error||"").slice(0,1000),running:false}));
   if(!save())throw Error("Penyimpanan lokal gagal. Pastikan ruang perangkat tersedia.");
   render();backupStatus("Cadangan berhasil diimpor. Konfigurasi AI lokal tidak diubah.");
  }catch(err){backupStatus("Impor gagal: "+(err?.message||"file tidak valid"),true)}
@@ -185,7 +186,7 @@ $("clear-data").onclick=async()=>{
  if(!confirm("Hapus SEMUA profil pekerja, tugas, konfigurasi provider, dan API key dari penyimpanan lokal aplikasi? Tindakan ini tidak bisa dibatalkan."))return;
  try{
   const store=secureStore();if(store?.clear)await store.clear();else for(const id of Object.keys(data.providers))await removeProviderSecret(id);
-  githubToken="";$("github-token").value="";data={workers:[],tasks:[],providers:{}};localStorage.removeItem(KEY);save();loadProvider();render();backupStatus("Data lokal aplikasi dan rahasia provider dihapus.");githubStatus("Token GitHub dan data lokal dihapus.");status("Data lokal dihapus.");
+  githubToken="";githubLastFile=null;$("github-token").value="";data={workers:[],tasks:[],providers:{}};localStorage.removeItem(KEY);save();loadProvider();render();backupStatus("Data lokal aplikasi dan rahasia provider dihapus.");githubStatus("Token GitHub dan data lokal dihapus.");status("Data lokal dihapus.");
  }catch(err){backupStatus("Gagal menghapus semua data: "+(err?.message||"kesalahan penyimpanan"),true)}
 };
 async function initializeApp(){
@@ -231,17 +232,26 @@ $("github-read").onclick=async()=>{
  try{
   const apiPath="/repos/"+repo+"/contents/"+path.split("/").map(encodeURIComponent).join("/")+"?ref="+encodeURIComponent(branch);
   const file=await githubRequest(apiPath);
-  if(Array.isArray(file)){$("github-output").textContent="Path ini adalah direktori. Daftar isi:\n"+file.map(x=>(x.type==="dir"?"📁 ":"📄 ")+x.name+(x.type==="file"?" — "+x.path:"")).join("\n");githubStatus("Direktori berhasil dibaca ("+file.length+" item).");return}
+  if(Array.isArray(file)){githubLastFile=null;$("github-output").textContent="Path ini adalah direktori. Daftar isi:\n"+file.map(x=>(x.type==="dir"?"📁 ":"📄 ")+x.name+(x.type==="file"?" — "+x.path:"")).join("\n");githubStatus("Direktori berhasil dibaca ("+file.length+" item).");return}
   if(file.type!=="file")throw Error("Path bukan file biasa. Pilih path file, bukan symlink atau submodule.");
   if(file.size>1000000)throw Error("File lebih besar dari 1 MB; pilih file yang lebih kecil untuk pembacaan awal.");
   const content=file.encoding==="base64"?decodeGithubFile(file.content):String(file.content||"");
+  githubLastFile={repo,branch,path:file.path,content:content.slice(0,12000)};
   $("github-output").textContent="FILE: "+file.path+"\nREPOSITORY: "+repo+" @ "+branch+"\nSIZE: "+file.size+" bytes\n\n"+content;
   githubStatus("Berhasil membaca "+file.path+". Isi file tampil sebagai konteks yang bisa kamu salin ke tugas AI.");
  }catch(err){githubStatus("Gagal membaca file: "+(err?.message||"kesalahan GitHub"),true)}
  finally{button.disabled=false;button.textContent="Baca file"}
 };
+$("github-to-task").onclick=()=>{
+ if(!githubLastFile)return githubStatus("Baca satu file terlebih dahulu sebelum mengirim konteks ke Task Board.",true);
+ const instruction=$("github-instruction").value.trim()||"Analisis file ini dan usulkan perbaikan konkret.";
+ const context="Repository: "+githubLastFile.repo+" @ "+githubLastFile.branch+"\nPath: "+githubLastFile.path+"\n\nIsi file (maksimal 12.000 karakter):\n"+githubLastFile.content;
+ data.tasks.unshift({id:String(Date.now())+Math.random().toString(16).slice(2),text:instruction,context,done:false,workerId:$("task-worker")?.value||"",output:"",error:""});
+ save();render();$("tasks").scrollIntoView({behavior:"smooth",block:"start"});
+ githubStatus("Konteks "+githubLastFile.path+" ditambahkan ke Task Board. Pilih pekerja lalu tekan Jalankan AI.");
+};
 $("github-disconnect").onclick=async()=>{
- try{await removeGithubSecret();githubToken="";$("github-token").value="";githubStatus("Koneksi diputus dan token dihapus dari Android Keystore jika tersedia.");$("github-output").textContent="Tidak terhubung."}
+ try{await removeGithubSecret();githubToken="";githubLastFile=null;$("github-token").value="";githubStatus("Koneksi diputus dan token dihapus dari Android Keystore jika tersedia.");$("github-output").textContent="Tidak terhubung."}
  catch(err){githubStatus("Gagal menghapus token: "+(err?.message||"kesalahan"),true)}
 };
 initializeApp();
