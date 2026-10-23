@@ -22,6 +22,10 @@
 <label>Nama branch baru<input id="github-pr-branch" value="agent/patch-review-01" autocomplete="off"></label>
 <label>Path file yang sudah ada<input id="github-pr-path" value="README.md" autocomplete="off"></label>
 <button type="button" id="github-pr-load">Muat file untuk diedit</button>
+<label>Instruksi perubahan untuk AI<textarea id="github-pr-instruction" rows="3" placeholder="Contoh: perbaiki validasi input, pertahankan API yang ada, tambahkan penanganan error."></textarea></label>
+<button type="button" id="github-pr-generate">✦ Buat usulan patch dengan AI</button>
+<p class="notice">AI menggunakan provider yang dipilih di Pengaturan AI. Hasil hanya dimasukkan ke editor untuk ditinjau; tidak dikirim ke GitHub sampai kamu menekan tombol Draft PR.</p>
+<div id="github-pr-ai-result" class="ai-result" aria-live="polite"></div>
 <label>Isi file lengkap — periksa sebelum mengirim<textarea id="github-pr-code" class="code-editor" rows="12" spellcheck="false" placeholder="Muat file terlebih dahulu, lalu tinjau/edit isi lengkapnya."></textarea></label>
 <label>Judul Draft PR<input id="github-pr-title" value="Proposed update from Mazkiplay Agent Office" maxlength="120"></label>
 <label>Pesan commit<input id="github-pr-commit" value="chore: propose reviewed file update" maxlength="120"></label>
