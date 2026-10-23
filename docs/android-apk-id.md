@@ -2,7 +2,7 @@
 
 ## Status dan rancangan
 
-Workflow `.github/workflows/android-apk.yml` membangun paket APK Android melalui GitHub Actions. APK ini merupakan **klien Android yang membuka server Agent Office yang sudah di-deploy**, bukan server Node.js penuh yang berjalan di dalam ponsel.
+Workflow `.github/workflows/android-apk.yml` membangun paket APK Android melalui GitHub Actions. APK ini merupakan **klien Android yang membuka server Agent Office yang sudah di-deploy**, bukan server Node.js penuh yang berjalan di dalam ponsel. Workflow saat ini menghasilkan APK debug yang sudah ditandatangani otomatis agar bisa dipasang untuk pengujian; ini belum merupakan signing key produksi untuk distribusi resmi jangka panjang.
 
 Server Agent Office memakai Node.js, proses terminal/PTY, dan coding-agent CLI. Komponen tersebut tidak otomatis dapat dijalankan di Android hanya dengan membungkus halaman web. Karena itu server harus tersedia di alamat HTTPS yang bisa dijangkau ponsel.
 
