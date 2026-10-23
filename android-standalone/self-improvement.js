@@ -65,6 +65,7 @@
     </div>
     <p id="self-improve-status" class="status" aria-live="polite">Monitor lokal siap.</p>
     <div id="self-findings" class="self-findings" aria-live="polite"></div>
+    <h3 class="self-subhead">Riwayat error runtime</h3><div id="self-event-list" class="self-event-list"></div>
     <h3 class="self-subhead">Memori pengalaman</h3>
     <p class="notice">Simpan pelajaran dan keputusan untuk dipakai sebagai referensi berikutnya. Ini memori catatan, bukan pelatihan otomatis atau perubahan bobot model AI.</p>
     <form id="self-learning-form" class="self-learning-form"><label>Pelajaran / temuan<textarea id="self-learning-note" rows="2" maxlength="1200" placeholder="Contoh: uji alur saat offline dan ketika model belum diunduh." required></textarea></label><button type="submit">Simpan pelajaran</button></form>
