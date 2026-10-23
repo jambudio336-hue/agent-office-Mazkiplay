@@ -67,6 +67,9 @@ jobs:
           if (!app.includes('function localLiteAnswer(') || !app.includes('data.aiMode===\"local\"') || !html.includes('Gratis Lokal — tanpa API key')) throw new Error('Mode lokal gratis belum tersambung.');
           if (!app.includes('await callModel(providerId,prompt,$("free-chat-role").value,1200)')) throw new Error('Chat API Mode belum diarahkan ke provider terpilih.');
           if (!app.includes('Chat, Task Board, dan Patch Lab menggunakan provider API yang dipilih')) throw new Error('Keterangan UI Mode API tidak sesuai dengan routing chat.');
+          const localLlm = readFileSync('android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplayLocalLLMPlugin.kt', 'utf8');
+          if (!localLlm.includes('com.google.ai.edge.litertlm.Engine') || !localLlm.includes('fun generate(call: PluginCall)') || !localLlm.includes('MODEL_URL')) throw new Error('Integrasi native LLM lokal belum lengkap.');
+          if (!html.includes('local-llm-download') || !html.includes('local-llm-status')) throw new Error('UI pengelola model generatif belum lengkap.');
           console.log('Validasi APK mandiri lulus: sintaks, ID HTML, modul, dan UI multi-file.');
           NODE
 
@@ -89,8 +92,46 @@ jobs:
           npx cap add android
           mkdir -p android/app/src/main/java/id/mazkiplay/agentoffice
           cp android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplaySecureStoragePlugin.java android/app/src/main/java/id/mazkiplay/agentoffice/
+          cp android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplayLocalLLMPlugin.kt android/app/src/main/java/id/mazkiplay/agentoffice/
           cp android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MainActivity.java android/app/src/main/java/id/mazkiplay/agentoffice/
           npx cap sync android
+
+      - name: Siapkan Kotlin dan LiteRT-LM untuk AI generatif offline
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+          root = Path('android')
+          top = root / 'build.gradle'
+          app = root / 'app' / 'build.gradle'
+          wrapper = root / 'gradle' / 'wrapper' / 'gradle-wrapper.properties'
+          s = top.read_text()
+          s = re.sub(r"com\\.android\\.tools\\.build:gradle:[^'\\\"]+", "com.android.tools.build:gradle:8.13.2", s)
+          if 'org.jetbrains.kotlin:kotlin-gradle-plugin:' in s:
+              s = re.sub(r"org\\.jetbrains\\.kotlin:kotlin-gradle-plugin:[^'\\\"]+", "org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.0", s)
+          else:
+              s = re.sub(r"(dependencies\\s*\\{)", r"\\1\\n        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.0'", s, count=1)
+          top.write_text(s)
+          a = app.read_text()
+          if "apply plugin: 'org.jetbrains.kotlin.android'" not in a:
+              a = a.replace("apply plugin: 'com.android.application'", "apply plugin: 'com.android.application'\\napply plugin: 'org.jetbrains.kotlin.android'", 1)
+          if 'litertlm-android' not in a:
+              a = re.sub(r"dependencies\\s*\\{", "dependencies {\\n    implementation 'com.google.ai.edge.litertlm:litertlm-android:0.18.0'\\n    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'", a, count=1)
+          app.write_text(a)
+          w = wrapper.read_text()
+          w = re.sub(r'gradle-[0-9.]+-(?:all|bin)\\.zip', 'gradle-8.13-all.zip', w)
+          wrapper.write_text(w)
+          manifest = root / 'app' / 'src' / 'main' / 'AndroidManifest.xml'
+          m = manifest.read_text()
+          if 'android.permission.INTERNET' not in m:
+              m = m.replace('<manifest ', '<manifest ', 1)
+              m = re.sub(r'(<manifest[^>]*>)', r'\\1\\n    <uses-permission android:name="android.permission.INTERNET"/>', m, count=1)
+          manifest.write_text(m)
+          assert 'litertlm-android:0.18.0' in app.read_text(), 'LiteRT-LM dependency was not added'
+          assert 'org.jetbrains.kotlin.android' in app.read_text(), 'Kotlin Android plugin was not applied'
+          assert 'gradle-8.13-all.zip' in wrapper.read_text(), 'Gradle wrapper was not upgraded'
+          print('LiteRT-LM, Kotlin plugin, Gradle, and model download permission configured.')
+          PY
 
       - name: Siapkan Java
         uses: actions/setup-java@v4
