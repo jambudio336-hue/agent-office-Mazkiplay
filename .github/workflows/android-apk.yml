@@ -48,7 +48,8 @@ jobs:
           const patch = readFileSync('android-standalone/github-pr.js', 'utf8');
           const html = readFileSync('android-standalone/index.html', 'utf8');
           const css = readFileSync('android-standalone/github-pr.css', 'utf8');
-          if (!css.includes('Hybrid HQ visual refresh') || !css.includes('worker-idle') || !css.includes('images.unsplash.com')) throw new Error('Visual hybrid HQ atau animasi pekerja hilang.');
+          const officeCss = readFileSync('android-standalone/styles.css', 'utf8');
+          if (!officeCss.includes('Hybrid HQ visual refresh') || !officeCss.includes('worker-idle') || !officeCss.includes('images.unsplash.com')) throw new Error('Visual hybrid HQ atau animasi pekerja hilang.');
           new vm.Script(app, { filename: 'android-standalone/app.js' });
           new vm.Script(patch, { filename: 'android-standalone/github-pr.js' });
           const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
