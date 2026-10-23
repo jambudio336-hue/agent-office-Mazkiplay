@@ -113,7 +113,7 @@ async function discoverModels() {
  const id = $("provider").value;
  const p = P[id];
  const key = $("api-key").value.trim() || data.providers[id]?.key || "";
- if (!key) throw Error("Masukkan API key provider terlebih dahulu.");
+ if (!key && id !== "custom") throw Error("Masukkan API key provider terlebih dahulu.");
  let url = "", headers = { "Accept": "application/json" };
  if (id === "openrouter") {
   url = "https://openrouter.ai/api/v1/models?output_modalities=text";
@@ -137,7 +137,7 @@ async function discoverModels() {
   if (!base) throw Error("Isi endpoint kompatibel OpenAI terlebih dahulu.");
   base = base.replace(/\/chat\/completions$/i, "").replace(/\/completions$/i, "");
   url = base + (base.endsWith("/v1") ? "/models" : "/v1/models");
-  headers.Authorization = "Bearer " + key;
+  if (key) headers.Authorization = "Bearer " + key;
  }
  const result = await request(url, { method: "GET", headers });
  if (!result.ok) throw Error("HTTP " + result.status + ": " + (result.data?.error?.message || result.data?.message || "provider tidak mengizinkan daftar model atau API key tidak valid"));
@@ -315,10 +315,12 @@ $("test-provider").onclick=async()=>{
  const b=$("test-provider"),previous=data.providers[id];b.disabled=true;b.textContent="Menguji…";data.providers[id]=p;
  try{
   const answer=await callModel(id,"Balas singkat hanya dengan: koneksi berhasil.","penguji koneksi");
-  let encrypted=false;try{encrypted=await saveProviderSecret(id,p.key)}catch(storageError){status("Koneksi berhasil, tetapi Android Keystore gagal menyimpan key: "+(storageError?.message||"kesalahan"),true)}
+  let encrypted=false;
+  if(p.key){try{encrypted=await saveProviderSecret(id,p.key)}catch(storageError){status("Koneksi berhasil, tetapi Android Keystore gagal menyimpan key: "+(storageError?.message||"kesalahan"),true)}}
+  else if(id==="custom"){data.providers[id]=p;status("Koneksi endpoint custom berhasil tanpa API key. Pastikan endpoint lokal/tepercaya. "+answer.slice(0,70));}
   save();render();
-  if(encrypted)status("Koneksi "+P[id].label+" berhasil; API key tersimpan terenkripsi di Android Keystore. "+answer.slice(0,70));
-  else status("Koneksi berhasil. API key hanya berada di memori sesi dan tidak disimpan di localStorage. "+answer.slice(0,70),true);
+  if(p.key&&encrypted)status("Koneksi "+P[id].label+" berhasil; API key tersimpan terenkripsi di Android Keystore. "+answer.slice(0,70));
+  else if(p.key)status("Koneksi berhasil. API key hanya berada di memori sesi dan tidak disimpan di localStorage. "+answer.slice(0,70),true);
  }catch(err){
   if(previous)data.providers[id]=previous;else delete data.providers[id];
   status("Uji gagal: "+(err?.message||"jaringan/provider bermasalah")+". Periksa key, model, kuota, dan koneksi.",true);
