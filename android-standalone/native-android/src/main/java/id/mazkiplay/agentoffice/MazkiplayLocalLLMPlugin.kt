@@ -1,6 +1,5 @@
 package id.mazkiplay.agentoffice
 
-import android.content.Context
 import com.getcapacitor.JSObject
 import com.getcapacitor.Plugin
 import com.getcapacitor.PluginCall
@@ -39,7 +38,7 @@ class MazkiplayLocalLLMPlugin : Plugin() {
     @Volatile private var engine: Engine? = null
     @Volatile private var conversation: Conversation? = null
 
-    private fun modelFile(ctx: Context = getContext()): File = File(ctx.filesDir, MODEL_FILE)
+    private fun modelFile(): File = File(getContext().filesDir, MODEL_FILE)
 
     @PluginMethod
     fun getStatus(call: PluginCall) {
