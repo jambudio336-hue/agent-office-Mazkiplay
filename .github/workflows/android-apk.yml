@@ -53,7 +53,7 @@ jobs:
           const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
           const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
           if (duplicates.length) throw new Error('ID HTML duplikat: ' + [...new Set(duplicates)].join(', '));
-          for (const id of ['multi-pr-paths', 'multi-pr-load', 'multi-pr-instruction', 'multi-pr-generate', 'multi-pr-editors', 'multi-pr-branch', 'multi-pr-create', 'model-id', 'model-options', 'discover-models', 'free-models-only', 'ai-mode', 'ai-mode-status', 'free-chat-form', 'free-chat-input', 'free-chat-output']) {
+          for (const id of ['multi-pr-paths', 'multi-pr-load', 'multi-pr-instruction', 'multi-pr-generate', 'multi-pr-editors', 'multi-pr-branch', 'multi-pr-create', 'model-id', 'model-options', 'discover-models', 'free-models-only', 'ai-mode', 'ai-mode-status', 'free-chat-form', 'free-chat-input', 'free-chat-output', 'local-llm-download', 'local-llm-prepare', 'local-llm-reset', 'local-llm-progress', 'local-llm-status']) {
             if (!html.includes('id="' + id + '"')) throw new Error('Kontrol UI hilang: ' + id);
           }
           for (const ref of ['./github-pr.js', './github-pr.css']) {
