@@ -48,3 +48,8 @@ The long-term target is a controlled improvement loop:
 ## What “learn every day” can realistically mean
 
 The application can accumulate useful user-approved notes, bug patterns, task templates, and test cases. A small on-device model does not automatically retrain itself or gain new reasoning ability merely because time passes. Better capabilities require evaluated prompt/skill updates, an improved model or provider, or new tested tools. The app should display the source, version, and evaluation status of each such upgrade.
+
+
+## Local learning notes and improvement queue
+
+The monitor also keeps a bounded, on-device list of user-entered lessons, active days, and improvement proposals generated from the local health checks. Proposals can be marked complete or sent to the Task Board. The diagnostics export includes this local context so the user can inspect it before sharing. This is a notes/retrieval feature, not model training; users should not enter secrets or sensitive personal data in the notes.
