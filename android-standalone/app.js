@@ -215,10 +215,10 @@ $("github-form").onsubmit=async e=>{
  const button=$("github-connect");button.disabled=true;button.textContent="Memeriksa akses…";
  const previous=githubToken;githubToken=token;
  try{
-  const [user,repository]=await Promise.all([githubRequest("/user"),githubRequest("/repos/"+repo)]);
+  const repository=await githubRequest("/repos/"+repo);let user=null;try{user=await githubRequest("/user")}catch{}
   let secure=false;try{secure=await saveGithubSecret(token)}catch(err){throw Error("Token valid tetapi gagal disimpan ke Android Keystore: "+(err?.message||"kesalahan"))}
   githubToken=token;
-  githubStatus("Terhubung sebagai @"+(user.login||"akun GitHub")+" · "+repository.full_name+" · akses repository terverifikasi"+(secure?" · token tersimpan di Android Keystore":" · token hanya tersimpan selama sesi ini"));
+  githubStatus("Repository terverifikasi"+(user?.login?" · @"+user.login:"")+" · "+repository.full_name+" · akses repository terverifikasi"+(secure?" · token tersimpan di Android Keystore":" · token hanya tersimpan selama sesi ini"));
   $("github-output").textContent="Repository: "+repository.full_name+"\nVisibilitas: "+(repository.private?"Private":"Public")+"\nBranch default: "+repository.default_branch+"\nIzin token: pemeriksaan baca berhasil.\n\nLangkah berikutnya: isi path file lalu tekan “Baca file”.";
  }catch(err){githubToken=previous;githubStatus("Gagal menghubungkan: "+(err?.message||"kesalahan GitHub"),true)}
  finally{button.disabled=false;button.textContent="Hubungkan & periksa akses"}
