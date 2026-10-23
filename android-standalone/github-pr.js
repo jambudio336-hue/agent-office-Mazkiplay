@@ -140,6 +140,22 @@ $("github-pr-create").addEventListener("click", async () => {
     button.textContent = "Buat branch + commit + Draft PR";
   }
 });
+window.addEventListener("github-token-disconnected", () => {
+  token = "";
+  loaded = null;
+  status("Token GitHub diputus. Hubungkan kembali sebelum membuat Draft PR.", true);
+});
+window.addEventListener("github-token-connected", async () => {
+  try {
+    const store = secureStore();
+    const result = store?.get ? await store.get({ key: "github:token" }) : null;
+    token = result?.value == null ? "" : String(result.value);
+    status(token ? "Token aman tersedia. Tinjau file dan perubahan sebelum membuat Draft PR." : "Token aman tidak tersedia; hubungkan kembali dari APK Android.", !token);
+  } catch (error) {
+    token = "";
+    status("Gagal membaca token aman: " + (error?.message || "kesalahan"), true);
+  }
+});
 async function initPatchLab() {
   try {
     const store = secureStore();
