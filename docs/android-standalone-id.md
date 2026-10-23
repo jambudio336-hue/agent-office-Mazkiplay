@@ -5,7 +5,8 @@ Folder android-standalone adalah antarmuka lokal yang dibundel ke APK. Aplikasi 
 ## Fitur prototipe lokal
 - Dashboard kantor bergaya 3D ilustratif.
 - Membuat/menghapus maksimal 20 profil pekerja dengan pilihan peran dan provider.
-- Task board lokal dengan tanda selesai dan hapus.
+- Arahan prompt berbeda sesuai peran (developer, QA, UI/UX, cybersecurity defensif, manajer proyek, dan lainnya).
+- Task board lokal dengan tanda selesai dan hapus; hasil AI tetap menunggu pemeriksaan pengguna dan tidak otomatis ditandai selesai.
 - Ekspor/impor cadangan JSON untuk profil dan tugas; API key sengaja tidak diekspor.
 - Tombol hapus seluruh data lokal, termasuk konfigurasi provider dan API key.
 - Form konfigurasi OpenRouter, OpenAI, Gemini, DeepSeek, Claude, dan endpoint kompatibel OpenAI.
