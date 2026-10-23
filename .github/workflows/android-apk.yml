@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feat/android-office-apk
+      - feat/free-local-ai-mode
   pull_request:
     branches:
       - main
