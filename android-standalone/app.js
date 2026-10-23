@@ -66,7 +66,7 @@ async function callModel(providerId,prompt,role){
  const result=await request(p.url,{method:"POST",headers,body:JSON.stringify(body)});
  if(!result.ok)throw Error("Provider mengembalikan HTTP "+result.status+": "+(result.data?.error?.message||result.data?.message||"periksa API key, model, kuota, dan izin jaringan"));
  let answer="";
- if(providerId==="anthropic"||p.format==="anthropic")answer=(result.data?.content||[]).map(c=>c.text||"").join("\\n");
+ if(providerId==="anthropic"||p.format==="anthropic")answer=(result.data?.content||[]).map(c=>c.text||"").join("\n");
  else answer=result.data?.choices?.[0]?.message?.content||"";
  if(!answer)throw Error("Respons provider kosong atau format respons belum didukung.");
  return answer;
@@ -77,7 +77,7 @@ async function runTask(id){
  const providerId=worker?.provider||$("provider").value;
  t.running=true;t.error="";t.output="";save();render();
  try{
-   const prompt="Kerjakan permintaan/tugas berikut. Jika tugas berupa coding, berikan rancangan, kode yang relevan, file yang perlu dibuat/diubah, dan langkah uji. Kamu tidak memiliki akses otomatis ke repository, shell, atau perangkat ini; jangan mengklaim sudah menjalankan perubahan.\\n\\nTUGAS: "+t.text;
+   const prompt="Kerjakan permintaan/tugas berikut. Jika tugas berupa coding, berikan rancangan, kode yang relevan, file yang perlu dibuat/diubah, dan langkah uji. Kamu tidak memiliki akses otomatis ke repository, shell, atau perangkat ini; jangan mengklaim sudah menjalankan perubahan.\n\nTUGAS: "+t.text;
    t.output=await callModel(providerId,prompt,worker?.role||"asisten umum");
    t.done=true;
  }catch(err){t.error=err?.message||"Gagal menjalankan tugas AI";}finally{t.running=false;save();render()}
@@ -87,10 +87,15 @@ $("test-provider").onclick=async()=>{
  if(!p.key)return status("Masukkan API key terlebih dahulu.",true);if(!p.url||!p.model)return status("Model dan endpoint wajib diisi.",true);
  const b=$("test-provider");b.disabled=true;b.textContent="Menguji…";
  try{
+  const previous=data.providers[id];
   data.providers[id]=p;
-  const answer=await callModel(id,"Balas singkat hanya dengan: koneksi berhasil.","penguji koneksi");
-  save();render();status("Koneksi "+P[id].label+" berhasil. "+answer.slice(0,100));
- }catch(err){delete data.providers[id];status("Uji gagal: "+(err?.message||"jaringan/provider bermasalah")+". Periksa key, model, kuota, dan koneksi.",true)}
+  try{
+   const answer=await callModel(id,"Balas singkat hanya dengan: koneksi berhasil.","penguji koneksi");
+   save();render();status("Koneksi "+P[id].label+" berhasil. "+answer.slice(0,100));
+  }catch(err){
+   if(previous)data.providers[id]=previous;else delete data.providers[id];
+   status("Uji gagal: "+(err?.message||"jaringan/provider bermasalah")+". Periksa key, model, kuota, dan koneksi.",true);
+  }
  finally{b.disabled=false;b.textContent="Uji koneksi"}
 };
 
