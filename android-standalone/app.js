@@ -334,13 +334,13 @@ $("ai-mode").addEventListener("change",updateAiModeStatus);
 function localLlmPlugin(){return window.Capacitor?.Plugins?.MazkiplayLocalLLM||null;}
 async function refreshLocalLlmStatus(){
  const plugin=localLlmPlugin(),label=$("local-llm-status"),download=$("local-llm-download"),prepare=$("local-llm-prepare");
- if(!plugin){label.textContent="AI generatif native tersedia di APK Android. Di preview browser, Asisten Lite tetap dapat dipakai.";download.disabled=true;prepare.disabled=true;return;}
+ if(!plugin){label.textContent="AI generatif native tersedia di APK Android. Di preview browser, Asisten Lite tetap dapat dipakai."; $("free-chat-mode-note").textContent="Preview browser: jawaban memakai aturan lokal sederhana, bukan LLM generatif.";download.disabled=true;prepare.disabled=true;return;}
  try{
   const state=await plugin.getStatus();
   download.disabled=false;prepare.disabled=!state.downloaded;
-  if(state.ready)label.textContent="AI generatif siap · Qwen3 0.6B INT4 · berjalan lokal/offline.";
-  else if(state.downloaded)label.textContent="Model sudah tersimpan ("+(state.sizeBytes/1048576).toFixed(0)+" MiB). Tekan Aktifkan model atau langsung ajukan pertanyaan.";
-  else label.textContent="Model belum diunduh. Butuh ruang kosong sekitar 400 MB untuk model, plus memori kerja saat inferensi.";
+  if(state.ready){label.textContent="AI generatif siap · Qwen3 0.6B INT4 · berjalan lokal/offline.";$("free-chat-mode-note").textContent="Qwen3 0.6B INT4 aktif. Chat diproses di perangkat dan bisa digunakan offline.";}
+  else if(state.downloaded){label.textContent="Model sudah tersimpan ("+(state.sizeBytes/1048576).toFixed(0)+" MiB). Tekan Aktifkan model atau langsung ajukan pertanyaan.";$("free-chat-mode-note").textContent="Model sudah diunduh. Pertanyaan akan diproses oleh Qwen3 lokal saat chat dimulai.";}
+  else{label.textContent="Model belum diunduh. Butuh ruang kosong sekitar 400 MB untuk model, plus memori kerja saat inferensi.";$("free-chat-mode-note").textContent="Unduh model Qwen3 terlebih dahulu untuk mengaktifkan LLM generatif offline.";}
  }catch(error){label.textContent="Gagal memeriksa model: "+(error?.message||"kesalahan native");}
 }
 const localLlmBridge=localLlmPlugin();
