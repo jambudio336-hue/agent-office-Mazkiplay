@@ -201,3 +201,159 @@ async function initPatchLab() {
   }
 }
 initPatchLab();
+
+let multiLoaded = [];
+function multiStatus(message, bad = false) {
+  const el = $("multi-pr-status");
+  if (el) {
+    el.textContent = message;
+    el.style.color = bad ? "#ff7e8a" : "#64e0a4";
+  }
+}
+function safeRepoPath(path) {
+  const value = String(path || "").trim();
+  return !!value && !value.startsWith("/") && !value.includes("\\") &&
+    value.split("/").every(part => part && part !== "." && part !== "..") &&
+    !value.includes("\u0000");
+}
+function renderMultiEditors() {
+  const host = $("multi-pr-editors");
+  host.replaceChildren();
+  multiLoaded.forEach((file, index) => {
+    const section = document.createElement("section");
+    section.className = "multi-file-editor";
+    const label = document.createElement("label");
+    label.textContent = file.path + " — isi file lengkap";
+    const area = document.createElement("textarea");
+    area.rows = 10;
+    area.spellcheck = false;
+    area.className = "code-editor";
+    area.value = file.currentContent;
+    area.setAttribute("aria-label", "Isi file " + file.path);
+    area.addEventListener("input", () => { file.currentContent = area.value; });
+    label.appendChild(area);
+    section.appendChild(label);
+    host.appendChild(section);
+  });
+}
+$("multi-pr-load").addEventListener("click", async () => {
+  const button = $("multi-pr-load");
+  const repo = $("github-pr-repo").value.trim();
+  const base = $("github-pr-base").value.trim();
+  const paths = [...new Set($("multi-pr-paths").value.split(/\r?\n/).map(x => x.trim()).filter(Boolean))];
+  if (!validRepo(repo)) return multiStatus("Format repository harus owner/nama-repo.", true);
+  if (!base) return multiStatus("Branch dasar wajib diisi.", true);
+  if (paths.length < 1 || paths.length > 5) return multiStatus("Masukkan 1 sampai 5 path file unik.", true);
+  if (!paths.every(safeRepoPath)) return multiStatus("Path tidak valid. Hindari path absolut, backslash, titik relatif, atau segmen ..", true);
+  button.disabled = true;
+  button.textContent = "Memuat file…";
+  try {
+    const files = [];
+    let total = 0;
+    for (const path of paths) {
+      const file = await requestGitHub(apiPath(repo, "/contents/" + filePath(path) + "?ref=" + encodeURIComponent(base)));
+      if (Array.isArray(file) || file.type !== "file") throw Error(path + " bukan file tunggal.");
+      if (file.size > 1000000 || file.encoding !== "base64") throw Error(path + " terlalu besar atau encoding tidak didukung.");
+      const content = decodeContent(file.content);
+      total += content.length;
+      if (total > 18000) throw Error("Total isi file lebih dari 18.000 karakter.");
+      files.push({ path: file.path, sha: file.sha, originalContent: content, currentContent: content });
+    }
+    multiLoaded = files;
+    renderMultiEditors();
+    multiStatus(files.length + " file dimuat. Isi sumber siap diperiksa atau diminta revisi AI.");
+  } catch (error) {
+    multiStatus(error?.message || "Gagal memuat file.", true);
+  } finally {
+    button.disabled = false;
+    button.textContent = "Muat semua file";
+  }
+});
+$("multi-pr-generate").addEventListener("click", async () => {
+  const button = $("multi-pr-generate");
+  const instruction = $("multi-pr-instruction").value.trim();
+  if (!multiLoaded.length) return multiStatus("Muat file terlebih dahulu.", true);
+  if (!instruction) return multiStatus("Tuliskan instruksi perubahan lintas file.", true);
+  if (typeof window.mazkiplayGenerateMultiPatch !== "function") return multiStatus("Modul AI multi-file belum siap.", true);
+  button.disabled = true;
+  button.textContent = "AI sedang menyusun patch…";
+  $("multi-pr-summary").textContent = "AI sedang menganalisis file dan menyiapkan usulan. Periksa kuota provider.";
+  try {
+    const proposal = await window.mazkiplayGenerateMultiPatch({
+      instruction,
+      files: multiLoaded.map(file => ({ path: file.path, content: file.currentContent }))
+    });
+    const loadedByPath = new Map(multiLoaded.map(file => [file.path, file]));
+    proposal.files.forEach(file => { loadedByPath.get(file.path).currentContent = file.updatedContent; });
+    renderMultiEditors();
+    $("multi-pr-summary").textContent = [
+      "RINGKASAN\n" + proposal.summary,
+      "LANGKAH UJI YANG DISARANKAN\n" + (proposal.tests.length ? proposal.tests.map((x, i) => (i + 1) + ". " + x).join("\n") : "Tidak dicantumkan."),
+      "RISIKO / ASUMSI\n" + (proposal.risks.length ? proposal.risks.map((x, i) => (i + 1) + ". " + x).join("\n") : "Tidak dicantumkan."),
+      "Editor telah diperbarui. Belum ada perubahan yang dikirim ke GitHub."
+    ].join("\n\n");
+    multiStatus("Usulan AI siap ditinjau untuk " + proposal.files.length + " file. Belum ada commit atau PR.");
+  } catch (error) {
+    $("multi-pr-summary").textContent = "";
+    multiStatus("AI gagal membuat usulan: " + (error?.message || "kesalahan provider"), true);
+  } finally {
+    button.disabled = false;
+    button.textContent = "✦ Buat usulan multi-file dengan AI";
+  }
+});
+$("multi-pr-create").addEventListener("click", async () => {
+  const button = $("multi-pr-create");
+  const repo = $("github-pr-repo").value.trim();
+  const base = $("github-pr-base").value.trim();
+  const branch = $("multi-pr-branch").value.trim();
+  const title = $("multi-pr-title").value.trim();
+  const message = $("multi-pr-commit").value.trim();
+  const body = $("multi-pr-body").value.trim();
+  if (!validRepo(repo)) return multiStatus("Format repository harus owner/nama-repo.", true);
+  if (!base || !branch || branch === base) return multiStatus("Branch patch wajib berbeda dari branch dasar.", true);
+  if (!/^[A-Za-z0-9._/-]+$/.test(branch) || branch.startsWith("/") || branch.endsWith("/") || branch.includes("..")) return multiStatus("Nama branch tidak valid.", true);
+  if (!title || !message) return multiStatus("Judul PR dan pesan commit wajib diisi.", true);
+  if (!multiLoaded.length) return multiStatus("Muat file terlebih dahulu.", true);
+  if (multiLoaded.some(file => !safeRepoPath(file.path) || !file.currentContent.trim())) return multiStatus("Ada path atau isi file yang tidak valid.", true);
+  if (!confirm("Kirim " + multiLoaded.length + " file sebagai commit pada branch baru lalu buka Draft PR? Tidak ada merge otomatis.")) return;
+  button.disabled = true;
+  button.textContent = "Mengirim patch…";
+  let branchCreated = false;
+  let committed = 0;
+  try {
+    const ref = await requestGitHub(apiPath(repo, "/git/ref/heads/" + base.split("/").map(encodeURIComponent).join("/")));
+    await requestGitHub(apiPath(repo, "/git/refs"), "POST", { ref: "refs/heads/" + branch, sha: ref.object.sha });
+    branchCreated = true;
+    for (const file of multiLoaded) {
+      await requestGitHub(apiPath(repo, "/contents/" + filePath(file.path)), "PUT", {
+        message: message + " (" + file.path + ")",
+        content: encodeContent(file.currentContent),
+        sha: file.sha,
+        branch
+      });
+      committed++;
+    }
+    const pr = await requestGitHub(apiPath(repo, "/pulls"), "POST", {
+      title,
+      body: body + "\n\nUsulan multi-file dari Mazkiplay Agent Office. Harap tinjau setiap perubahan dan jalankan pengujian sebelum merge.",
+      head: branch,
+      base,
+      draft: true
+    });
+    multiStatus("Draft PR #" + pr.number + " berhasil dibuat: " + pr.html_url + ". " + committed + " file di-commit; branch dasar belum di-merge.");
+    const link = document.createElement("a");
+    link.href = pr.html_url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = "Buka Draft Pull Request #" + pr.number;
+    const host = $("multi-pr-status");
+    host.appendChild(document.createTextNode(" "));
+    host.appendChild(link);
+  } catch (error) {
+    const prefix = branchCreated ? "Branch dibuat; " + committed + " dari " + multiLoaded.length + " file berhasil di-commit. " : "";
+    multiStatus(prefix + (error?.message || "Gagal membuat Draft PR.") + " Periksa branch di GitHub sebelum mencoba ulang.", true);
+  } finally {
+    button.disabled = false;
+    button.textContent = "Buat branch + commit file + Draft PR";
+  }
+});
