@@ -39,7 +39,7 @@ class MazkiplayLocalLLMPlugin : Plugin() {
     @Volatile private var engine: Engine? = null
     @Volatile private var conversation: Conversation? = null
 
-    private fun modelFile(ctx: Context = context): File = File(ctx.filesDir, MODEL_FILE)
+    private fun modelFile(ctx: Context = getContext()): File = File(ctx.filesDir, MODEL_FILE)
 
     @PluginMethod
     fun getStatus(call: PluginCall) {
@@ -217,7 +217,7 @@ class MazkiplayLocalLLMPlugin : Plugin() {
             EngineConfig(
                 modelPath = file.absolutePath,
                 backend = Backend.CPU(),
-                cacheDir = context.cacheDir.absolutePath
+                cacheDir = getContext().cacheDir.absolutePath
             )
         )
         try {
