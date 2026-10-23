@@ -200,7 +200,9 @@ class MazkiplayLocalLLMPlugin : Plugin() {
                         samplerConfig = SamplerConfig(temperature = 0.7, topK = 32, topP = 0.9)
                     )
                 )
-                call.resolve(JSObject().put("ready", true))
+                val result = JSObject()
+                result.put("ready", true)
+                call.resolve(result)
             } catch (error: Exception) {
                 call.reject(error.message ?: "Gagal memulai percakapan baru.")
             }
