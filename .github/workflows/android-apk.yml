@@ -52,7 +52,7 @@ jobs:
           const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
           const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
           if (duplicates.length) throw new Error('ID HTML duplikat: ' + [...new Set(duplicates)].join(', '));
-          for (const id of ['multi-pr-paths', 'multi-pr-load', 'multi-pr-instruction', 'multi-pr-generate', 'multi-pr-editors', 'multi-pr-branch', 'multi-pr-create', 'model-id', 'model-options', 'discover-models', 'free-models-only']) {
+          for (const id of ['multi-pr-paths', 'multi-pr-load', 'multi-pr-instruction', 'multi-pr-generate', 'multi-pr-editors', 'multi-pr-branch', 'multi-pr-create', 'model-id', 'model-options', 'discover-models', 'free-models-only', 'ai-mode', 'ai-mode-status', 'free-chat-form', 'free-chat-input', 'free-chat-output']) {
             if (!html.includes('id="' + id + '"')) throw new Error('Kontrol UI hilang: ' + id);
           }
           for (const ref of ['./github-pr.js', './github-pr.css']) {
@@ -63,6 +63,7 @@ jobs:
           }
           if (!css.includes('.multi-file-editor')) throw new Error('CSS editor multi-file hilang.');
           if (!app.includes('function discoverModels()') || !app.includes('openrouter/free') || !app.includes('models?')) throw new Error('Penemuan model AI belum lengkap.');
+          if (!app.includes('function localLiteAnswer(') || !app.includes('data.aiMode===\"local\"') || !html.includes('Gratis Lokal — tanpa API key')) throw new Error('Mode lokal gratis belum tersambung.');
           console.log('Validasi APK mandiri lulus: sintaks, ID HTML, modul, dan UI multi-file.');
           NODE
 
