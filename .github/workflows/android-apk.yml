@@ -3,12 +3,8 @@ name: Android APK
 on:
   workflow_dispatch:
     inputs:
-      office_server_url:
-        description: "URL HTTPS kantor Agent Office yang sudah di-deploy (contoh: https://office.domainkamu.id)"
-        required: true
-        type: string
       publish_release:
-        description: "Publikasikan APK sebagai GitHub Release publik"
+        description: "Publikasikan APK mandiri sebagai GitHub Release publik"
         required: true
         default: false
         type: boolean
@@ -29,32 +25,25 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Validasi alamat server
-        env:
-          OFFICE_URL: ${{ inputs.office_server_url }}
-        run: |
-          node --input-type=module -e 'const u=new URL(process.env.OFFICE_URL); if(u.protocol!=="https:") { console.error("URL kantor wajib HTTPS"); process.exit(1); } if(u.username||u.password) { console.error("Jangan masukkan kredensial ke URL"); process.exit(1); }'
-
-      - name: Instal dependensi dan build kantor web
+      - name: Periksa proyek utama
         run: |
           npm ci
           npm run typecheck
           npm test
           npm run build
-          npm install --no-save @capacitor/core @capacitor/cli @capacitor/android
 
-      - name: Buat konfigurasi aplikasi Android
-        env:
-          OFFICE_URL: ${{ inputs.office_server_url }}
+      - name: Siapkan Capacitor untuk aplikasi lokal
+        run: |
+          npm install --no-save @capacitor/core@^7 @capacitor/cli@^7 @capacitor/android@^7
+
+      - name: Buat konfigurasi Android tanpa server hosting
         run: |
           node --input-type=module <<'NODE'
           import { writeFileSync } from 'node:fs';
-          const url = new URL(process.env.OFFICE_URL);
           writeFileSync('capacitor.config.json', JSON.stringify({
             appId: 'id.mazkiplay.agentoffice',
             appName: 'Mazkiplay Agent Office',
-            webDir: 'dist/public',
-            server: { url: url.toString().replace(/\/$/, ''), cleartext: false, androidScheme: 'https' },
+            webDir: 'android-standalone',
             android: { allowMixedContent: false }
           }, null, 2) + '\n');
           NODE
@@ -67,7 +56,7 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Build APK debug yang sudah ditandatangani otomatis
+      - name: Build APK debug
         run: |
           cd android
           chmod +x gradlew
@@ -79,7 +68,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Mazkiplay-Agent-Office-Android-APK
-          path: apk-output/Mazkiplay-Agent-Office-unsigned.apk
+          path: apk-output/Mazkiplay-Agent-Office.apk
           if-no-files-found: error
           retention-days: 30
 
@@ -87,10 +76,9 @@ jobs:
         if: inputs.publish_release
         env:
           GH_TOKEN: ${{ github.token }}
-          OFFICE_URL: ${{ inputs.office_server_url }}
         run: |
-          tag="android-office-${GITHUB_RUN_NUMBER}"
-          gh release create "$tag" apk-output/Mazkiplay-Agent-Office-unsigned.apk \
+          tag="android-standalone-${GITHUB_RUN_NUMBER}"
+          gh release create "$tag" apk-output/Mazkiplay-Agent-Office.apk \
             --title "Mazkiplay Agent Office Android ${GITHUB_RUN_NUMBER}" \
-            --notes "APK Android wrapper untuk kantor Agent Office yang berjalan di: ${OFFICE_URL}. Aplikasi memerlukan server HTTPS tersebut agar fitur kantor dan agen bekerja." \
+            --notes "APK Android mandiri versi prototipe. UI kantor, profil pekerja dan task board berjalan lokal; integrasi provider AI memerlukan internet/API key. Terminal coding agent, eksekusi AI otonom dan integrasi panggilan/SMS belum tersedia di versi ini." \
             --latest
