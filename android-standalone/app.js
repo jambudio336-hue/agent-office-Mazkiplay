@@ -74,7 +74,106 @@ $("tasks").onclick=async e=>{
  const del=e.target.closest("[data-delete]");if(del){data.tasks=data.tasks.filter(x=>x.id!==del.dataset.delete);save();render();return}
  const run=e.target.closest("[data-run]");if(run){await runTask(run.dataset.run)}
 };
-function loadProvider(){const id=$("provider").value,p=P[id],s=data.providers[id]||{};$("api-key").value=s.key||"";$("model-id").value=s.model||p.model;$("endpoint").value=s.url||p.url;$("endpoint").readOnly=id!=="custom";$("endpoint-label").style.display=id==="custom"?"grid":"none"}
+
+const modelCatalogs = Object.create(null);
+function modelDiscoveryStatus(message, bad = false) {
+ const el = $("model-discovery-status");
+ if (el) { el.textContent = message; el.style.color = bad ? "#ff7e8a" : "#64e0a4"; }
+}
+function currentModelList() {
+ const id = $("provider").value;
+ const all = modelCatalogs[id] || [];
+ if (!$("free-models-only").checked) return all;
+ if (id !== "openrouter") {
+  modelDiscoveryStatus("Provider ini tidak memberikan label harga gratis yang dapat diverifikasi lewat daftar model. Gunakan OpenRouter untuk filter gratis otomatis.", true);
+  return all;
+ }
+ return all.filter(model => model.id === "openrouter/free" || model.id.endsWith(":free") || model.free === true);
+}
+function renderModelOptions() {
+ const list = $("model-options");
+ if (!list) return;
+ const models = currentModelList();
+ list.replaceChildren();
+ models.forEach(model => {
+  const option = document.createElement("option");
+  option.value = model.id;
+  option.label = model.name && model.name !== model.id ? model.name + (model.free ? " — GRATIS" : "") : model.id + (model.free ? " — GRATIS" : "");
+  list.appendChild(option);
+ });
+ const providerId = $("provider").value;
+ if (providerId === "openrouter" && $("free-models-only").checked && !models.some(m => m.id === "openrouter/free")) {
+  const option = document.createElement("option");
+  option.value = "openrouter/free";
+  option.label = "OpenRouter Free Router — pilih model gratis otomatis";
+  list.appendChild(option);
+ }
+}
+async function discoverModels() {
+ const id = $("provider").value;
+ const p = P[id];
+ const key = $("api-key").value.trim() || data.providers[id]?.key || "";
+ if (!key) throw Error("Masukkan API key provider terlebih dahulu.");
+ let url = "", headers = { "Accept": "application/json" };
+ if (id === "openrouter") {
+  url = "https://openrouter.ai/api/v1/models?output_modalities=text";
+  headers.Authorization = "Bearer " + key;
+ } else if (id === "openai") {
+  url = "https://api.openai.com/v1/models";
+  headers.Authorization = "Bearer " + key;
+ } else if (id === "deepseek") {
+  url = "https://api.deepseek.com/models";
+  headers.Authorization = "Bearer " + key;
+ } else if (id === "gemini") {
+  url = "https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000";
+  headers["x-goog-api-key"] = key;
+ } else if (id === "anthropic") {
+  url = "https://api.anthropic.com/v1/models?limit=1000";
+  headers["x-api-key"] = key;
+  headers["anthropic-version"] = "2023-06-01";
+  headers["anthropic-dangerous-direct-browser-access"] = "true";
+ } else {
+  let base = $("endpoint").value.trim().replace(/\/+$/, "");
+  if (!base) throw Error("Isi endpoint kompatibel OpenAI terlebih dahulu.");
+  base = base.replace(/\/chat\/completions$/i, "").replace(/\/completions$/i, "");
+  url = base + (base.endsWith("/v1") ? "/models" : "/v1/models");
+  headers.Authorization = "Bearer " + key;
+ }
+ const result = await request(url, { method: "GET", headers });
+ if (!result.ok) throw Error("HTTP " + result.status + ": " + (result.data?.error?.message || result.data?.message || "provider tidak mengizinkan daftar model atau API key tidak valid"));
+ let raw = [];
+ if (id === "gemini") raw = (result.data?.models || []).filter(m => (m.supportedGenerationMethods || []).includes("generateContent")).map(m => ({ id: String(m.name || "").replace(/^models\//, ""), name: m.displayName || m.name, free: false }));
+ else if (id === "anthropic") raw = (result.data?.data || []).map(m => ({ id: m.id, name: m.display_name || m.id, free: false }));
+ else raw = (result.data?.data || result.data?.models || []).map(m => {
+  const price = m.pricing || {};
+  const free = String(price.prompt ?? "") === "0" && String(price.completion ?? "") === "0" || String(m.id || "").endsWith(":free") || m.id === "openrouter/free";
+  return { id: String(m.id || m.name || ""), name: String(m.name || m.id || m.display_name || ""), free };
+ }).filter(m => m.id);
+ if (!raw.length) throw Error("Provider tidak mengembalikan model teks yang dapat dipilih.");
+ if (id === "openrouter" && !raw.some(m => m.id === "openrouter/free")) raw.unshift({ id: "openrouter/free", name: "OpenRouter Free Router (pilih model gratis otomatis)", free: true });
+ modelCatalogs[id] = raw.sort((a, b) => a.name.localeCompare(b.name));
+ renderModelOptions();
+ const shown = currentModelList().length;
+ modelDiscoveryStatus("Ditemukan " + raw.length + " model dari " + p.label + ". " + shown + " model tampil sesuai filter. Pilih saran atau isi Model ID secara manual.");
+}
+$("discover-models").addEventListener("click", async () => {
+ const button = $("discover-models");
+ button.disabled = true;
+ button.textContent = "Mencari model…";
+ try { await discoverModels(); }
+ catch (error) { modelDiscoveryStatus("Gagal mengambil daftar model: " + (error?.message || "kesalahan jaringan"), true); }
+ finally { button.disabled = false; button.textContent = "Cari model tersedia"; }
+});
+$("free-models-only").addEventListener("change", () => {
+ renderModelOptions();
+ const id = $("provider").value;
+ if (id !== "openrouter" && $("free-models-only").checked) {
+  modelDiscoveryStatus("Filter gratis yang terverifikasi tersedia untuk OpenRouter. Provider lain tidak selalu mengirim metadata harga.");
+ } else {
+  modelDiscoveryStatus("Filter diperbarui. Daftar harga dan ketersediaan dapat berubah.");
+ }
+});
+function loadProvider(){const id=$("provider").value,p=P[id],s=data.providers[id]||{};$("api-key").value=s.key||"";$("model-id").value=s.model||p.model;$("endpoint").value=s.url||p.url;$("endpoint").readOnly=id!=="custom";$("endpoint-label").style.display=id==="custom"?"grid":"none";renderModelOptions();modelDiscoveryStatus("Provider dipilih: "+p.label+". Tekan Cari model tersedia untuk mengambil daftar terbaru.")}
 $("provider").onchange=loadProvider;
 $("provider-form").onsubmit=async e=>{
  e.preventDefault();const id=$("provider").value,p={key:$("api-key").value.trim(),model:$("model-id").value.trim(),url:$("endpoint").value.trim(),format:P[id].format};
