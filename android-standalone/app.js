@@ -316,7 +316,7 @@ function updateAiModeStatus(){
  const mode=$("ai-mode")?.value||data.aiMode||"local";data.aiMode=mode;save();
  const el=$("ai-mode-status");
  if(el)el.textContent=mode==="local"?"Mode Gratis Lokal aktif. Tidak perlu API key atau internet; AI Lite menggunakan aturan lokal dan bukan LLM generatif.":(Object.values(data.providers).some(p=>p&&p.model&&(p.key||p.url))?"Mode API aktif. Tugas dan Patch Lab akan menggunakan provider yang dipilih; kuota/biaya mengikuti provider.":"Mode API aktif, tetapi belum ada provider siap. Simpan API key, model, dan endpoint di bawah.");
- const note=$("free-chat-mode-note");if(note)note.textContent=mode==="local"?"Asisten Lokal Lite · tanpa API key · tidak mengirim prompt ke cloud":"Mode API dipilih. Chat di bawah tetap menggunakan Lite lokal; Task Board dan Patch Lab memakai provider API.";
+ const note=$("free-chat-mode-note");if(note)note.textContent=mode==="local"?"Asisten Lokal Lite · tanpa API key · tidak mengirim prompt ke cloud":"Chat, Task Board, dan Patch Lab menggunakan provider API yang dipilih; penggunaan dapat memakai kuota atau biaya provider.";
 }
 async function runTask(id){
  const t=data.tasks.find(x=>x.id===id);if(!t||t.running)return;
