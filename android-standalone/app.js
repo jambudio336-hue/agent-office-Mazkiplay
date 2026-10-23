@@ -330,12 +330,21 @@ async function runTask(id){
 }
 $("ai-mode").value=data.aiMode;
 $("ai-mode").addEventListener("change",updateAiModeStatus);
-$("free-chat-form").addEventListener("submit",e=>{
+$("free-chat-form").addEventListener("submit",async e=>{
  e.preventDefault();const prompt=$("free-chat-input").value.trim();if(!prompt)return;
- const output=$("free-chat-output");output.textContent="Menyusun jawaban lokal…";$("free-chat-submit").disabled=true;
- try{output.textContent=localLiteAnswer(prompt,$("free-chat-role").value);$("free-chat-input").value="";}
- catch(err){output.textContent="Asisten lokal gagal: "+(err?.message||"kesalahan tidak diketahui");}
- finally{$("free-chat-submit").disabled=false;}
+ const output=$("free-chat-output"),button=$("free-chat-submit");
+ output.textContent=data.aiMode==="local"?"Menyusun jawaban lokal…":"Menghubungi provider AI…";button.disabled=true;
+ try{
+  if(data.aiMode==="local"){
+   output.textContent=localLiteAnswer(prompt,$("free-chat-role").value);
+  }else{
+   const providerId=$("provider").value;
+   const answer=await callModel(providerId,prompt,$("free-chat-role").value,1200);
+   output.textContent=answer;
+  }
+  $("free-chat-input").value="";
+ }catch(err){output.textContent="Gagal menjawab: "+(err?.message||"kesalahan tidak diketahui");}
+ finally{button.disabled=false;}
 });
 $("test-provider").onclick=async()=>{
  const id=$("provider").value,p={key:$("api-key").value.trim(),model:$("model-id").value.trim(),url:$("endpoint").value.trim(),format:P[$("provider").value].format};
