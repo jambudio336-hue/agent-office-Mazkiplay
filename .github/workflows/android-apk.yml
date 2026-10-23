@@ -38,6 +38,33 @@ jobs:
           npm test
           npm run build
 
+      - name: Validasi modul APK mandiri
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          import vm from 'node:vm';
+          const app = readFileSync('android-standalone/app.js', 'utf8');
+          const patch = readFileSync('android-standalone/github-pr.js', 'utf8');
+          const html = readFileSync('android-standalone/index.html', 'utf8');
+          const css = readFileSync('android-standalone/github-pr.css', 'utf8');
+          new vm.Script(app, { filename: 'android-standalone/app.js' });
+          new vm.Script(patch, { filename: 'android-standalone/github-pr.js' });
+          const ids = [...html.matchAll(/\\bid="([^"]+)"/g)].map(match => match[1]);
+          const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
+          if (duplicates.length) throw new Error('ID HTML duplikat: ' + [...new Set(duplicates)].join(', '));
+          for (const id of ['multi-pr-paths', 'multi-pr-load', 'multi-pr-instruction', 'multi-pr-generate', 'multi-pr-editors', 'multi-pr-branch', 'multi-pr-create']) {
+            if (!html.includes('id="' + id + '"')) throw new Error('Kontrol UI hilang: ' + id);
+          }
+          for (const ref of ['./github-pr.js', './github-pr.css']) {
+            if (!html.includes(ref)) throw new Error('Referensi modul hilang: ' + ref);
+          }
+          if (!patch.includes('window.mazkiplayGenerateMultiPatch') || !app.includes('window.mazkiplayGenerateMultiPatch')) {
+            throw new Error('Integrasi AI multi-file belum tersambung.');
+          }
+          if (!css.includes('.multi-file-editor')) throw new Error('CSS editor multi-file hilang.');
+          console.log('Validasi APK mandiri lulus: sintaks, ID HTML, modul, dan UI multi-file.');
+          NODE
+
       - name: Siapkan Capacitor untuk aplikasi lokal
         run: |
           npm install --no-save @capacitor/core@^7 @capacitor/cli@^7 @capacitor/android@^7
