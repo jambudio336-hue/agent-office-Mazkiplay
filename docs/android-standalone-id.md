@@ -26,3 +26,6 @@ Folder `android-standalone` adalah antarmuka lokal yang dibundel ke APK. Aplikas
 
 ## Build
 Workflow Android APK membundel isi folder ini tanpa URL hosting, menyalin plugin Android Keystore native, lalu membangun APK debug. Setelah workflow sukses, APK tersedia sebagai artifact GitHub Actions.
+
+
+Penemuan model AI: tombol "Cari model tersedia" mengambil katalog model melalui API provider yang dipilih (OpenRouter, OpenAI, Gemini, DeepSeek, Anthropic, atau endpoint OpenAI-compatible). Model yang terdeteksi muncul sebagai saran pada kolom Model ID, namun ID tetap dapat diisi manual. Filter "Hanya model gratis" hanya memberi label gratis secara otomatis untuk katalog OpenRouter berdasarkan metadata harga/ID gratis; untuk provider lain daftar model umumnya tidak menjamin harga atau akses gratis. OpenRouter Free Router `openrouter/free` ditawarkan sebagai pilihan routing ke model gratis yang tersedia, dengan kuota dan ketersediaan yang dapat berubah. Pengguna tetap membutuhkan API key provider masing-masing dan harus meninjau biaya/limit akun.
