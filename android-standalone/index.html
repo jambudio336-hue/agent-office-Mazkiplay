@@ -6,8 +6,8 @@
 <label>GitHub personal access token<input id="github-token" type="password" autocomplete="off" placeholder="github_pat_..." /></label>
 <label>Repository (owner/nama)<input id="github-repo" value="jambudio336-hue/agent-office-Mazkiplay" autocomplete="off" required /></label>
 <label>Branch / ref<input id="github-branch" value="feat/android-office-apk" autocomplete="off" required /></label>
-<label>Path file untuk dibaca<input id="github-path" value="README.md" autocomplete="off" placeholder="contoh: src/app.tsx" /></label>
-<div class="actions"><button type="submit" id="github-connect">Hubungkan & periksa akses</button><button type="button" class="secondary" id="github-read">Baca file</button><button type="button" class="secondary" id="github-disconnect">Putuskan</button></div>
+<label>Path file untuk dibaca<input id="github-path" value="README.md" autocomplete="off" placeholder="contoh: src/app.tsx" /></label><label>Instruksi untuk AI<input id="github-instruction" value="Analisis file ini, temukan masalah, dan usulkan perbaikan konkret." autocomplete="off" /></label>
+<div class="actions"><button type="submit" id="github-connect">Hubungkan & periksa akses</button><button type="button" class="secondary" id="github-read">Baca file</button><button type="button" class="secondary" id="github-to-task">Kirim konteks ke Task Board</button><button type="button" class="secondary" id="github-disconnect">Putuskan</button></div>
 </form>
 <p id="github-status" class="status" aria-live="polite">Belum terhubung ke GitHub.</p>
 <pre id="github-output" class="task-output" aria-live="polite">Hasil pemeriksaan repository dan isi file akan muncul di sini.</pre>
