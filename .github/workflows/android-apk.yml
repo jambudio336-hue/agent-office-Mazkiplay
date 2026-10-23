@@ -1,6 +1,12 @@
 name: Android APK
 
 on:
+  push:
+    branches:
+      - feat/android-office-apk
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       publish_release:
