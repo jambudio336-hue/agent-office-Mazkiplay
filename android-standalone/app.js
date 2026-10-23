@@ -10,6 +10,7 @@ const P={
 const $=id=>document.getElementById(id);
 const parse=s=>{try{return JSON.parse(s)}catch{return null}};
 let data=parse(localStorage.getItem(KEY))||{workers:[],tasks:[],providers:{}};
+let githubToken="";
 if(!Array.isArray(data.workers))data.workers=[];
 if(!Array.isArray(data.tasks))data.tasks=[];
 if(!data.providers||typeof data.providers!=="object")data.providers={};
@@ -24,6 +25,26 @@ function secureStore(){return window.Capacitor?.Plugins?.MazkiplaySecureStorage|
 async function saveProviderSecret(id,key){const store=secureStore();if(!store?.set)return false;await store.set({key:"provider:"+id,value:key});return true}
 async function readProviderSecret(id){const store=secureStore();if(!store?.get)return null;const result=await store.get({key:"provider:"+id});return result?.value==null?null:String(result.value)}
 async function removeProviderSecret(id){const store=secureStore();if(store?.remove)await store.remove({key:"provider:"+id})}
+async function saveGithubSecret(token){const store=secureStore();if(!store?.set)return false;await store.set({key:"github:token",value:token});return true}
+async function readGithubSecret(){const store=secureStore();if(!store?.get)return null;const result=await store.get({key:"github:token"});return result?.value==null?null:String(result.value)}
+async function removeGithubSecret(){const store=secureStore();if(store?.remove)await store.remove({key:"github:token"})}
+function githubStatus(message,bad=false){const el=$("github-status");if(el){el.textContent=message;el.style.color=bad?"#ff7e8a":"#64e0a4"}}
+function validRepo(value){return /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(value.trim())}
+async function githubRequest(path){
+ if(!githubToken)throw Error("Masukkan token GitHub lalu hubungkan terlebih dahulu.");
+ const result=await request("https://api.github.com"+path,{method:"GET",headers:{
+  "Accept":"application/vnd.github+json","Authorization":"Bearer "+githubToken,
+  "X-GitHub-Api-Version":"2022-11-28"
+ }});
+ if(!result.ok)throw Error("GitHub HTTP "+result.status+": "+(result.data?.message||"periksa token, nama repository, dan izin akses."));
+ return result.data;
+}
+function decodeGithubFile(content){
+ const binary=atob(String(content||"").replace(/\s/g,""));
+ const bytes=new Uint8Array(binary.length);
+ for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+ return new TextDecoder("utf-8",{fatal:false}).decode(bytes);
+}
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function optionsForWorkers(selected=""){return '<option value="">Tanpa penugasan</option>'+data.workers.map(w=>'<option value="'+esc(w.id)+'" '+(w.id===selected?"selected":"")+'>'+esc(w.name)+" — "+esc(w.role)+"</option>").join("")}
 function render(){
@@ -164,10 +185,11 @@ $("clear-data").onclick=async()=>{
  if(!confirm("Hapus SEMUA profil pekerja, tugas, konfigurasi provider, dan API key dari penyimpanan lokal aplikasi? Tindakan ini tidak bisa dibatalkan."))return;
  try{
   const store=secureStore();if(store?.clear)await store.clear();else for(const id of Object.keys(data.providers))await removeProviderSecret(id);
-  data={workers:[],tasks:[],providers:{}};localStorage.removeItem(KEY);save();loadProvider();render();backupStatus("Data lokal aplikasi dan rahasia provider dihapus.");status("Data lokal dihapus.");
+  githubToken="";$("github-token").value="";data={workers:[],tasks:[],providers:{}};localStorage.removeItem(KEY);save();loadProvider();render();backupStatus("Data lokal aplikasi dan rahasia provider dihapus.");githubStatus("Token GitHub dan data lokal dihapus.");status("Data lokal dihapus.");
  }catch(err){backupStatus("Gagal menghapus semua data: "+(err?.message||"kesalahan penyimpanan"),true)}
 };
 async function initializeApp(){
+ try{const secret=await readGithubSecret();if(secret!==null){githubToken=secret;$("github-token").value=secret;}}catch(err){githubStatus("Gagal membaca token GitHub dari Android Keystore.",true)}
  const store=secureStore();
  for(const [id,p] of Object.entries(data.providers)){
   if(!P[id])continue;
@@ -183,4 +205,43 @@ async function initializeApp(){
  if(store?.get&&store?.set)status("Penyimpanan rahasia Android Keystore tersedia.");
  else status("Mode browser/preview: API key hanya disimpan di memori sesi, bukan localStorage.",true);
 }
+
+$("github-form").onsubmit=async e=>{
+ e.preventDefault();
+ const token=$("github-token").value.trim(),repo=$("github-repo").value.trim(),branch=$("github-branch").value.trim();
+ if(!token)return githubStatus("Masukkan personal access token GitHub.",true);
+ if(!validRepo(repo))return githubStatus("Format repository harus owner/nama-repo.",true);
+ const button=$("github-connect");button.disabled=true;button.textContent="Memeriksa akses…";
+ const previous=githubToken;githubToken=token;
+ try{
+  const [user,repository]=await Promise.all([githubRequest("/user"),githubRequest("/repos/"+repo)]);
+  let secure=false;try{secure=await saveGithubSecret(token)}catch(err){throw Error("Token valid tetapi gagal disimpan ke Android Keystore: "+(err?.message||"kesalahan"))}
+  githubToken=token;
+  githubStatus("Terhubung sebagai @"+(user.login||"akun GitHub")+" · "+repository.full_name+" · akses repository terverifikasi"+(secure?" · token tersimpan di Android Keystore":" · token hanya tersimpan selama sesi ini"));
+  $("github-output").textContent="Repository: "+repository.full_name+"\nVisibilitas: "+(repository.private?"Private":"Public")+"\nBranch default: "+repository.default_branch+"\nIzin token: pemeriksaan baca berhasil.\n\nLangkah berikutnya: isi path file lalu tekan “Baca file”.";
+ }catch(err){githubToken=previous;githubStatus("Gagal menghubungkan: "+(err?.message||"kesalahan GitHub"),true)}
+ finally{button.disabled=false;button.textContent="Hubungkan & periksa akses"}
+};
+$("github-read").onclick=async()=>{
+ const repo=$("github-repo").value.trim(),branch=$("github-branch").value.trim(),path=$("github-path").value.trim();
+ if(!validRepo(repo))return githubStatus("Format repository harus owner/nama-repo.",true);
+ if(!branch)return githubStatus("Isi branch atau ref.",true);
+ if(!path)return githubStatus("Isi path file yang akan dibaca.",true);
+ const button=$("github-read");button.disabled=true;button.textContent="Membaca…";
+ try{
+  const apiPath="/repos/"+repo+"/contents/"+path.split("/").map(encodeURIComponent).join("/")+"?ref="+encodeURIComponent(branch);
+  const file=await githubRequest(apiPath);
+  if(Array.isArray(file)){$("github-output").textContent="Path ini adalah direktori. Daftar isi:\n"+file.map(x=>(x.type==="dir"?"📁 ":"📄 ")+x.name+(x.type==="file"?" — "+x.path:"")).join("\n");githubStatus("Direktori berhasil dibaca ("+file.length+" item).");return}
+  if(file.type!=="file")throw Error("Path bukan file biasa. Pilih path file, bukan symlink atau submodule.");
+  if(file.size>1000000)throw Error("File lebih besar dari 1 MB; pilih file yang lebih kecil untuk pembacaan awal.");
+  const content=file.encoding==="base64"?decodeGithubFile(file.content):String(file.content||"");
+  $("github-output").textContent="FILE: "+file.path+"\nREPOSITORY: "+repo+" @ "+branch+"\nSIZE: "+file.size+" bytes\n\n"+content;
+  githubStatus("Berhasil membaca "+file.path+". Isi file tampil sebagai konteks yang bisa kamu salin ke tugas AI.");
+ }catch(err){githubStatus("Gagal membaca file: "+(err?.message||"kesalahan GitHub"),true)}
+ finally{button.disabled=false;button.textContent="Baca file"}
+};
+$("github-disconnect").onclick=async()=>{
+ try{await removeGithubSecret();githubToken="";$("github-token").value="";githubStatus("Koneksi diputus dan token dihapus dari Android Keystore jika tersedia.");$("github-output").textContent="Tidak terhubung."}
+ catch(err){githubStatus("Gagal menghapus token: "+(err?.message||"kesalahan"),true)}
+};
 initializeApp();
