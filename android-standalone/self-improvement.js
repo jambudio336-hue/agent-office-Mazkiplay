@@ -8,7 +8,7 @@
   const $ = id => document.getElementById(id);
   const day = () => new Date().toISOString().slice(0, 10);
   const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-  const initial = { events: [], lessons: [], ideas: [], activeDays: [], lastReview: null };
+  const initial = { events: [], lessons: [], ideas: [], activeDays: [], lastReview: null, releaseChecks: {} };
   function read() {
     try {
       const value = JSON.parse(localStorage.getItem(STORE) || "null") || {};
@@ -17,7 +17,8 @@
         lessons: Array.isArray(value.lessons) ? value.lessons.slice(-MAX) : [],
         ideas: Array.isArray(value.ideas) ? value.ideas.slice(-MAX) : [],
         activeDays: Array.isArray(value.activeDays) ? value.activeDays.slice(-365) : [],
-        lastReview: value.lastReview || null
+        lastReview: value.lastReview || null,
+        releaseChecks: value.releaseChecks && typeof value.releaseChecks === "object" ? value.releaseChecks : {}
       };
     } catch { return { ...initial, events: [], lessons: [], ideas: [], activeDays: [] }; }
   }
@@ -69,6 +70,18 @@
     <form id="self-learning-form" class="self-learning-form"><label>Pelajaran / temuan<textarea id="self-learning-note" rows="2" maxlength="1200" placeholder="Contoh: uji alur saat offline dan ketika model belum diunduh." required></textarea></label><button type="submit">Simpan pelajaran</button></form>
     <div id="self-learning-list" class="self-event-list"></div>
     <h3 class="self-subhead">Antrean peningkatan</h3><div id="self-ideas" class="self-ideas"></div>
+    <h3 class="self-subhead">Perencana kerja otomatis</h3>
+    <p class="notice">Menyusun pekerjaan kecil berdasarkan temuan monitor, tugas gagal, dan antrean. Tugas dibuat di Task Board untuk dikerjakan/diperiksa; modul ini tidak menjalankan perubahan kode sendiri.</p>
+    <div class="actions"><button type="button" id="self-plan-work">Susun rencana perbaikan</button><button type="button" class="secondary" id="self-qa-plan">Buat tugas QA</button></div>
+    <div id="self-plan-preview" class="self-findings"></div>
+    <h3 class="self-subhead">Pustaka skill & pengetahuan</h3>
+    <p class="notice">Catatan yang disimpan bisa dicari dan dimasukkan ke konteks tugas berikutnya. Jangan simpan password, API key, atau data pribadi sensitif.</p>
+    <form id="self-skill-search" class="self-learning-form"><label>Cari skill / pelajaran<input id="self-skill-query" maxlength="160" placeholder="Contoh: offline, Android, regresi"></label><button type="submit">Cari</button><button type="button" class="secondary" id="self-skill-use">Masukkan hasil ke tugas</button></form>
+    <div id="self-skill-results" class="self-event-list"></div>
+    <h3 class="self-subhead">Gerbang QA sebelum rilis APK</h3>
+    <p class="notice">Checklist ini membantu disiplin rilis, tetapi centang adalah konfirmasi manual—bukan bukti tes otomatis berhasil.</p>
+    <div id="self-release-checks" class="self-release-checks"></div>
+    <div class="actions"><button type="button" id="self-release-reset" class="secondary">Reset checklist rilis</button></div>
     <details id="self-improvement-summary"><summary>Bagaimana agent berkembang dengan aman?</summary><p>1. Pantau error dan kondisi nyata. 2. Buat hipotesis akar masalah. 3. Siapkan patch di branch terpisah melalui Patch Lab. 4. Jalankan tes regresi dan build. 5. Minta review sebelum merge/rilis. 6. Simpan hasil dan siapkan rollback. AI tidak otomatis melatih ulang dirinya sendiri dari chat; peningkatan kecerdasan datang dari model yang lebih baik, konteks terkurasi, tools, tes, dan upgrade kode yang tervalidasi.</p></details>
   `;
   const insert = () => {
@@ -114,7 +127,57 @@
     $("self-findings").innerHTML = findings.length ? findings.map(f => '<article class="self-finding ' + f.level + '"><b>' + esc(f.title) + '</b><p>' + esc(f.detail) + '</p></article>').join("") : '<div class="empty">Pemeriksaan dasar tidak menemukan masalah yang diketahui. Ini bukan jaminan bebas bug.</div>';
     $("self-event-list").innerHTML = state.events.slice().reverse().slice(0, 12).map(event => '<article><small>' + esc(new Date(event.at).toLocaleString("id-ID")) + ' · ' + esc(event.kind) + ' ×' + (event.count || 1) + '</small><p>' + esc(event.message) + '</p></article>').join("") || '<p class="status">Belum ada error tercatat.</p>';
     $("self-learning-list").innerHTML = state.lessons.slice(0, 6).map(item => '<article><small>' + esc(new Date(item.at).toLocaleString("id-ID")) + '</small><p>' + esc(item.note) + '</p></article>').join("") || '<p class="status">Belum ada pelajaran tersimpan.</p>';
-    $("self-ideas").innerHTML = state.ideas.slice(0, 10).map(item => '<article class="self-finding ' + (item.status === "Selesai" ? "info" : "warning") + '"><b>' + esc(item.title) + ' · ' + esc(item.priority) + '</b><p>' + esc(item.detail) + '</p><div class="actions"><button type="button" class="secondary" data-idea-done="' + esc(item.id) + '">' + (item.status === "Selesai" ? "Buka kembali" : "Tandai selesai") + '</button><button type="button" class="secondary" data-idea-task="' + esc(item.id) + '">Kirim ke Task Board</button></div></article>').join("") || '<div class="empty">Belum ada usulan. Jalankan pemeriksaan atau tinjau error.</div>';
+    renderReleaseChecks();\n    renderSkillResults($("self-skill-query")?.value || "");\n    $("self-ideas").innerHTML = state.ideas.slice(0, 10).map(item => '<article class="self-finding ' + (item.status === "Selesai" ? "info" : "warning") + '"><b>' + esc(item.title) + ' · ' + esc(item.priority) + '</b><p>' + esc(item.detail) + '</p><div class="actions"><button type="button" class="secondary" data-idea-done="' + esc(item.id) + '">' + (item.status === "Selesai" ? "Buka kembali" : "Tandai selesai") + '</button><button type="button" class="secondary" data-idea-task="' + esc(item.id) + '">Kirim ke Task Board</button></div></article>').join("") || '<div class="empty">Belum ada usulan. Jalankan pemeriksaan atau tinjau error.</div>';
+  }
+  const releaseItems = [
+    ["syntax", "Validasi sintaks JavaScript/Kotlin dan konfigurasi build"],
+    ["tests", "Unit test, typecheck, dan regresi lulus di GitHub Actions"],
+    ["flows", "Uji tambah pekerja, buat/jalankan tugas, dan tandai selesai"],
+    ["offline", "Uji tanpa internet, model belum diunduh, dan penyimpanan penuh"],
+    ["security", "Pastikan API key tidak masuk log, ekspor, commit, atau screenshot"],
+    ["android", "Uji install, buka ulang, izin, memori, dan performa pada perangkat target"],
+    ["recovery", "Uji backup/restore serta siapkan cara rollback"],
+    ["release", "Tinjau diff/PR, changelog, checksum, dan APK final"]
+  ];
+  function renderReleaseChecks() {
+    const host = $("self-release-checks");
+    if (!host) return;
+    host.innerHTML = releaseItems.map(([id, label]) => '<label class="self-release-item"><input type="checkbox" data-release-check="' + id + '" ' + (state.releaseChecks[id] ? 'checked' : '') + '><span>' + esc(label) + '</span></label>').join("");
+  }
+  function renderSkillResults(query = "") {
+    const host = $("self-skill-results");
+    if (!host) return;
+    const q = query.trim().toLowerCase();
+    const rows = state.lessons.filter(item => !q || item.note.toLowerCase().includes(q)).slice(0, 12);
+    host.innerHTML = rows.map((item, i) => '<article><label><input type="checkbox" data-skill-pick="' + i + '" checked><small>' + esc(new Date(item.at).toLocaleDateString("id-ID")) + '</small><p>' + esc(item.note) + '</p></label></article>').join("") || '<p class="status">Tidak ada catatan yang cocok. Simpan pelajaran baru di bagian Memori pengalaman.</p>';
+    host.dataset.query = q;
+    host.dataset.items = JSON.stringify(rows.map(item => ({ at: item.at, note: item.note })));
+  }
+  function createTask(text) {
+    const input = $("task-input");
+    if (!input || !$("task-form")) return false;
+    input.value = text;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    $("task-form").requestSubmit();
+    return true;
+  }
+  function makePlan() {
+    const findings = review();
+    const app = (() => { try { return JSON.parse(localStorage.getItem("mazkiplay-agent-office-v1") || "{}"); } catch { return {}; } })();
+    const tasks = Array.isArray(app.tasks) ? app.tasks : [];
+    const failed = tasks.filter(task => task.error);
+    const plan = [];
+    if (findings.some(f => f.level === "error")) plan.push({ title: "P0 — Pulihkan komponen/penyimpanan yang bermasalah", detail: findings.filter(f => f.level === "error").map(f => f.title + ": " + f.detail).join("; ") });
+    if (failed.length) plan.push({ title: "P1 — Reproduksi dan perbaiki tugas gagal", detail: failed.slice(0, 5).map(t => String(t.text || "tugas tanpa judul").slice(0, 100)).join("; ") });
+    if (state.events.some(e => e.kind === "error" || e.kind === "rejection")) plan.push({ title: "P1 — Analisis error runtime terbaru", detail: state.events.slice(-8).map(e => e.kind + ": " + e.message).join("; ").slice(0, 650) });
+    if (tasks.filter(t => !t.done).length > 5) plan.push({ title: "P2 — Prioritaskan antrean tugas", detail: tasks.filter(t => !t.done).length + " tugas belum selesai; kelompokkan, pecah tugas besar, dan urutkan menurut dampak." });
+    if (!plan.length) plan.push({ title: "P2 — Jalankan smoke test dan cari risiko regresi", detail: "Tidak ada masalah dasar yang terdeteksi. Uji alur inti, offline, pemulihan data, keamanan rahasia, dan build APK pada perangkat nyata." });
+    plan.push({ title: "P2 — Review kualitas sebelum rilis", detail: "Jalankan test/typecheck/build, tinjau diff, uji instalasi dan pemulihan, lalu siapkan rollback. Jangan merge atau rilis tanpa persetujuan." });
+    const host = $("self-plan-preview");
+    if (host) host.innerHTML = plan.map((p, i) => '<article class="self-finding ' + (i === 0 && findings.some(f => f.level === "error") ? "error" : "info") + '"><b>' + esc(p.title) + '</b><p>' + esc(p.detail) + '</p><button type="button" data-plan-task="' + i + '">Kirim tugas ini ke Task Board</button></article>').join("");
+    state.generatedPlan = plan;
+    save();
+    status("Rencana dibuat: " + plan.length + " tugas terstruktur. Tinjau sebelum menjalankan agent.");
   }
   function reviewWithoutSaving() {
     const findings = [];
@@ -134,7 +197,40 @@
   panel.addEventListener("click", event => {
     const button = event.target.closest("button");
     if (!button) return;
-    if (button.id === "self-run-check") {
+    if (button.id === "self-plan-work") {
+      makePlan();
+    } else if (button.id === "self-qa-plan") {
+      const qa = [
+        "QA SMOKE TEST — Mazkiplay Agent Office",
+        "1. Install APK bersih dan buka aplikasi; pastikan tidak crash.",
+        "2. Tambah pekerja, buat tugas, jalankan AI, cek hasil/error, tandai selesai.",
+        "3. Uji Mode Gratis Lokal dan jelaskan fallback bila native model tidak tersedia.",
+        "4. Uji unduh model: jaringan putus, ruang kurang, progress, retry, reset percakapan.",
+        "5. Uji backup/export lalu restore; verifikasi API key tidak ikut diekspor.",
+        "6. Uji GitHub token tidak valid, akses ditolak, branch/PR gagal, dan Patch Lab tidak auto-merge.",
+        "7. Uji rotasi layar, tombol utama, teks panjang, Android low-memory, serta buka ulang.",
+        "8. Jalankan syntax, typecheck, unit tests, Gradle build dan tinjau log.",
+        "Kriteria lulus: catat perangkat/versi, langkah reproduksi, hasil aktual, screenshot/log yang sudah disanitasi, dan status tiap tes. Jangan klaim lulus tanpa menjalankannya."
+      ].join("\\n");
+      if (!createTask(qa)) status("Task Board tidak ditemukan.", true);
+      else status("Checklist QA dibuat sebagai tugas. Jalankan langkah satu per satu dan catat hasil nyata.");
+    } else if (button.dataset.planTask !== undefined) {
+      const item = state.generatedPlan?.[Number(button.dataset.planTask)];
+      if (!item) return status("Rencana tidak ditemukan; susun ulang rencana.", true);
+      if (createTask("[Rencana Otomatis] " + item.title + "\\n" + item.detail + "\\nKriteria selesai: reproduksi, akar masalah, patch terisolasi, tes regresi, hasil build, dan rollback.")) status("Tugas rencana dikirim ke Task Board.");
+      else status("Task Board tidak ditemukan.", true);
+    } else if (button.id === "self-skill-use") {
+      const host = $("self-skill-results");
+      let rows = [];
+      try { rows = JSON.parse(host?.dataset.items || "[]"); } catch {}
+      const picked = [...(host?.querySelectorAll("[data-skill-pick]:checked") || [])].map(el => rows[Number(el.dataset.skillPick)]).filter(Boolean);
+      if (!picked.length) return status("Pilih setidaknya satu pelajaran.", true);
+      const context = "KONTEKS DARI PUSTAKA PENGETAHUAN LOKAL — gunakan sebagai petunjuk, verifikasi relevansi, jangan anggap fakta mutlak:\\n" + picked.map(x => "- " + x.note).join("\\n") + "\\nInstruksi: sebutkan asumsi, rencana tes, risiko, dan rollback. Jangan sertakan rahasia.";
+      if (createTask(context)) status("Catatan terpilih ditambahkan sebagai konteks tugas baru.");
+      else status("Task Board tidak ditemukan.", true);
+    } else if (button.id === "self-release-reset") {
+      if (confirm("Reset semua centang checklist rilis?")) { state.releaseChecks = {}; save(); renderReleaseChecks(); status("Checklist rilis direset."); }
+    } else if (button.id === "self-run-check") {
       const findings = review(); render();
       findings.forEach(f => addIdea(f.title, f.detail, f.level === "error" ? "Tinggi" : f.level === "warning" ? "Sedang" : "Rendah"));
       render();
