@@ -1,38 +1,37 @@
-# MazkiplayAgentOffice Android — status eksperimental
+# MazkiplayAgentOffice Android — local-agent preview
 
-Folder `android/` berisi fondasi aplikasi Android native Jetpack Compose dengan application ID `com.mazkiplay.agentoffice`. Ini **belum** merupakan port penuh Agent Office dan tidak boleh dipromosikan sebagai APK fullstack setara desktop.
+`android/` adalah klien Android native Jetpack Compose yang menambahkan agent tool-loop terbatas di perangkat. Ini merupakan **preview eksperimen dan belum setara dengan full desktop Agent Office**.
 
-## Yang sudah berfungsi di source saat ini
+## Yang benar-benar berjalan di APK
 
-- Formulir untuk memasukkan API key milik pengguna dan pilihan provider: OpenRouter, OpenAI, Anthropic Claude, DeepSeek, Google Gemini, Cerebras, serta endpoint OpenAI-compatible khusus.
-- Key provider dienkripsi dengan AES-GCM sebelum disimpan ke preferensi privat aplikasi. Kunci AES dibuat di Android Keystore dan tidak diekspor oleh aplikasi. Preferensi aplikasi dikecualikan dari backup cloud dan transfer perangkat Android.
-- Permintaan katalog model dan chat dikirim langsung dari aplikasi ke endpoint HTTPS provider; tidak ada service/backend Manus atau server Mazkiplay sebagai perantara.
-- Katalog OpenRouter diminta secara langsung. Filter “Gratis saja” hanya menampilkan model yang respons katalog saat itu tandai berharga nol; ketersediaan dan syarat model gratis dapat berubah di sisi provider.
-- UI native beridentitas MazkiplayAgentOffice, layout Android adaptif, dan kontrol error untuk request/provider.
+- API key BYOK dienkripsi secara lokal menggunakan AES-GCM dan key non-exportable dari Android Keystore. Preferensi yang berisi key dikecualikan dari Android backup/device transfer.
+- Katalog model dan chat satu putaran dikirim langsung melalui HTTPS ke provider yang dipilih. Tidak ada backend Mazkiplay/Manus untuk inference.
+- Agent menjalankan loop tool-calling OpenAI-compatible dari perangkat: `workspace_list`, `workspace_read`, `workspace_search`, dan `workspace_write`.
+- Workspace berada di direktori privat aplikasi (`files/agent-workspace`), bukan seluruh penyimpanan HP. Pembacaan/penulisan dibatasi dalam sandbox itu; traversal dan symlink keluar ditolak.
+- Setiap pembuatan/penggantian file membutuhkan konfirmasi eksplisit pengguna dengan preview isi. Penolakan dilaporkan sebagai `SKIPPED`; batas loop adalah 8 giliran model/20 pemanggilan tool. File teks dibatasi 256 KiB.
+- Workspace dapat diekspor sebagai ZIP melalui Android document picker (maksimum 500 file dan 20 MiB). File tidak otomatis dibagikan atau diunggah.
+- OpenRouter, OpenAI, DeepSeek, Cerebras, dan endpoint OpenAI-compatible kustom dapat dicoba untuk tool-calling jika model/endpoint terkait benar-benar mendukung OpenAI Chat Completions `tools`. Provider dapat menolak pemanggilan tools atau mengenakan biaya sesuai model dan akun.
 
-Saat menekan tombol kirim, API key dan prompt dikirim ke layanan provider yang dipilih, sesuai tindakan pengguna. Untuk OpenRouter, permintaan melalui OpenRouter; untuk provider lain, permintaan langsung ke endpoint provider tersebut. Aplikasi tidak mengklaim inference berjalan lokal/offline.
+Saat pengguna menjalankan agent, API key, prompt/tugas, konteks file yang diminta agent, dan hasil tool yang relevan dikirim langsung ke provider untuk menghasilkan langkah berikutnya. Jangan masukkan data sensitif ke workspace atau prompt kecuali pengguna memahami pengiriman tersebut.
 
-## Yang belum dipindahkan
+## Status capability yang belum didukung
 
-Kode desktop yang ada menjalankan worker sebagai proses CLI dan memakai node-pty, git/GitHub CLI, sistem repositori, boards, queue, account sharing, relay/multiplayer, serta kantor 3D. Komponen-komponen tersebut **belum tersedia** di APK ini. Tidak ada local agent/tool loop, shell/worktree Git untuk proyek, worker yang dapat dihire, 3D office, atau mode offline. “OpenCode” adalah runtime CLI, bukan endpoint model API; runtime OpenCode dan integrasi CLI desktop belum dipaketkan untuk Android. Custom OpenAI-compatible hanya bisa digunakan jika layanan tujuan sungguh mendukung protokol itu.
+- **Claude/Anthropic dan Gemini:** chat biasa didukung oleh gateway yang ada; tool-calling agent native belum diimplementasikan dan harus dilaporkan `NOT_SUPPORTED`, bukan disimulasikan.
+- **Desktop CLI workers/OpenCode runtime, shell/terminal, PTY, proses Node, git/worktree/GitHub, boards/queue, akun/kolaborasi, relay, kantor 3D, dan inference offline:** belum dipindahkan ke Android. APK tidak menjalankan perintah shell atau mengakses repo/folder eksternal.
+- Tidak ada impor otomatis proyek dari folder HP pada preview ini. Workspace baru berada di sandbox privat aplikasi; pengguna dapat mengekspor ZIP untuk mengambil berkas.
+- Provider live calls, performa pada perangkat fisik, dan instalasi di emulator belum diuji pada sesi build ini. Tanpa konfigurasi key/provider yang nyata, statusnya **NOT TESTED**.
 
-Oleh karena itu artefak sekarang hanya vertical slice native untuk kredensial, katalog model, dan satu request chat; jangan menganggapnya sebagai release lengkap yang memenuhi seluruh fitur repo desktop.
+“OpenCode” adalah runtime CLI, bukan nama protokol endpoint model. Memasukkan endpoint kompatibel hanya bekerja jika servis tersebut benar-benar mengimplementasikan protokol dan tool calling yang diharapkan.
 
-## Build dan status validasi
+## Build & verifikasi
 
-Memerlukan JDK 17, Android SDK Platform 35 dan Build Tools 35.0.0.
+Membutuhkan JDK 17, Android SDK Platform 35, dan Build Tools 35.0.0.
 
 ```sh
 cd android
-ANDROID_HOME="$HOME/Android/Sdk" ./gradlew assembleDebug
+ANDROID_HOME="$HOME/Android/Sdk" ./gradlew testDebugUnitTest lintDebug assembleDebug
 ```
 
-Status yang benar untuk checkout ini:
+Validasi preview dilakukan dengan unit test workspace nyata (operasi tulis/baca/cari/list, traversal, symlink, dan isi ZIP), Android lint, dan kompilasi APK debug. **NOT TESTED:** UI pada perangkat/emulator dan transaksi provider live. APK debug bukan APK release untuk distribusi publik.
 
-- **BUILD SUCCESSFUL** — `assembleDebug` berhasil dikompilasi.
-- **VERIFIED** — application ID, label aplikasi, min SDK 26, target SDK 35, dan izin INTERNET diverifikasi dari APK.
-- **NOT TESTED** — pemasangan/launch pada perangkat atau emulator; saat build tidak ada perangkat Android/emulator yang terhubung.
-- **SKIPPED** — request langsung ke provider dan pengujian model live karena tidak ada API key pengguna yang diberikan (key tidak boleh dikomit atau diminta di chat).
-- **NOT RELEASED** — belum ada APK release bertanda tangan pemilik aplikasi; jangan gunakan debug APK sebagai distribusi release.
-
-Jangan menyimpan API key pengguna, keystore penandatanganan release, password signing, atau kredensial provider di repo, APK, log, maupun workflow publik. APK release untuk distribusi perlu ditandatangani dengan kunci release yang pemiliknya kendalikan.
+Jangan menyimpan API key provider, password signing, atau keystore release di repo, APK, log, atau CI publik. Release publik harus menggunakan signing key yang pemilik aplikasi kendalikan.

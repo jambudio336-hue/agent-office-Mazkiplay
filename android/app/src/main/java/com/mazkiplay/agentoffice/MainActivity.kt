@@ -2,7 +2,9 @@ package com.mazkiplay.agentoffice
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,6 +29,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -48,6 +51,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -58,7 +62,12 @@ import androidx.compose.ui.unit.sp
 import com.mazkiplay.agentoffice.ai.ModelGateway
 import com.mazkiplay.agentoffice.ai.ModelOption
 import com.mazkiplay.agentoffice.ai.Provider
+import com.mazkiplay.agentoffice.agent.LocalAgent
 import com.mazkiplay.agentoffice.security.KeyVault
+import com.mazkiplay.agentoffice.workspace.LocalWorkspace
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 
 private val Ink = Color(0xFF0A0D14)
@@ -67,6 +76,13 @@ private val PanelRaised = Color(0xFF1B2331)
 private val Gold = Color(0xFFE8BB68)
 private val Muted = Color(0xFF9BA6B7)
 private val Green = Color(0xFF63D8A5)
+
+private data class PendingFileWrite(
+    val path: String,
+    val content: String,
+    val replacing: Boolean,
+    val decision: CompletableDeferred<Boolean>,
+)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -140,7 +156,7 @@ private fun AgentOfficeScreen(vault: KeyVault) {
                     Row(Modifier.padding(horizontal = 11.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(7.dp).background(Green, CircleShape))
                         Spacer(Modifier.width(7.dp))
-                        Text("ON-DEVICE", color = Green, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                        Text("LOCAL WORKSPACE", color = Green, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = .5.sp)
                     }
                 }
             }
@@ -292,8 +308,111 @@ private fun AgentOfficeScreen(vault: KeyVault) {
                 }
             }
 
-            Text("MVP native · inference memakai layanan provider pilihanmu melalui internet. API key dan prompt dikirim ke provider saat kamu menekan tombol.", color = Muted, fontSize = 11.sp, lineHeight = 16.sp, modifier = Modifier.padding(horizontal = 3.dp))
+            LocalAgentPanel(provider, key, keySaved, selectedModel, customBaseUrl)
+
+            Text("Agent memakai workspace privat aplikasi di perangkat. Inferensi dikirim langsung ke provider pilihanmu; tidak ada backend Mazkiplay.", color = Muted, fontSize = 11.sp, lineHeight = 16.sp, modifier = Modifier.padding(horizontal = 3.dp))
             Spacer(Modifier.height(16.dp))
+        }
+    }
+}
+
+@Composable
+private fun LocalAgentPanel(provider: Provider, key: String, keySaved: Boolean, model: String, customBaseUrl: String) {
+    val context = LocalContext.current
+    val workspace = remember(context) { LocalWorkspace(context.applicationContext) }
+    val agent = remember(workspace) { LocalAgent(workspace) }
+    val scope = rememberCoroutineScope()
+    var task by remember { mutableStateOf("") }
+    var running by remember { mutableStateOf(false) }
+    var status by remember { mutableStateOf("") }
+    var result by remember { mutableStateOf("") }
+    var exportStatus by remember { mutableStateOf("") }
+    var files by remember { mutableStateOf(runCatching { workspace.list() }.getOrDefault(emptyList())) }
+    var pending by remember { mutableStateOf<PendingFileWrite?>(null) }
+    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
+        if (uri != null) scope.launch {
+            try {
+                val count = withContext(Dispatchers.IO) {
+                    val output = context.contentResolver.openOutputStream(uri) ?: error("Could not open the selected document.")
+                    workspace.exportZip(output)
+                }
+                exportStatus = "Export berhasil · $count file"
+            } catch (e: Exception) { exportStatus = "INCONCLUSIVE · ${e.message ?: "Export failed."}" }
+        }
+    }
+
+    pending?.let { proposal ->
+        AlertDialog(
+            onDismissRequest = { proposal.decision.complete(false); pending = null },
+            title = { Text(if (proposal.replacing) "Setujui perubahan file?" else "Buat file baru?") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(proposal.path, color = Gold, fontWeight = FontWeight.Bold)
+                    Text(proposal.content.take(1000) + if (proposal.content.length > 1000) "\n… (preview dipotong)" else "", color = Muted, fontSize = 12.sp, lineHeight = 17.sp)
+                    Text("Agent hanya boleh menulis di workspace privat Mazkiplay. Persetujuan berlaku untuk file ini saja.", color = Muted, fontSize = 11.sp)
+                }
+            },
+            confirmButton = { TextButton(onClick = { proposal.decision.complete(true); pending = null }) { Text("Setujui") } },
+            dismissButton = { TextButton(onClick = { proposal.decision.complete(false); pending = null }) { Text("Tolak") } },
+        )
+    }
+
+    SectionHeading("04", "Local project agent")
+    Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(20.dp)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("Agent dapat menjelajah, mencari, membaca, dan mengusulkan perubahan file di workspace proyek privat aplikasi. Tidak ada shell/terminal atau akses otomatis ke folder lain.", color = Muted, fontSize = 13.sp, lineHeight = 19.sp)
+            Text("WORKSPACE PRIVAT · ${files.size} item di root", color = Gold, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = .7.sp)
+            if (files.isNotEmpty()) Text(files.take(12).joinToString("\n"), color = Muted, fontSize = 11.sp, lineHeight = 16.sp)
+            else Text("Workspace masih kosong. Minta agent membuat file awal; setiap write perlu persetujuanmu.", color = Muted, fontSize = 12.sp)
+            TextButton(onClick = { exportLauncher.launch("mazkiplay-workspace.zip") }, enabled = files.isNotEmpty() && !running) {
+                Text("Ekspor workspace ZIP…", color = Gold)
+            }
+            if (exportStatus.isNotBlank()) Text(exportStatus, color = if (exportStatus.startsWith("Export berhasil")) Green else Gold, fontSize = 11.sp)
+            OutlinedTextField(
+                value = task, onValueChange = { task = it },
+                label = { Text("Tugas untuk agent") },
+                placeholder = { Text("Contoh: buat README.md untuk aplikasi catatan sederhana") },
+                modifier = Modifier.fillMaxWidth(), minLines = 2, maxLines = 5, shape = RoundedCornerShape(14.dp),
+            )
+            Button(
+                enabled = keySaved && task.isNotBlank() && model.isNotBlank() && !running,
+                onClick = {
+                    running = true; status = "Memulai agent…"; result = ""
+                    scope.launch {
+                        try {
+                            result = agent.run(
+                                provider = provider, apiKey = key, model = model.trim(), task = task.trim(), customBaseUrl = customBaseUrl,
+                                approveWrite = { path, content, replacing ->
+                                    val decision = CompletableDeferred<Boolean>()
+                                    withContext(Dispatchers.Main) { pending = PendingFileWrite(path, content, replacing, decision) }
+                                    decision.await()
+                                },
+                                onProgress = { message -> withContext(Dispatchers.Main) { status = message } },
+                            )
+                            status = "Selesai"
+                            files = runCatching { workspace.list() }.getOrDefault(files)
+                        } catch (e: Exception) {
+                            result = e.message ?: "Agent gagal."
+                            status = if (result.startsWith("NOT_SUPPORTED")) "NOT_SUPPORTED" else "INCONCLUSIVE"
+                        } finally { running = false }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Gold, contentColor = Ink),
+            ) {
+                if (running) CircularProgressIndicator(Modifier.size(17.dp), strokeWidth = 2.dp, color = Ink)
+                else Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, modifier = Modifier.size(17.dp))
+                Spacer(Modifier.width(8.dp)); Text(if (running) status else "Jalankan agent · ${provider.label}", fontWeight = FontWeight.Bold)
+            }
+            if (result.isNotBlank()) {
+                Surface(color = PanelRaised, shape = RoundedCornerShape(15.dp)) {
+                    Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(status, color = if (status == "Selesai") Green else Gold, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text(result, color = Color(0xFFE9EDF4), fontSize = 13.sp, lineHeight = 19.sp)
+                    }
+                }
+            }
+            Text("Tool calling: provider OpenAI-compatible (OpenRouter, OpenAI, DeepSeek, Cerebras, custom). Claude/Gemini untuk agent: NOT_SUPPORTED; chat biasa tetap tersedia.", color = Muted, fontSize = 10.sp, lineHeight = 15.sp)
         }
     }
 }
