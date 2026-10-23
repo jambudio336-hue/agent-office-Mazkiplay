@@ -367,6 +367,14 @@ $("local-llm-download").addEventListener("click",async()=>{
  }catch(error){$("local-llm-status").textContent="Unduhan gagal: "+(error?.message||"periksa koneksi dan ruang penyimpanan");}
  finally{button.disabled=false;await refreshLocalLlmStatus();}
 });
+$("local-llm-reset").addEventListener("click",async()=>{
+ const plugin=localLlmPlugin();
+ try{
+  if(plugin){const state=await plugin.getStatus();if(state.ready)await plugin.resetConversation();}
+  $("free-chat-output").textContent="Percakapan direset. Tulis pertanyaan baru untuk mulai lagi.";
+  $("local-llm-status").textContent="Percakapan baru siap. Model tetap tersimpan di perangkat.";
+ }catch(error){$("local-llm-status").textContent="Gagal mereset percakapan: "+(error?.message||"kesalahan native");}
+});
 $("local-llm-prepare").addEventListener("click",async()=>{
  const plugin=localLlmPlugin();if(!plugin){$("local-llm-status").textContent="Aktivasi model hanya tersedia di APK Android.";return;}
  const button=$("local-llm-prepare");button.disabled=true;$("local-llm-status").textContent="Memuat model AI generatif. Pertama kali bisa memerlukan waktu beberapa detik…";
