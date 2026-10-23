@@ -46,12 +46,16 @@ jobs:
           import vm from 'node:vm';
           const app = readFileSync('android-standalone/app.js', 'utf8');
           const patch = readFileSync('android-standalone/github-pr.js', 'utf8');
+          const selfImprovement = readFileSync('android-standalone/self-improvement.js', 'utf8');
           const html = readFileSync('android-standalone/index.html', 'utf8');
           const css = readFileSync('android-standalone/github-pr.css', 'utf8');
           const officeCss = readFileSync('android-standalone/styles.css', 'utf8');
           if (!officeCss.includes('Hybrid HQ visual refresh') || !officeCss.includes('worker-idle') || !officeCss.includes('images.unsplash.com')) throw new Error('Visual hybrid HQ atau animasi pekerja hilang.');
           new vm.Script(app, { filename: 'android-standalone/app.js' });
           new vm.Script(patch, { filename: 'android-standalone/github-pr.js' });
+          new vm.Script(selfImprovement, { filename: 'android-standalone/self-improvement.js' });
+          if (!html.includes('./self-improvement.js') || !selfImprovement.includes('SELF-IMPROVEMENT ENGINE') || !selfImprovement.includes('unhandledrejection')) throw new Error('Self-improvement monitor tidak tersambung atau tidak mencatat promise rejection.');
+          if (!selfImprovement.includes('Tidak ada perubahan kode diam-diam') && !selfImprovement.includes('tidak mengubah kode')) throw new Error('Batas keamanan self-improvement tidak terdokumentasi.');
           const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
           const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
           if (duplicates.length) throw new Error('ID HTML duplikat: ' + [...new Set(duplicates)].join(', '));
