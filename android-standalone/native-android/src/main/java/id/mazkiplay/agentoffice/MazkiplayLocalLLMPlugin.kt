@@ -39,7 +39,7 @@ class MazkiplayLocalLLMPlugin : Plugin() {
     private var engine: Engine? = null
     private var conversation: Conversation? = null
 
-    private fun modelFile(context: Context = context): File = File(context.filesDir, MODEL_FILE)
+    private fun modelFile(ctx: Context = context): File = File(ctx.filesDir, MODEL_FILE)
 
     @PluginMethod
     fun getStatus(call: PluginCall) {
