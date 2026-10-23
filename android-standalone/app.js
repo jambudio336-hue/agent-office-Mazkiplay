@@ -55,7 +55,21 @@ async function callModel(providerId,prompt,role){
  const p=data.providers[providerId]||{};
  if(!p.key||!p.model||!p.url)throw Error("Provider "+(P[providerId]?.label||providerId)+" belum dikonfigurasi. Buka Pengaturan AI dan simpan API key, model, serta endpoint.");
  let headers={"Content-Type":"application/json"},body;
- const system="Kamu adalah "+(role||"asisten")+" di Mazkiplay Agent Office. Jawab dalam Bahasa Indonesia, berikan hasil praktis, jujur tentang keterbatasan, dan jangan mengaku telah mengubah file/perangkat jika belum benar-benar melakukannya.";
+ const roleGuidance={
+ "Founder / Owner":"Bertindak sebagai pemilik produk: jelaskan prioritas, nilai bisnis, risiko, biaya, dan metrik keberhasilan.",
+ "Manajer proyek":"Susun langkah kerja berurutan, estimasi relatif, dependensi, risiko, dan kriteria penerimaan.",
+ "Developer Full-stack":"Berikan rancangan frontend/backend, kontrak API, skema data, validasi, keamanan, dan pengujian integrasi.",
+ "Developer Android":"Fokus pada arsitektur Android, lifecycle, izin, penyimpanan aman, kompatibilitas perangkat, dan pengujian APK.",
+ "Developer Web":"Fokus pada HTML/CSS/JavaScript atau framework yang diminta, responsivitas, aksesibilitas, performa, dan keamanan web.",
+ "Developer Game":"Fokus pada loop permainan, input, scene/state, aset, performa, dan target platform.",
+ "Cybersecurity":"Lakukan analisis defensif dan berizin; uraikan ancaman, tingkat risiko, bukti, serta mitigasi tanpa mengklaim telah memindai sistem.",
+ "QA / Tester":"Buat test case positif/negatif, langkah reproduksi, hasil yang diharapkan, dan prioritas bug.",
+ "UI/UX Designer":"Jelaskan alur pengguna, hierarki visual, aksesibilitas, state kosong/error/loading, dan desain responsif.",
+ "Data Analyst":"Nyatakan asumsi, metode analisis, metrik, batasan data, dan rekomendasi berbasis bukti.",
+ "Penulis dokumentasi":"Susun dokumentasi ringkas dengan prasyarat, langkah, contoh, dan troubleshooting.",
+ "Asisten umum":"Pecah tugas menjadi langkah praktis, jelaskan asumsi, dan utamakan solusi yang bisa diverifikasi."
+};
+const system="Kamu adalah "+(role||"Asisten umum")+" di Mazkiplay Agent Office. "+(roleGuidance[role]||roleGuidance["Asisten umum"])+" Jawab dalam Bahasa Indonesia. Berikan hasil praktis, jelaskan file/komponen yang disarankan dan cara menguji bila relevan. Kamu tidak memiliki akses otomatis ke repository, shell, atau perangkat pengguna; jangan mengaku sudah mengubah atau menjalankan sesuatu yang belum benar-benar dilakukan.";
  if(p.format==="anthropic"||providerId==="anthropic"){
    headers["x-api-key"]=p.key;headers["anthropic-version"]="2023-06-01";headers["anthropic-dangerous-direct-browser-access"]="true";
    body={model:p.model,max_tokens:1200,system,messages:[{role:"user",content:prompt}]};
@@ -77,9 +91,9 @@ async function runTask(id){
  const providerId=worker?.provider||$("provider").value;
  t.running=true;t.error="";t.output="";save();render();
  try{
-   const prompt="Kerjakan permintaan/tugas berikut. Jika tugas berupa coding, berikan rancangan, kode yang relevan, file yang perlu dibuat/diubah, dan langkah uji. Kamu tidak memiliki akses otomatis ke repository, shell, atau perangkat ini; jangan mengklaim sudah menjalankan perubahan.\n\nTUGAS: "+t.text;
-   t.output=await callModel(providerId,prompt,worker?.role||"asisten umum");
-   t.done=true;
+   const prompt="Kerjakan permintaan berikut dengan hasil yang bisa ditinjau. Untuk coding, berikan ringkasan pendek, daftar file beserta isi kode yang relevan, langkah pemasangan, cara uji, dan risiko/asumsi. Jika informasi kurang, sebutkan asumsi. Jangan mengklaim perubahan file atau pengujian sudah dilakukan. Jawaban AI bukan berarti tugas sudah benar-benar selesai; pengguna akan menandai selesai setelah memeriksa hasil.\n\nTUGAS: "+t.text;
+   t.output=await callModel(providerId,prompt,worker?.role||"Asisten umum");
+   t.done=false;
  }catch(err){t.error=err?.message||"Gagal menjalankan tugas AI";}finally{t.running=false;save();render()}
 }
 $("test-provider").onclick=async()=>{
