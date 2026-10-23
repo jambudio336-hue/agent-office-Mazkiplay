@@ -49,7 +49,7 @@ jobs:
           const css = readFileSync('android-standalone/github-pr.css', 'utf8');
           new vm.Script(app, { filename: 'android-standalone/app.js' });
           new vm.Script(patch, { filename: 'android-standalone/github-pr.js' });
-          const ids = [...html.matchAll(/\\bid="([^"]+)"/g)].map(match => match[1]);
+          const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
           const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
           if (duplicates.length) throw new Error('ID HTML duplikat: ' + [...new Set(duplicates)].join(', '));
           for (const id of ['multi-pr-paths', 'multi-pr-load', 'multi-pr-instruction', 'multi-pr-generate', 'multi-pr-editors', 'multi-pr-branch', 'multi-pr-create']) {
