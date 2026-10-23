@@ -97,3 +97,29 @@
 #multi-pr-body {
   min-height: 5rem;
 }
+
+.model-discovery-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0.2rem 0 0.5rem;
+}
+.model-discovery-actions button {
+  flex: 1 1 12rem;
+}
+.model-discovery-actions .inline-check {
+  display: flex;
+  align-items: center;
+  grid-template-columns: auto 1fr;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+}
+#model-discovery-status {
+  margin: 0.2rem 0 0.75rem;
+  overflow-wrap: anywhere;
+}
+#model-id {
+  width: 100%;
+  box-sizing: border-box;
+}
