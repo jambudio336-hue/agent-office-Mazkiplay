@@ -106,26 +106,25 @@ jobs:
           app = root / 'app' / 'build.gradle'
           wrapper = root / 'gradle' / 'wrapper' / 'gradle-wrapper.properties'
           s = top.read_text()
-          s = re.sub(r"com\\.android\\.tools\\.build:gradle:[^'\\\"]+", "com.android.tools.build:gradle:8.13.2", s)
+          s = re.sub(r"com\.android\.tools\.build:gradle:[^'\"]+", "com.android.tools.build:gradle:8.13.2", s)
           if 'org.jetbrains.kotlin:kotlin-gradle-plugin:' in s:
-              s = re.sub(r"org\\.jetbrains\\.kotlin:kotlin-gradle-plugin:[^'\\\"]+", "org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.0", s)
+              s = re.sub(r"org\.jetbrains\.kotlin:kotlin-gradle-plugin:[^'\"]+", "org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.0", s)
           else:
-              s = re.sub(r"(dependencies\\s*\\{)", r"\\1\\n        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.0'", s, count=1)
+              s = re.sub(r"(dependencies\s*\{)", r"\1\n        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.0'", s, count=1)
           top.write_text(s)
           a = app.read_text()
           if "apply plugin: 'org.jetbrains.kotlin.android'" not in a:
-              a = a.replace("apply plugin: 'com.android.application'", "apply plugin: 'com.android.application'\\napply plugin: 'org.jetbrains.kotlin.android'", 1)
+              a = a.replace("apply plugin: 'com.android.application'", "apply plugin: 'com.android.application'\napply plugin: 'org.jetbrains.kotlin.android'", 1)
           if 'litertlm-android' not in a:
-              a = re.sub(r"dependencies\\s*\\{", "dependencies {\\n    implementation 'com.google.ai.edge.litertlm:litertlm-android:0.18.0'\\n    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'", a, count=1)
+              a = re.sub(r"dependencies\s*\{", "dependencies {\n    implementation 'com.google.ai.edge.litertlm:litertlm-android:0.18.0'\n    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'", a, count=1)
           app.write_text(a)
           w = wrapper.read_text()
-          w = re.sub(r'gradle-[0-9.]+-(?:all|bin)\\.zip', 'gradle-8.13-all.zip', w)
+          w = re.sub(r'gradle-[0-9.]+-(?:all|bin)\.zip', 'gradle-8.13-all.zip', w)
           wrapper.write_text(w)
           manifest = root / 'app' / 'src' / 'main' / 'AndroidManifest.xml'
           m = manifest.read_text()
           if 'android.permission.INTERNET' not in m:
-              m = m.replace('<manifest ', '<manifest ', 1)
-              m = re.sub(r'(<manifest[^>]*>)', r'\\1\\n    <uses-permission android:name="android.permission.INTERNET"/>', m, count=1)
+              m = re.sub(r'(<manifest[^>]*>)', r'\1\n    <uses-permission android:name="android.permission.INTERNET"/>', m, count=1)
           manifest.write_text(m)
           assert 'litertlm-android:0.18.0' in app.read_text(), 'LiteRT-LM dependency was not added'
           assert 'org.jetbrains.kotlin.android' in app.read_text(), 'Kotlin Android plugin was not applied'
