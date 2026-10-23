@@ -93,4 +93,38 @@ $("test-provider").onclick=async()=>{
  }catch(err){delete data.providers[id];status("Uji gagal: "+(err?.message||"jaringan/provider bermasalah")+". Periksa key, model, kuota, dan koneksi.",true)}
  finally{b.disabled=false;b.textContent="Uji koneksi"}
 };
+
+function backupStatus(message,bad=false){const el=$("backup-status");if(el){el.textContent=message;el.style.color=bad?"#ff7e8a":"#64e0a4"}}
+$("export-data").onclick=()=>{
+ try{
+  const backup={format:"mazkiplay-agent-office-backup",version:1,createdAt:new Date().toISOString(),workers:data.workers.map(w=>({id:w.id,name:w.name,role:w.role,provider:w.provider,task:w.task||""})),tasks:data.tasks.map(t=>({id:t.id,text:t.text,done:!!t.done,workerId:t.workerId||"",output:t.output||"",error:t.error||""}))};
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="mazkiplay-agent-office-backup.json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  backupStatus("Cadangan dibuat. Simpan file JSON di lokasi aman; API key tidak ikut diekspor.");
+ }catch(err){backupStatus("Gagal membuat cadangan: "+(err?.message||"kesalahan tidak diketahui"),true)}
+};
+$("import-data").onclick=()=>$("import-file").click();
+$("import-file").onchange=async e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ try{
+  if(file.size>2*1024*1024)throw Error("File cadangan terlalu besar (maksimum 2 MB).");
+  const backup=parse(await file.text());
+  if(!backup||backup.format!=="mazkiplay-agent-office-backup"||backup.version!==1||!Array.isArray(backup.workers)||!Array.isArray(backup.tasks))throw Error("Format cadangan tidak dikenali.");
+  if(backup.workers.length>MAX)throw Error("Cadangan memiliki lebih dari 20 pekerja.");
+  if(backup.workers.some(w=>!w||typeof w.name!=="string"||typeof w.id!=="string")||backup.tasks.some(t=>!t||typeof t.text!=="string"||typeof t.id!=="string"))throw Error("Data pekerja atau tugas tidak valid.");
+  if(!confirm("Impor akan mengganti daftar pekerja dan tugas saat ini. Pengaturan AI dan API key tetap dipertahankan. Lanjutkan?"))return;
+  data.workers=backup.workers.map(w=>({id:w.id.slice(0,100),name:w.name.slice(0,32),role:String(w.role||"Asisten umum").slice(0,80),provider:P[w.provider]?w.provider:"openrouter",task:String(w.task||"").slice(0,180)}));
+  const workerIds=new Set(data.workers.map(w=>w.id));
+  data.tasks=backup.tasks.map(t=>({id:t.id.slice(0,100),text:t.text.slice(0,240),done:!!t.done,workerId:workerIds.has(t.workerId)?t.workerId:"",output:String(t.output||"").slice(0,20000),error:String(t.error||"").slice(0,1000),running:false}));
+  if(!save())throw Error("Penyimpanan lokal gagal. Pastikan ruang perangkat tersedia.");
+  render();backupStatus("Cadangan berhasil diimpor. Konfigurasi AI lokal tidak diubah.");
+ }catch(err){backupStatus("Impor gagal: "+(err?.message||"file tidak valid"),true)}
+ finally{e.target.value=""}
+};
+$("clear-data").onclick=()=>{
+ if(!confirm("Hapus SEMUA profil pekerja, tugas, konfigurasi provider, dan API key dari penyimpanan lokal aplikasi? Tindakan ini tidak bisa dibatalkan."))return;
+ data={workers:[],tasks:[],providers:{}};
+ try{localStorage.removeItem(KEY);save();loadProvider();render();backupStatus("Data lokal aplikasi sudah dihapus.");status("Data lokal dihapus.")}catch(err){backupStatus("Gagal menghapus data lokal.",true)}
+};
+
 loadProvider();render();
