@@ -14,7 +14,16 @@ if(!Array.isArray(data.workers))data.workers=[];
 if(!Array.isArray(data.tasks))data.tasks=[];
 if(!data.providers||typeof data.providers!=="object")data.providers={};
 function status(message,bad=false){$("status").textContent=message;$("status").style.color=bad?"#ff7e8a":"#64e0a4"}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(data));return true}catch{status("Penyimpanan lokal penuh atau tidak tersedia.",true);return false}}
+function save(){
+ try{
+  const safe={...data,providers:Object.fromEntries(Object.entries(data.providers).map(([id,p])=>{const copy={...p};delete copy.key;return[id,copy]}))};
+  localStorage.setItem(KEY,JSON.stringify(safe));return true;
+ }catch{status("Penyimpanan lokal penuh atau tidak tersedia.",true);return false}
+}
+function secureStore(){return window.Capacitor?.Plugins?.MazkiplaySecureStorage||null}
+async function saveProviderSecret(id,key){const store=secureStore();if(!store?.set)return false;await store.set({key:"provider:"+id,value:key});return true}
+async function readProviderSecret(id){const store=secureStore();if(!store?.get)return null;const result=await store.get({key:"provider:"+id});return result?.value==null?null:String(result.value)}
+async function removeProviderSecret(id){const store=secureStore();if(store?.remove)await store.remove({key:"provider:"+id})}
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function optionsForWorkers(selected=""){return '<option value="">Tanpa penugasan</option>'+data.workers.map(w=>'<option value="'+esc(w.id)+'" '+(w.id===selected?"selected":"")+'>'+esc(w.name)+" — "+esc(w.role)+"</option>").join("")}
 function render(){
@@ -45,7 +54,19 @@ $("tasks").onclick=async e=>{
 };
 function loadProvider(){const id=$("provider").value,p=P[id],s=data.providers[id]||{};$("api-key").value=s.key||"";$("model-id").value=s.model||p.model;$("endpoint").value=s.url||p.url;$("endpoint").readOnly=id!=="custom";$("endpoint-label").style.display=id==="custom"?"grid":"none"}
 $("provider").onchange=loadProvider;
-$("provider-form").onsubmit=e=>{e.preventDefault();const id=$("provider").value,p={key:$("api-key").value.trim(),model:$("model-id").value.trim(),url:$("endpoint").value.trim(),format:P[id].format};if(p.key&&(!p.model||!p.url))return status("API key, model, dan endpoint harus lengkap.",true);if(p.key)data.providers[id]=p;else delete data.providers[id];save();render();status(p.key?"Konfigurasi "+P[id].label+" disimpan lokal.":"Konfigurasi provider dihapus.")};
+$("provider-form").onsubmit=async e=>{
+ e.preventDefault();const id=$("provider").value,p={key:$("api-key").value.trim(),model:$("model-id").value.trim(),url:$("endpoint").value.trim(),format:P[id].format};
+ if(p.key&&(!p.model||!p.url))return status("API key, model, dan endpoint harus lengkap.",true);
+ try{
+  if(p.key){
+   const encrypted=await saveProviderSecret(id,p.key);
+   data.providers[id]=p;save();render();
+   status(encrypted?"Konfigurasi "+P[id].label+" disimpan terenkripsi dengan Android Keystore.":"Konfigurasi tersimpan untuk sesi ini saja. APK/Android Keystore tidak tersedia; key tidak disimpan di localStorage.",!encrypted);
+  }else{
+   await removeProviderSecret(id);delete data.providers[id];save();render();loadProvider();status("Konfigurasi provider dan API key dihapus.");
+  }
+ }catch(err){status("Gagal menyimpan rahasia dengan aman: "+(err?.message||"kesalahan Android Keystore"),true)}
+};
 async function request(url,options){
  const http=window.Capacitor?.Plugins?.CapacitorHttp;
  if(http?.request){const r=await http.request({url,method:options.method||"GET",headers:options.headers,data:options.body?JSON.parse(options.body):undefined,connectTimeout:20000,readTimeout:60000});return{ok:r.status>=200&&r.status<300,status:r.status,data:r.data}}
@@ -99,11 +120,13 @@ async function runTask(id){
 $("test-provider").onclick=async()=>{
  const id=$("provider").value,p={key:$("api-key").value.trim(),model:$("model-id").value.trim(),url:$("endpoint").value.trim(),format:P[$("provider").value].format};
  if(!p.key)return status("Masukkan API key terlebih dahulu.",true);if(!p.url||!p.model)return status("Model dan endpoint wajib diisi.",true);
- const b=$("test-provider"),previous=data.providers[id];b.disabled=true;b.textContent="Menguji…";
- data.providers[id]=p;
+ const b=$("test-provider"),previous=data.providers[id];b.disabled=true;b.textContent="Menguji…";data.providers[id]=p;
  try{
   const answer=await callModel(id,"Balas singkat hanya dengan: koneksi berhasil.","penguji koneksi");
-  save();render();status("Koneksi "+P[id].label+" berhasil. "+answer.slice(0,100));
+  let encrypted=false;try{encrypted=await saveProviderSecret(id,p.key)}catch(storageError){status("Koneksi berhasil, tetapi Android Keystore gagal menyimpan key: "+(storageError?.message||"kesalahan"),true)}
+  save();render();
+  if(encrypted)status("Koneksi "+P[id].label+" berhasil; API key tersimpan terenkripsi di Android Keystore. "+answer.slice(0,70));
+  else status("Koneksi berhasil. API key hanya berada di memori sesi dan tidak disimpan di localStorage. "+answer.slice(0,70),true);
  }catch(err){
   if(previous)data.providers[id]=previous;else delete data.providers[id];
   status("Uji gagal: "+(err?.message||"jaringan/provider bermasalah")+". Periksa key, model, kuota, dan koneksi.",true);
@@ -137,10 +160,27 @@ $("import-file").onchange=async e=>{
  }catch(err){backupStatus("Impor gagal: "+(err?.message||"file tidak valid"),true)}
  finally{e.target.value=""}
 };
-$("clear-data").onclick=()=>{
+$("clear-data").onclick=async()=>{
  if(!confirm("Hapus SEMUA profil pekerja, tugas, konfigurasi provider, dan API key dari penyimpanan lokal aplikasi? Tindakan ini tidak bisa dibatalkan."))return;
- data={workers:[],tasks:[],providers:{}};
- try{localStorage.removeItem(KEY);save();loadProvider();render();backupStatus("Data lokal aplikasi sudah dihapus.");status("Data lokal dihapus.")}catch(err){backupStatus("Gagal menghapus data lokal.",true)}
+ try{
+  const store=secureStore();if(store?.clear)await store.clear();else for(const id of Object.keys(data.providers))await removeProviderSecret(id);
+  data={workers:[],tasks:[],providers:{}};localStorage.removeItem(KEY);save();loadProvider();render();backupStatus("Data lokal aplikasi dan rahasia provider dihapus.");status("Data lokal dihapus.");
+ }catch(err){backupStatus("Gagal menghapus semua data: "+(err?.message||"kesalahan penyimpanan"),true)}
 };
-
-loadProvider();render();
+async function initializeApp(){
+ const store=secureStore();
+ for(const [id,p] of Object.entries(data.providers)){
+  if(!P[id])continue;
+  if(p.key&&store?.set){
+   try{await saveProviderSecret(id,p.key)}catch(err){status("Tidak dapat memigrasikan API key ke Android Keystore. Key hanya tersedia di sesi ini.",true)}
+  }
+  if(store?.get){
+   try{const secret=await readProviderSecret(id);if(secret!==null)data.providers[id]={...p,key:secret};}
+   catch(err){status("Gagal membaca API key dari Android Keystore. Periksa kembali konfigurasi AI.",true)}
+  }
+ }
+ save();loadProvider();render();
+ if(store?.get&&store?.set)status("Penyimpanan rahasia Android Keystore tersedia.");
+ else status("Mode browser/preview: API key hanya disimpan di memori sesi, bukan localStorage.",true);
+}
+initializeApp();
