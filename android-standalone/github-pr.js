@@ -96,6 +96,40 @@ $("github-pr-load").addEventListener("click", async () => {
   catch (error) { status(error?.message || "Gagal memuat file.", true); }
   finally { button.disabled = false; button.textContent = "Muat file untuk diedit"; }
 });
+$("github-pr-generate").addEventListener("click", async () => {
+  const button = $("github-pr-generate");
+  const resultBox = $("github-pr-ai-result");
+  const instruction = $("github-pr-instruction").value.trim();
+  const path = $("github-pr-path").value.trim();
+  const content = $("github-pr-code").value;
+  if (!loaded || loaded.path !== path || loaded.repo !== $("github-pr-repo").value.trim() || loaded.base !== $("github-pr-base").value.trim()) {
+    return status("Muat ulang file dari branch dasar sebelum meminta AI membuat patch.", true);
+  }
+  if (!instruction) return status("Tuliskan instruksi perubahan untuk AI.", true);
+  if (typeof window.mazkiplayGeneratePatch !== "function") {
+    return status("Modul AI belum siap. Pastikan app.js berhasil dimuat dan konfigurasi provider sudah tersimpan.", true);
+  }
+  button.disabled = true;
+  button.textContent = "AI sedang menyusun patch…";
+  resultBox.textContent = "Meminta AI membuat usulan. Ini bisa memerlukan waktu dan kuota provider.";
+  try {
+    const proposal = await window.mazkiplayGeneratePatch({ instruction, path, content });
+    $("github-pr-code").value = proposal.updatedContent;
+    const sections = [
+      "RINGKASAN USULAN\n" + proposal.summary,
+      "LANGKAH UJI YANG DISARANKAN\n" + (proposal.tests.length ? proposal.tests.map((x, i) => (i + 1) + ". " + x).join("\n") : "AI tidak memberikan langkah uji."),
+      "RISIKO / ASUMSI\n" + (proposal.risks.length ? proposal.risks.map((x, i) => (i + 1) + ". " + x).join("\n") : "Tidak dicantumkan.")
+    ];
+    resultBox.textContent = sections.join("\n\n") + "\n\nIsi editor sudah diperbarui, tetapi belum dikirim ke GitHub. Tinjau seluruh file dan jalankan pengujian sebelum membuat Draft PR.";
+    status("Usulan patch AI siap ditinjau. Belum ada commit atau PR yang dibuat.");
+  } catch (error) {
+    resultBox.textContent = "";
+    status("AI gagal membuat patch: " + (error?.message || "kesalahan provider"), true);
+  } finally {
+    button.disabled = false;
+    button.textContent = "✦ Buat usulan patch dengan AI";
+  }
+});
 $("github-pr-create").addEventListener("click", async () => {
   const button = $("github-pr-create");
   const repo = $("github-pr-repo").value.trim();
