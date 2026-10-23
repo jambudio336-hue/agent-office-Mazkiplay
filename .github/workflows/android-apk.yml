@@ -56,6 +56,10 @@ jobs:
           new vm.Script(selfImprovement, { filename: 'android-standalone/self-improvement.js' });
           if (!html.includes('./self-improvement.js') || !selfImprovement.includes('SELF-IMPROVEMENT ENGINE') || !selfImprovement.includes('unhandledrejection')) throw new Error('Self-improvement monitor tidak tersambung atau tidak mencatat promise rejection.');
           if (!selfImprovement.includes('Tidak ada perubahan kode diam-diam') && !selfImprovement.includes('tidak mengubah kode')) throw new Error('Batas keamanan self-improvement tidak terdokumentasi.');
+          for (const feature of ['function makePlan()', 'self-plan-work', 'self-qa-plan', 'self-skill-search', 'self-skill-use', 'self-release-checks', 'data-release-check', 'data-plan-task']) {
+            if (!selfImprovement.includes(feature)) throw new Error('Fitur self-improvement hilang: ' + feature);
+          }
+          if (!officeCss.includes('.self-release-checks') || !officeCss.includes('#self-skill-search')) throw new Error('CSS planner, pustaka pengetahuan, atau gerbang QA hilang.');
           const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
           const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
           if (duplicates.length) throw new Error('ID HTML duplikat: ' + [...new Set(duplicates)].join(', '));
