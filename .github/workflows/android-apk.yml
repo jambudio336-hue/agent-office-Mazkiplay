@@ -117,6 +117,8 @@ jobs:
               a = a.replace("apply plugin: 'com.android.application'", "apply plugin: 'com.android.application'\napply plugin: 'org.jetbrains.kotlin.android'", 1)
           if 'litertlm-android' not in a:
               a = re.sub(r"dependencies\s*\{", "dependencies {\n    implementation 'com.google.ai.edge.litertlm:litertlm-android:0.18.0'\n    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'", a, count=1)
+          if 'kotlinOptions { jvmTarget' not in a:
+              a = a.replace('android {', "android {\n    kotlinOptions { jvmTarget = '21' }", 1)
           app.write_text(a)
           w = wrapper.read_text()
           w = re.sub(r'gradle-[0-9.]+-(?:all|bin)\.zip', 'gradle-8.13-all.zip', w)
