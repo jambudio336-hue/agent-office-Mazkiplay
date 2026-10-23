@@ -123,6 +123,11 @@ jobs:
           w = wrapper.read_text()
           w = re.sub(r'gradle-[0-9.]+-(?:all|bin)\.zip', 'gradle-8.13-all.zip', w)
           wrapper.write_text(w)
+          variables = root / 'variables.gradle'
+          if variables.exists():
+              v = variables.read_text()
+              v = re.sub(r'minSdkVersion\s*=\s*\d+', 'minSdkVersion = 24', v)
+              variables.write_text(v)
           manifest = root / 'app' / 'src' / 'main' / 'AndroidManifest.xml'
           m = manifest.read_text()
           if 'android.permission.INTERNET' not in m:
