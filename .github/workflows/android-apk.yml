@@ -55,6 +55,9 @@ jobs:
           }, null, 2) + '\n');
           NODE
           npx cap add android
+          mkdir -p android/app/src/main/java/id/mazkiplay/agentoffice
+          cp android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplaySecureStoragePlugin.java android/app/src/main/java/id/mazkiplay/agentoffice/
+          cp android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MainActivity.java android/app/src/main/java/id/mazkiplay/agentoffice/
           npx cap sync android
 
       - name: Siapkan Java
