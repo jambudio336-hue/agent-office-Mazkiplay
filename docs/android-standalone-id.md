@@ -10,10 +10,12 @@ Folder `android-standalone` adalah antarmuka lokal yang dibundel ke APK. Aplikas
 - Ekspor/impor cadangan JSON untuk profil dan tugas; API key sengaja tidak diekspor.
 - Tombol hapus seluruh data lokal, termasuk konfigurasi provider dan API key.
 - Konfigurasi OpenRouter, OpenAI, Gemini, DeepSeek, Claude, dan endpoint kompatibel OpenAI.
+- Hub GitHub baca-saja: validasi token dan repository, membaca direktori/file pada branch/ref, dan mengirim konteks file ke Task Board untuk dianalisis AI. Token disimpan di Android Keystore bila plugin native tersedia; browser hanya menyimpannya di memori sesi.
 - APK Android menggunakan plugin native khusus yang mengenkripsi API key dengan AES-GCM dan kunci yang disimpan di Android Keystore. Nilai terenkripsi disimpan di SharedPreferences; kunci AES tidak disimpan sebagai teks biasa.
 - Mode browser/preview tidak memiliki Android Keystore, sehingga API key hanya berada di memori sesi dan tidak ditulis ke localStorage.
 
 ## Batas yang belum selesai
+- Hub GitHub versi ini hanya membaca repository. Belum ada penulisan/commit file, pembuatan branch, pembukaan pull request, atau pengujian kode secara otomatis.
 - Profil pekerja belum menjadi proses AI otonom yang menjalankan coding atau mengubah repository.
 - Terminal Node.js/PTY, Git worktree, clone repo, GitHub PR automation, voice chat, panggilan/SMS, dan eksekusi agent CLI dari aplikasi desktop belum dipindahkan ke Android.
 - Panggilan provider memerlukan internet, API key, model, kuota, serta dukungan endpoint/jaringan.
