@@ -186,7 +186,7 @@ $("clear-data").onclick=async()=>{
  if(!confirm("Hapus SEMUA profil pekerja, tugas, konfigurasi provider, dan API key dari penyimpanan lokal aplikasi? Tindakan ini tidak bisa dibatalkan."))return;
  try{
   const store=secureStore();if(store?.clear)await store.clear();else for(const id of Object.keys(data.providers))await removeProviderSecret(id);
-  githubToken="";githubLastFile=null;$("github-token").value="";data={workers:[],tasks:[],providers:{}};localStorage.removeItem(KEY);save();loadProvider();render();backupStatus("Data lokal aplikasi dan rahasia provider dihapus.");githubStatus("Token GitHub dan data lokal dihapus.");status("Data lokal dihapus.");
+  githubToken="";window.dispatchEvent(new Event("github-token-disconnected"));githubLastFile=null;$("github-token").value="";data={workers:[],tasks:[],providers:{}};localStorage.removeItem(KEY);save();loadProvider();render();backupStatus("Data lokal aplikasi dan rahasia provider dihapus.");githubStatus("Token GitHub dan data lokal dihapus.");status("Data lokal dihapus.");
  }catch(err){backupStatus("Gagal menghapus semua data: "+(err?.message||"kesalahan penyimpanan"),true)}
 };
 async function initializeApp(){
@@ -217,7 +217,7 @@ $("github-form").onsubmit=async e=>{
  try{
   const repository=await githubRequest("/repos/"+repo);let user=null;try{user=await githubRequest("/user")}catch{}
   let secure=false;try{secure=await saveGithubSecret(token)}catch(err){throw Error("Token valid tetapi gagal disimpan ke Android Keystore: "+(err?.message||"kesalahan"))}
-  githubToken=token;
+  githubToken=token;if(secure)window.dispatchEvent(new Event("github-token-connected"));
   githubStatus("Repository terverifikasi"+(user?.login?" · @"+user.login:"")+" · "+repository.full_name+" · akses repository terverifikasi"+(secure?" · token tersimpan di Android Keystore":" · token hanya tersimpan selama sesi ini"));
   $("github-output").textContent="Repository: "+repository.full_name+"\nVisibilitas: "+(repository.private?"Private":"Public")+"\nBranch default: "+repository.default_branch+"\nIzin token: pemeriksaan baca berhasil.\n\nLangkah berikutnya: isi path file lalu tekan “Baca file”.";
  }catch(err){githubToken=previous;githubStatus("Gagal menghubungkan: "+(err?.message||"kesalahan GitHub"),true)}
@@ -251,7 +251,7 @@ $("github-to-task").onclick=()=>{
  githubStatus("Konteks "+githubLastFile.path+" ditambahkan ke Task Board. Pilih pekerja lalu tekan Jalankan AI.");
 };
 $("github-disconnect").onclick=async()=>{
- try{await removeGithubSecret();githubToken="";githubLastFile=null;$("github-token").value="";githubStatus("Koneksi diputus dan token dihapus dari Android Keystore jika tersedia.");$("github-output").textContent="Tidak terhubung."}
+ try{await removeGithubSecret();githubToken="";window.dispatchEvent(new Event("github-token-disconnected"));githubLastFile=null;$("github-token").value="";githubStatus("Koneksi diputus dan token dihapus dari Android Keystore jika tersedia.");$("github-output").textContent="Tidak terhubung."}
  catch(err){githubStatus("Gagal menghapus token: "+(err?.message||"kesalahan"),true)}
 };
 initializeApp();
