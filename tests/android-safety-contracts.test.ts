@@ -5,6 +5,7 @@ import { runInNewContext } from 'node:vm';
 
 const app = readFileSync(new URL('../android-standalone/app.js', import.meta.url), 'utf8');
 const html = readFileSync(new URL('../android-standalone/index.html', import.meta.url), 'utf8');
+const intro = readFileSync(new URL('../android-standalone/intro.js', import.meta.url), 'utf8');
 const localLlm = readFileSync(new URL('../android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplayLocalLLMPlugin.kt', import.meta.url), 'utf8');
 const secureStorage = readFileSync(new URL('../android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplaySecureStoragePlugin.java', import.meta.url), 'utf8');
 const improvement = readFileSync(new URL('../android-standalone/self-improvement.js', import.meta.url), 'utf8');
@@ -76,10 +77,29 @@ test('diagnostic redactor removes representative bearer, GitHub, and API key sam
   const declaration = improvement.slice(start, end + 4);
   const sandbox = {};
   runInNewContext(declaration + '; globalThis.testRedact = redact;', sandbox);
-  runInNewContext(declaration[0] + '; globalThis.testRedact = redact;', sandbox);
   const redact = (sandbox as Record<string, unknown>).testRedact as (value: string) => string;
   assert.equal(redact('Bearer abcdefghijklmnopqrstuvwxyz0123456789'), 'Bearer [REDACTED]');
   assert.equal(redact('ghp_TESTTOKEN012345678901234567890'), '[REDACTED_GITHUB_TOKEN]');
   assert.equal(redact('api_key=sample-secret-value'), 'api_key=[REDACTED]');
   assert.equal(redact('safe message with no credentials'), 'safe message with no credentials');
+});
+
+test('startup intro has skip and end-of-video paths and fails open when the asset is unavailable', () => {
+  assert.match(html, /id="intro-screen"/);
+  assert.match(html, /id="intro-video"/);
+  assert.match(html, /id="intro-skip"/);
+  assert.match(html, /src="\.\/intro\.js"/);
+  assert.match(intro, /\.\/assets\/intro\.mp4/);
+  assert.match(intro, /skip\.addEventListener\("click", finish\)/);
+  assert.match(intro, /video\.addEventListener\("ended", finish/);
+  assert.match(intro, /video\.addEventListener\("error", finish/);
+});
+
+test('background and device-permission design documents explicit opt-in and Android limits', () => {
+  const policy = readFileSync(new URL('../docs/android-background-and-device-permissions.md', import.meta.url), 'utf8');
+  assert.match(policy, /persistent notification/);
+  assert.match(policy, /Stop action/);
+  assert.match(policy, /does not provide a legitimate general-purpose full device control permission/);
+  assert.match(policy, /AccessibilityService/);
+  assert.match(policy, /not considered packaged until android-standalone\/assets\/intro\.mp4 exists/);
 });
