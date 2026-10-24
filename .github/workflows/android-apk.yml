@@ -172,13 +172,25 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publikasikan GitHub Release (opsional)
-        if: inputs.publish_release
+      - name: Siapkan checksum APK
+        run: |
+          cd apk-output
+          sha256sum Mazkiplay-Agent-Office.apk > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Publikasikan GitHub Release publik
+        if: inputs.publish_release || (github.event_name == 'push' && github.ref == 'refs/heads/feat/free-local-ai-mode')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           tag="android-standalone-${GITHUB_RUN_NUMBER}"
-          gh release create "$tag" apk-output/Mazkiplay-Agent-Office.apk \
-            --title "Mazkiplay Agent Office Android ${GITHUB_RUN_NUMBER}" \
-            --notes "APK Android mandiri versi prototipe. UI kantor, profil pekerja dan task board berjalan lokal; integrasi provider AI memerlukan internet/API key. Terminal coding agent, eksekusi AI otonom dan integrasi panggilan/SMS belum tersedia di versi ini." \
-            --latest
+          notes="Mazkiplay Agent Office — APK Android standalone. Berisi UI kantor, profil pekerja, Task Board, koneksi provider AI, AI lokal Qwen3 setelah model diunduh, GitHub workspace, dan modul monitor/perencana perbaikan. Provider cloud membutuhkan internet/API key dan dapat memakai kuota/biaya. AI tidak mengedit kode diam-diam; perubahan kode tetap perlu review, tes, dan build tervalidasi. Belum diverifikasi pada perangkat Android fisik; gunakan sebagai preview publik dan laporkan bug melalui Issues."
+          if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            gh release create "$tag" apk-output/Mazkiplay-Agent-Office.apk apk-output/SHA256SUMS.txt \
+              --title "Mazkiplay Agent Office Android ${GITHUB_RUN_NUMBER} Preview" \
+              --notes "$notes" --prerelease
+          else
+            gh release create "$tag" apk-output/Mazkiplay-Agent-Office.apk apk-output/SHA256SUMS.txt \
+              --title "Mazkiplay Agent Office Android ${GITHUB_RUN_NUMBER}" \
+              --notes "$notes" --latest
+          fi
