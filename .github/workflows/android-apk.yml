@@ -1,0 +1,41 @@
+name: Android APK
+
+on:
+  pull_request:
+    paths:
+      - 'android/**'
+      - 'README.md'
+      - 'docs/features.md'
+      - 'docs/android-apk.md'
+      - 'tests/android-wrapper.test.ts'
+      - '.github/workflows/android-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build-debug-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-36 build-tools;36.0.0'
+          accept-android-sdk-licenses: true
+      - name: Build installable debug APK
+        run: android/gradlew --no-daemon -p android assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: m4zkiplay-agent-office-android-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
