@@ -590,4 +590,16 @@ $("github-disconnect").onclick=async()=>{
  try{await removeGithubSecret();githubToken="";window.dispatchEvent(new Event("github-token-disconnected"));githubLastFile=null;$("github-token").value="";githubStatus("Koneksi diputus dan token dihapus dari Android Keystore jika tersedia.");$("github-output").textContent="Tidak terhubung."}
  catch(err){githubStatus("Gagal menghapus token: "+(err?.message||"kesalahan"),true)}
 };
+
+window.addEventListener("mazkiplay:canvas-source",event=>{
+ const detail=event.detail||{},filename=String(detail.filename||"source.txt").slice(0,100),kind=String(detail.kind||"other"),source=String(detail.source||"");
+ if(data.tasks.length>=MAX_TASKS){status("Batas 500 tugas tercapai. Hapus tugas lama sebelum mengirim source Canvas.",true);return;}
+ if(!source.trim()){status("Source Canvas kosong; tidak ada tugas yang dibuat.",true);return;}
+ const context="Source dikirim dari Canvas Workspace.\nJenis proyek: "+kind+"\nNama file: "+filename+"\n\nSOURCE CODE (maksimal 12.000 karakter):\n"+source.slice(0,12000);
+ data.tasks.unshift({id:String(Date.now())+Math.random().toString(16).slice(2),text:"Tinjau source "+filename+" dari Canvas. Jelaskan masalah, usulkan perbaikan, dan berikan kode revisi yang bisa ditinjau. Jangan mengklaim file repository telah diubah.",context,done:false,workerId:$("task-worker")?.value||"",output:"",error:""});
+ save();render();
+ $("tasks").scrollIntoView({behavior:"smooth",block:"start"});
+ status("Source Canvas ditambahkan ke Task Board. Pilih pekerja dan jalankan AI untuk mendapatkan tinjauan.");
+});
+
 initializeApp();
