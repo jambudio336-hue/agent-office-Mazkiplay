@@ -40,7 +40,7 @@
     catch { status("Penyimpanan diagnostik penuh. Ekspor laporan dan hapus riwayat lama.", true); return false; }
   }
   function record(kind, message, source = "") {
-    const clean = redact(String(message || kind).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, " ").slice(0, 800);
+    const clean = redact(String(message || kind).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, " ")).slice(0, 800);
     const now = Date.now();
     const duplicate = state.events.find(event => event.kind === kind && event.message === clean && now - event.at < 30000);
     if (duplicate) { duplicate.count = (duplicate.count || 1) + 1; duplicate.at = now; }
