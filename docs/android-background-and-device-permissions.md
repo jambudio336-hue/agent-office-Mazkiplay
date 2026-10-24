@@ -24,13 +24,13 @@ Android does not provide a legitimate general-purpose full device control permis
 | Device admin, VPN, usage access, overlay | Separate opt-in flow, detailed purpose, and Android's own system confirmation; do not request by default. |
 | System settings, security protections, other apps' private data | Not available to a normal app without privileged/system-level access; do not attempt to bypass OS controls. |
 
-## Intro video acceptance criteria
+## Intro image-and-audio acceptance criteria
 
-- Package the user's licensed assets/intro.mp4 in the APK; preserve its original audio.
+- Package android-standalone/assets/mazkiplay-intro.png and android-standalone/assets/intro-welcome.mp3 in the APK; generate the Indonesian welcome narration and short synthetic sword-like effects during CI.
 - Show the intro on every cold launch; hide playback controls, allow an explicit Skip button, and continue to the app automatically when playback ends.
 - If media is missing or unsupported, fail open to the app rather than trapping the user on a blank screen.
 - Test audio autoplay, skip, completion, orientation, accessibility, and low-memory behavior on a physical Android device.
 
 ## Release gate
 
-The intro asset is not considered packaged until android-standalone/assets/intro.mp4 exists in the repository and the APK workflow verifies it. Background execution is not considered complete until a real native task survives activity recreation/process death and reports its status, and the user can stop it. Do not describe these capabilities as complete based on UI alone.
+The intro asset is not considered packaged until android-standalone/assets/intro-welcome.mp3 exists in the repository and the APK workflow verifies it. Background execution is not considered complete until a real native task survives activity recreation/process death and reports its status, and the user can stop it. Do not describe these capabilities as complete based on UI alone.
