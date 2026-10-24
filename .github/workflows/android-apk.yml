@@ -39,6 +39,27 @@ jobs:
           npm test
           npm run build
 
+      - name: Siapkan aset intro gambar dan audio
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y espeak-ng ffmpeg librsvg2-bin
+          mkdir -p android-standalone/assets
+          cat > /tmp/mazkiplay-intro.svg <<'SVG'
+          <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+            <defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#030817"/><stop offset=".5" stop-color="#142d58"/><stop offset="1" stop-color="#240d2d"/></linearGradient><linearGradient id="blade"><stop stop-color="#fff"/><stop offset=".5" stop-color="#51eaff"/><stop offset="1" stop-color="#a3b8ff"/></linearGradient><radialGradient id="glow"><stop stop-color="#087dff" stop-opacity=".7"/><stop offset="1" stop-color="#00112a" stop-opacity="0"/></radialGradient></defs>
+            <rect width="1280" height="720" fill="url(#bg)"/><circle cx="1030" cy="140" r="310" fill="url(#glow)"/><circle cx="170" cy="590" r="330" fill="url(#glow)"/>
+            <g stroke="#1b70bb" stroke-width="2" opacity=".45"><path d="M0 120H1280M0 210H1280M0 300H1280M0 390H1280M0 480H1280M0 570H1280M80 0V720M180 0V720M280 0V720M1000 0V720M1100 0V720M1200 0V720"/></g>
+            <g transform="translate(350 115)"><path d="M-120 120L-60 -30L45 -60L130 20L85 140L-15 185Z" fill="#111a30" stroke="#ff315c" stroke-width="8"/><path d="M-70 -25L0 -100L85 -60L120 10L55 55L-10 25Z" fill="#1c2945" stroke="#78eaff" stroke-width="5"/><path d="M-70 -85L-25 -150L20 -105L65 -135L55 -60" fill="none" stroke="#ff315c" stroke-width="15"/><path d="M-115 135L-180 220L-80 190L-30 115" fill="#cf1f4e"/><path d="M-15 70L440 240L65 100Z" fill="url(#blade)" stroke="#eafcff" stroke-width="4"/><circle cx="-5" cy="68" r="25" fill="#d7b06c" stroke="#fff" stroke-width="4"/></g>
+            <g transform="translate(875 165)"><path d="M0 0Q95 -85 180 0L210 145L145 250L35 235L-20 135Z" fill="#392047" stroke="#a64eea" stroke-width="7"/><ellipse cx="90" cy="55" rx="74" ry="92" fill="#e8d8d1"/><path d="M20 15Q-5 -70 95 -65Q180 -55 165 25L135 2L110 -25L55 5Z" fill="#171424"/><path d="M50 55L72 68L92 55M112 55L132 68L151 55" fill="none" stroke="#cf234f" stroke-width="9"/><path d="M65 112Q100 142 139 108" fill="none" stroke="#b72b4c" stroke-width="8"/><path d="M-10 155L-90 220L0 210L35 240" fill="#24142e"/></g>
+            <path d="M0 590L1280 590L1280 720L0 720Z" fill="#030914" fill-opacity=".88"/><text x="640" y="625" text-anchor="middle" font-family="sans-serif" font-size="24" letter-spacing="8" fill="#7cecff">WELCOME TO</text><text x="640" y="674" text-anchor="middle" font-family="sans-serif" font-size="48" font-weight="900" fill="#f5fbff">MAZKIPLAY AGENT OFFICE</text><text x="640" y="705" text-anchor="middle" font-family="sans-serif" font-size="18" fill="#66dfff">Tempat para agen AI bekerja untukmu</text>
+          </svg>
+          SVG
+          rsvg-convert -o android-standalone/assets/mazkiplay-intro.png -f png -w 1280 -h 720 /tmp/mazkiplay-intro.svg
+          espeak-ng -v id -s 142 -p 68 -a 175 -w /tmp/welcome.wav "Selamat datang di kantor Mazkiplay Agent Office. Tempat para agen AI bekerja untukmu."
+          ffmpeg -y -i /tmp/welcome.wav -f lavfi -i "sine=frequency=1450:duration=0.22" -f lavfi -i "sine=frequency=540:duration=0.35" -filter_complex "[1:a]afade=t=out:st=0.08:d=0.14,volume=0.14[s1];[2:a]afade=t=out:st=0.12:d=0.23,volume=0.10[s2];[0:a]adelay=350|350,volume=1.0[v];[v][s1][s2]amix=inputs=3:duration=longest,highpass=f=100,lowpass=f=7000,loudnorm=I=-16:TP=-1.5:LRA=11[out]" -map "[out]" -codec:a libmp3lame -b:a 128k android-standalone/assets/intro-welcome.mp3
+          test -s android-standalone/assets/mazkiplay-intro.png
+          test -s android-standalone/assets/intro-welcome.mp3
+
       - name: Validasi modul APK mandiri
         run: |
           node --input-type=module <<'NODE'
@@ -57,7 +78,7 @@ jobs:
           new vm.Script(selfImprovement, { filename: 'android-standalone/self-improvement.js' });
           new vm.Script(intro, { filename: 'android-standalone/intro.js' });
           if (!html.includes('id=\"intro-screen\"') || !html.includes('id=\"intro-video\"') || !html.includes('id=\"intro-skip\"') || !html.includes('./intro.js')) throw new Error('Startup intro overlay is not wired into the APK HTML.');
-          if (!intro.includes('./assets/intro.mp4') || !intro.includes('video.addEventListener("ended", finish') || !intro.includes('skip.addEventListener("click", finish)')) throw new Error('Startup intro playback, completion, or skip flow is missing.');
+          if (!intro.includes('./assets/intro-welcome.mp3') || !intro.includes('audio.addEventListener("ended", finish') || !intro.includes('skip.addEventListener("click", finish)')) throw new Error('Startup intro playback, completion, or skip flow is missing.');
           if (!html.includes('./self-improvement.js') || !selfImprovement.includes('SELF-IMPROVEMENT ENGINE') || !selfImprovement.includes('unhandledrejection')) throw new Error('Self-improvement monitor tidak tersambung atau tidak mencatat promise rejection.');
           if (!selfImprovement.includes('Tidak ada perubahan kode diam-diam') && !selfImprovement.includes('tidak mengubah kode')) throw new Error('Batas keamanan self-improvement tidak terdokumentasi.');
           for (const feature of ['function makePlan()', 'self-plan-work', 'self-feature-scan', 'self-qa-plan', 'self-skill-search', 'self-skill-use', 'self-release-checks', 'data-release-check', 'data-plan-task']) {
