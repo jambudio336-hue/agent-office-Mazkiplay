@@ -48,3 +48,13 @@ test('self-improvement records suggestions but never silently rewrites code or i
   assert.match(improvement, /Draft PR/);
   assert.match(improvement, /localStorage/);
 });
+
+test('diagnostics redact common API and GitHub credentials before storage and export', () => {
+  assert.match(improvement, /function redact\(value\)/);
+  assert.match(improvement, /REDACTED_GITHUB_TOKEN/);
+  assert.match(improvement, /REDACTED_API_KEY/);
+  assert.match(improvement, /const clean = redact\(/);
+  assert.match(improvement, /source: redact\(source \|\| ""\)/);
+  assert.match(improvement, /events: state\.events\.map\(e => \(\{ \.\.\.e, message: redact\(e\.message\)/);
+  assert.match(improvement, /lessons: state\.lessons\.map\(e => \(\{ \.\.\.e, note: redact\(e\.note\)/);
+});
