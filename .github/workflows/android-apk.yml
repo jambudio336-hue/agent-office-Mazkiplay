@@ -57,7 +57,7 @@ jobs:
           new vm.Script(selfImprovement, { filename: 'android-standalone/self-improvement.js' });
           new vm.Script(intro, { filename: 'android-standalone/intro.js' });
           if (!html.includes('id=\"intro-screen\"') || !html.includes('id=\"intro-video\"') || !html.includes('id=\"intro-skip\"') || !html.includes('./intro.js')) throw new Error('Startup intro overlay is not wired into the APK HTML.');
-          if (!intro.includes('./assets/intro.mp4') || !intro.includes('video.addEventListener(\'ended\', finish') || !intro.includes('skip.addEventListener(\'click\', finish)')) throw new Error('Startup intro playback, completion, or skip flow is missing.');
+          if (!intro.includes('./assets/intro.mp4') || !intro.includes('video.addEventListener("ended", finish') || !intro.includes('skip.addEventListener("click", finish)')) throw new Error('Startup intro playback, completion, or skip flow is missing.');
           if (!html.includes('./self-improvement.js') || !selfImprovement.includes('SELF-IMPROVEMENT ENGINE') || !selfImprovement.includes('unhandledrejection')) throw new Error('Self-improvement monitor tidak tersambung atau tidak mencatat promise rejection.');
           if (!selfImprovement.includes('Tidak ada perubahan kode diam-diam') && !selfImprovement.includes('tidak mengubah kode')) throw new Error('Batas keamanan self-improvement tidak terdokumentasi.');
           for (const feature of ['function makePlan()', 'self-plan-work', 'self-feature-scan', 'self-qa-plan', 'self-skill-search', 'self-skill-use', 'self-release-checks', 'data-release-check', 'data-plan-task']) {
