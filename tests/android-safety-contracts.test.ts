@@ -90,9 +90,9 @@ test('startup intro has skip and end-of-video paths and fails open when the asse
   assert.match(html, /id="intro-skip"/);
   assert.match(html, /src="\.\/intro\.js"/);
   assert.match(intro, /\.\/assets\/intro\.mp4/);
-  assert.match(intro, /skip\\.addEventListener\\(['\"]click['\"], finish\\)/);
-  assert.match(intro, /video\\.addEventListener\\(['\"]ended['\"], finish/);
-  assert.match(intro, /video\\.addEventListener\\(['\"]error['\"], finish/);
+  assert.match(intro, /skip\.addEventListener\(['"]click['"], finish\)/);
+  assert.match(intro, /video\.addEventListener\(['"]ended['"], finish/);
+  assert.match(intro, /video\.addEventListener\(['"]error['"], finish/);
 });
 
 test('background and device-permission design documents explicit opt-in and Android limits', () => {
