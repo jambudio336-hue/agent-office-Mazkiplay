@@ -1,6 +1,6 @@
 /* Mazkiplay Agent Office image-and-audio startup intro.
  * Required packaged assets:
- *   android-standalone/assets/mazkiplay-intro.png
+ *   android-standalone/assets/mazkiplay-intro.jpg
  *   android-standalone/assets/intro-welcome.mp3
  * The intro is shown on every app launch; audio is started on entry and
  * the app always falls through to the dashboard if assets are unavailable.
