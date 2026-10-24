@@ -47,7 +47,7 @@ jobs:
           const app = readFileSync('android-standalone/app.js', 'utf8');
           const patch = readFileSync('android-standalone/github-pr.js', 'utf8');
           const selfImprovement = readFileSync('android-standalone/self-improvement.js', 'utf8');
-const intro = readFileSync('android-standalone/intro.js', 'utf8');
+          const intro = readFileSync('android-standalone/intro.js', 'utf8');
           const html = readFileSync('android-standalone/index.html', 'utf8');
           const css = readFileSync('android-standalone/github-pr.css', 'utf8');
           const officeCss = readFileSync('android-standalone/styles.css', 'utf8');
@@ -55,9 +55,9 @@ const intro = readFileSync('android-standalone/intro.js', 'utf8');
           new vm.Script(app, { filename: 'android-standalone/app.js' });
           new vm.Script(patch, { filename: 'android-standalone/github-pr.js' });
           new vm.Script(selfImprovement, { filename: 'android-standalone/self-improvement.js' });
-new vm.Script(intro, { filename: 'android-standalone/intro.js' });
-if (!html.includes('id=\"intro-screen\"') || !html.includes('id=\"intro-video\"') || !html.includes('id=\"intro-skip\"') || !html.includes('./intro.js')) throw new Error('Startup intro overlay is not wired into the APK HTML.');
-if (!intro.includes('./assets/intro.mp4') || !intro.includes('video.addEventListener(\'ended\', finish') || !intro.includes('skip.addEventListener(\'click\', finish)')) throw new Error('Startup intro playback, completion, or skip flow is missing.');
+          new vm.Script(intro, { filename: 'android-standalone/intro.js' });
+          if (!html.includes('id=\"intro-screen\"') || !html.includes('id=\"intro-video\"') || !html.includes('id=\"intro-skip\"') || !html.includes('./intro.js')) throw new Error('Startup intro overlay is not wired into the APK HTML.');
+          if (!intro.includes('./assets/intro.mp4') || !intro.includes('video.addEventListener(\'ended\', finish') || !intro.includes('skip.addEventListener(\'click\', finish)')) throw new Error('Startup intro playback, completion, or skip flow is missing.');
           if (!html.includes('./self-improvement.js') || !selfImprovement.includes('SELF-IMPROVEMENT ENGINE') || !selfImprovement.includes('unhandledrejection')) throw new Error('Self-improvement monitor tidak tersambung atau tidak mencatat promise rejection.');
           if (!selfImprovement.includes('Tidak ada perubahan kode diam-diam') && !selfImprovement.includes('tidak mengubah kode')) throw new Error('Batas keamanan self-improvement tidak terdokumentasi.');
           for (const feature of ['function makePlan()', 'self-plan-work', 'self-feature-scan', 'self-qa-plan', 'self-skill-search', 'self-skill-use', 'self-release-checks', 'data-release-check', 'data-plan-task']) {
