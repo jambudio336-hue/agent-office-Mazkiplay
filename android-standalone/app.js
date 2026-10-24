@@ -249,7 +249,7 @@ window.mazkiplayGeneratePatch = async ({ instruction, path, content }) => {
   content,
   "</source_file>"
  ].join("\n\n");
- const raw = await callModel(providerId, prompt, "Developer Full-stack", 6000);
+ const raw = await callModelWithFallback(providerId, prompt, "Developer Full-stack", 6000);
  let jsonText = raw.trim().replace(/^\u0060\u0060\u0060(?:json)?\s*/i, "").replace(/\s*\u0060\u0060\u0060$/i, "");
  const first = jsonText.indexOf("{"), last = jsonText.lastIndexOf("}");
  if (first < 0 || last <= first) throw Error("AI tidak mengembalikan objek JSON. Coba instruksi yang lebih kecil.");
@@ -328,16 +328,46 @@ function updateAiModeStatus(){
  if(el)el.textContent=mode==="local"?"Mode Gratis Lokal aktif. APK Android memakai Qwen3 lokal setelah model diunduh; preview browser memakai AI Lite berbasis aturan.":(Object.values(data.providers).some(p=>p&&p.model&&(p.key||p.url))?"Mode API aktif. Tugas dan Patch Lab akan menggunakan provider yang dipilih; kuota/biaya mengikuti provider.":"Mode API aktif, tetapi belum ada provider siap. Simpan API key, model, dan endpoint di bawah.");
  const note=$("free-chat-mode-note");if(note)note.textContent=mode==="local"?"Di APK: AI generatif offline setelah Qwen3 diunduh. Di preview browser: AI Lite berbasis aturan, bukan LLM.":"Chat, Task Board, dan Patch Lab menggunakan provider API yang dipilih; penggunaan dapat memakai kuota atau biaya provider.";
 }
+async function callModelWithFallback(providerId,prompt,role,maxTokens=1200){
+ try{return await callModel(providerId,prompt,role,maxTokens);}
+ catch(primaryError){
+  if(!data.autoProviderFallback)throw primaryError;
+  const failures=[(P[providerId]?.label||providerId)+": "+(primaryError?.message||"gagal")];
+  const candidates=Object.keys(data.providers).filter(id=>id!==providerId).sort((a,b)=>{
+   if(a===data.lastSuccessfulProvider)return -1;
+   if(b===data.lastSuccessfulProvider)return 1;
+   return (P[a]?.label||a).localeCompare(P[b]?.label||b);
+  });
+  for(const id of candidates){
+   const p=data.providers[id];
+   if(!p||!p.model||!p.url)continue;
+   if(!p.key&&id!=="custom"){
+    try{p.key=await readProviderSecret(id)||"";}catch{p.key="";}
+   }
+   if(!p.key&&id!=="custom")continue;
+   try{
+    const answer=await callModel(id,prompt,role,maxTokens);
+    data.lastSuccessfulProvider=id;save();
+    const message="Provider utama "+(P[providerId]?.label||providerId)+" gagal; fallback berhasil memakai "+(P[id]?.label||id)+". Periksa biaya/kuota provider tersebut.";
+    status(message,false);
+    return "【FALLBACK PROVIDER: "+(P[id]?.label||id)+"】\n"+answer;
+   }catch(err){failures.push((P[id]?.label||id)+": "+(err?.message||"gagal").slice(0,180));}
+  }
+  throw Error("Provider utama gagal dan tidak ada fallback yang berhasil. "+failures.join(" | "));
+ }
+}
+
 async function runTask(id){
  const t=data.tasks.find(x=>x.id===id);if(!t||t.running)return;
  const worker=data.workers.find(w=>w.id===t.workerId),providerId=worker?.provider||$("provider").value;
  t.running=true;t.error="";t.output="";save();render();
  try{
   const prompt="Kerjakan permintaan berikut dengan hasil yang bisa ditinjau. Untuk coding, berikan ringkasan pendek, daftar file beserta isi kode yang relevan, langkah pemasangan, cara uji, dan risiko/asumsi. Jika informasi kurang, sebutkan asumsi. Jangan mengklaim perubahan file atau pengujian sudah dilakukan. Jawaban AI bukan berarti tugas sudah benar-benar selesai; pengguna akan menandai selesai setelah memeriksa hasil.\n\nTUGAS: "+t.text+(t.context?"\n\nKONTEKS REPOSITORY/FILE:\n"+t.context:"");
-  t.output=data.aiMode==="local"?await generateLocalAnswer(prompt,worker?.role||"Asisten umum"):await callModel(providerId,prompt,worker?.role||"Asisten umum");
+  t.output=data.aiMode==="local"?await generateLocalAnswer(prompt,worker?.role||"Asisten umum"):await callModelWithFallback(providerId,prompt,worker?.role||"Asisten umum");
   t.done=false;
  }catch(err){t.error=err?.message||"Gagal menjalankan tugas AI";}finally{t.running=false;save();render()}
 }
+const fallbackToggle=$("auto-provider-fallback");if(fallbackToggle){fallbackToggle.checked=data.autoProviderFallback===true;fallbackToggle.addEventListener("change",()=>{data.autoProviderFallback=fallbackToggle.checked;save();status(fallbackToggle.checked?"Fallback otomatis aktif. Permintaan bisa memakai kuota/biaya provider lain.":"Fallback otomatis nonaktif.");});}
 $("ai-mode").value=data.aiMode;
 $("ai-mode").addEventListener("change",updateAiModeStatus);
 
@@ -413,7 +443,7 @@ $("free-chat-form").addEventListener("submit",async e=>{
    }
   }else{
    const providerId=$("provider").value;
-   const answer=await callModel(providerId,prompt,$("free-chat-role").value,1200);
+   const answer=await callModelWithFallback(providerId,prompt,$("free-chat-role").value,1200);
    output.textContent=answer;
   }
   $("free-chat-input").value="";
