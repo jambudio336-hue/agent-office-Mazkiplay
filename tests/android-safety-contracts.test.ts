@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { runInNewContext } from 'node:vm';
 
 const app = readFileSync(new URL('../android-standalone/app.js', import.meta.url), 'utf8');
 const html = readFileSync(new URL('../android-standalone/index.html', import.meta.url), 'utf8');
@@ -66,4 +67,16 @@ test('real-device release checklist covers checksum, true local inference, offli
   assert.match(checklist, /Enable airplane mode/);
   assert.match(checklist, /are redacted/);
   assert.match(checklist, /Do not call a release device-verified/);
+});
+
+test('diagnostic redactor removes representative bearer, GitHub, and API key samples', () => {
+  const declaration = improvement.match(/  function redact\(value\) \{[\\s\\S]*?\n  \}/);
+  assert.ok(declaration, 'redact helper must remain directly testable');
+  const sandbox = {};
+  runInNewContext(declaration[0] + '; globalThis.testRedact = redact;', sandbox);
+  const redact = sandbox.testRedact as (value: string) => string;
+  assert.equal(redact('Authorization: Bearer abcdefghijklmnopqrstuvwxyz0123456789'), 'Authorization: Bearer [REDACTED]');
+  assert.equal(redact('ghp_TESTTOKEN012345678901234567890'), '[REDACTED_GITHUB_TOKEN]');
+  assert.equal(redact('api_key=sample-secret-value'), 'api_key=[REDACTED]');
+  assert.equal(redact('safe message with no credentials'), 'safe message with no credentials');
 });
