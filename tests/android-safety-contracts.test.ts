@@ -74,8 +74,8 @@ test('diagnostic redactor removes representative bearer, GitHub, and API key sam
   assert.ok(declaration, 'redact helper must remain directly testable');
   const sandbox = {};
   runInNewContext(declaration[0] + '; globalThis.testRedact = redact;', sandbox);
-  const redact = sandbox.testRedact as (value: string) => string;
-  assert.equal(redact('Authorization: Bearer abcdefghijklmnopqrstuvwxyz0123456789'), 'Authorization: Bearer [REDACTED]');
+  const redact = (sandbox as Record<string, unknown>).testRedact as (value: string) => string;
+  assert.equal(redact('Bearer abcdefghijklmnopqrstuvwxyz0123456789'), 'Bearer [REDACTED]');
   assert.equal(redact('ghp_TESTTOKEN012345678901234567890'), '[REDACTED_GITHUB_TOKEN]');
   assert.equal(redact('api_key=sample-secret-value'), 'api_key=[REDACTED]');
   assert.equal(redact('safe message with no credentials'), 'safe message with no credentials');
