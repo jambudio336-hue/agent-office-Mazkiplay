@@ -89,7 +89,7 @@ test('startup intro has skip and end-of-audio paths and fails open when the asse
   assert.match(html, /id="intro-audio"/);
   assert.match(html, /id="intro-skip"/);
   assert.match(html, /src="\.\/intro\.js"/);
-  assert.match(intro, /\.\/assets\/intro-welcome\.mp3/);
+  assert.match(intro, /assets\/intro-welcome\.mp3/);
   assert.match(intro, /skip\.addEventListener\(['"]click['"], finish\)/);
   assert.match(intro, /audio\.addEventListener\(['"]ended['"], finish/);
   assert.match(intro, /audio\.addEventListener\(['"]error['"],/);
