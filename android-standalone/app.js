@@ -1,4 +1,4 @@
-const KEY="mazkiplay-agent-office-v1",MAX=20;
+const KEY="mazkiplay-agent-office-v1",MAX=20,MAX_TASKS=500;
 const P={
  openrouter:{label:"OpenRouter",url:"https://openrouter.ai/api/v1/chat/completions",model:"openrouter/auto",format:"openai"},
  openai:{label:"OpenAI",url:"https://api.openai.com/v1/chat/completions",model:"gpt-4o-mini",format:"openai"},
@@ -63,9 +63,9 @@ function render(){
 function openDialog(){if(data.workers.length>=MAX){alert("Maksimum 20 pekerja. Hapus profil yang tidak dipakai dahulu.");return}$("worker-name").value="";$("worker-task").value="";$("worker-dialog").showModal()}
 $("add-worker").onclick=openDialog;$("close-dialog").onclick=()=>$("worker-dialog").close();
 $("open-settings").onclick=()=>$("settings").scrollIntoView({behavior:"smooth",block:"start"});
-$("worker-form").onsubmit=e=>{e.preventDefault();if(data.workers.length>=MAX)return alert("Maksimum 20 pekerja.");const name=$("worker-name").value.trim();if(!name)return;const w={id:String(Date.now())+Math.random().toString(16).slice(2),name,role:$("worker-role").value,provider:$("worker-provider").value,task:$("worker-task").value.trim()};data.workers.push(w);if(w.task)data.tasks.unshift({id:w.id,text:w.task,done:false,workerId:w.id});save();render();$("worker-dialog").close()};
+$("worker-form").onsubmit=e=>{e.preventDefault();if(data.workers.length>=MAX)return alert("Maksimum 20 pekerja.");if(data.tasks.length>=MAX_TASKS)return alert("Batas 500 tugas tercapai. Hapus tugas lama atau buat cadangan terlebih dahulu.");const name=$("worker-name").value.trim();if(!name)return;const w={id:String(Date.now())+Math.random().toString(16).slice(2),name,role:$("worker-role").value,provider:$("worker-provider").value,task:$("worker-task").value.trim()};data.workers.push(w);if(w.task)data.tasks.unshift({id:w.id,text:w.task,done:false,workerId:w.id});save();render();$("worker-dialog").close()};
 $("workers").onclick=e=>{const b=e.target.closest("[data-remove]");if(!b)return;const w=data.workers.find(x=>x.id===b.dataset.remove);if(w&&confirm("Hapus profil pekerja "+w.name+"?")){data.workers=data.workers.filter(x=>x.id!==w.id);save();render()}};
-$("task-form").onsubmit=e=>{e.preventDefault();const text=$("task-input").value.trim();if(!text)return;data.tasks.unshift({id:String(Date.now())+Math.random().toString(16).slice(2),text,done:false,workerId:$("task-worker")?.value||"",output:"",error:""});$("task-input").value="";save();render()};
+$("task-form").onsubmit=e=>{e.preventDefault();if(data.tasks.length>=MAX_TASKS)return alert("Batas 500 tugas tercapai. Hapus tugas lama atau buat cadangan terlebih dahulu.");const text=$("task-input").value.trim();if(!text)return;data.tasks.unshift({id:String(Date.now())+Math.random().toString(16).slice(2),text,done:false,workerId:$("task-worker")?.value||"",output:"",error:""});$("task-input").value="";save();render()};
 $("tasks").onchange=e=>{
  if(e.target.dataset.done){const t=data.tasks.find(x=>x.id===e.target.dataset.done);if(t)t.done=e.target.checked}
  if(e.target.dataset.assign){const t=data.tasks.find(x=>x.id===e.target.dataset.assign);if(t){t.workerId=e.target.value;t.output="";t.error=""}}
@@ -503,7 +503,12 @@ $("import-file").onchange=async e=>{
   const backup=parse(await file.text());
   if(!backup||backup.format!=="mazkiplay-agent-office-backup"||backup.version!==1||!Array.isArray(backup.workers)||!Array.isArray(backup.tasks))throw Error("Format cadangan tidak dikenali.");
   if(backup.workers.length>MAX)throw Error("Cadangan memiliki lebih dari 20 pekerja.");
-  if(backup.workers.some(w=>!w||typeof w.name!=="string"||typeof w.id!=="string")||backup.tasks.some(t=>!t||typeof t.text!=="string"||typeof t.id!=="string"))throw Error("Data pekerja atau tugas tidak valid.");
+  if(backup.tasks.length>MAX_TASKS)throw Error("Cadangan memiliki lebih dari 500 tugas.");
+  if(backup.workers.some(w=>!w||typeof w.name!=="string"||!w.name.trim()||typeof w.id!=="string"||!w.id.trim())||backup.tasks.some(t=>!t||typeof t.text!=="string"||!t.text.trim()||typeof t.id!=="string"||!t.id.trim()))throw Error("Data pekerja atau tugas tidak valid.");
+  const workerIdsInBackup=backup.workers.map(w=>w.id);
+  const taskIdsInBackup=backup.tasks.map(t=>t.id);
+  if(new Set(workerIdsInBackup).size!==workerIdsInBackup.length)throw Error("Cadangan memiliki ID pekerja duplikat.");
+  if(new Set(taskIdsInBackup).size!==taskIdsInBackup.length)throw Error("Cadangan memiliki ID tugas duplikat.");
   if(!confirm("Impor akan mengganti daftar pekerja dan tugas saat ini. Pengaturan AI dan API key tetap dipertahankan. Lanjutkan?"))return;
   data.workers=backup.workers.map(w=>({id:w.id.slice(0,100),name:w.name.slice(0,32),role:String(w.role||"Asisten umum").slice(0,80),provider:P[w.provider]?w.provider:"openrouter",task:String(w.task||"").slice(0,180)}));
   const workerIds=new Set(data.workers.map(w=>w.id));
