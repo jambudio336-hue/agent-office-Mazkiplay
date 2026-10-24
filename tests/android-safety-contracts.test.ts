@@ -58,3 +58,12 @@ test('diagnostics redact common API and GitHub credentials before storage and ex
   assert.match(improvement, /events: state\.events\.map\(e => \(\{ \.\.\.e, message: redact\(e\.message\)/);
   assert.match(improvement, /lessons: state\.lessons\.map\(e => \(\{ \.\.\.e, note: redact\(e\.note\)/);
 });
+
+test('real-device release checklist covers checksum, true local inference, offline operation, and secret redaction', () => {
+  const checklist = readFileSync(new URL('../docs/android-device-validation.md', import.meta.url), 'utf8');
+  assert.match(checklist, /SHA-256/);
+  assert.match(checklist, /rather than a canned fallback being mislabeled as generative AI/);
+  assert.match(checklist, /Enable airplane mode/);
+  assert.match(checklist, /are redacted/);
+  assert.match(checklist, /Do not call a release device-verified/);
+});
