@@ -84,15 +84,15 @@ test('diagnostic redactor removes representative bearer, GitHub, and API key sam
   assert.equal(redact('safe message with no credentials'), 'safe message with no credentials');
 });
 
-test('startup intro has skip and end-of-video paths and fails open when the asset is unavailable', () => {
+test('startup intro has skip and end-of-audio paths and fails open when the asset is unavailable', () => {
   assert.match(html, /id="intro-screen"/);
-  assert.match(html, /id="intro-video"/);
+  assert.match(html, /id="intro-audio"/);
   assert.match(html, /id="intro-skip"/);
   assert.match(html, /src="\.\/intro\.js"/);
-  assert.match(intro, /\.\/assets\/intro\.mp4/);
+  assert.match(intro, /\.\/assets\/intro-welcome\.mp3/);
   assert.match(intro, /skip\.addEventListener\(['"]click['"], finish\)/);
-  assert.match(intro, /video\.addEventListener\(['"]ended['"], finish/);
-  assert.match(intro, /video\.addEventListener\(['"]error['"], finish/);
+  assert.match(intro, /audio\.addEventListener\(['"]ended['"], finish/);
+  assert.match(intro, /audio\.addEventListener\(['"]error['"],/);
 });
 
 test('background and device-permission design documents explicit opt-in and Android limits', () => {
@@ -101,5 +101,5 @@ test('background and device-permission design documents explicit opt-in and Andr
   assert.match(policy, /Stop action/);
   assert.match(policy, /does not provide a legitimate general-purpose full device control permission/);
   assert.match(policy, /AccessibilityService/);
-  assert.match(policy, /not considered packaged until android-standalone\/assets\/intro\.mp4 exists/);
+  assert.match(policy, /not considered packaged until android-standalone\/assets\/intro-welcome\.mp3 exists/);
 });
