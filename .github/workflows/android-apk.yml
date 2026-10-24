@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feat/android-office-apk
+      - feat/free-local-ai-mode
   pull_request:
     branches:
       - main
@@ -45,14 +46,28 @@ jobs:
           import vm from 'node:vm';
           const app = readFileSync('android-standalone/app.js', 'utf8');
           const patch = readFileSync('android-standalone/github-pr.js', 'utf8');
+          const selfImprovement = readFileSync('android-standalone/self-improvement.js', 'utf8');
+          const intro = readFileSync('android-standalone/intro.js', 'utf8');
           const html = readFileSync('android-standalone/index.html', 'utf8');
           const css = readFileSync('android-standalone/github-pr.css', 'utf8');
+          const officeCss = readFileSync('android-standalone/styles.css', 'utf8');
+          if (!officeCss.includes('Hybrid HQ visual refresh') || !officeCss.includes('worker-idle') || !officeCss.includes('images.unsplash.com')) throw new Error('Visual hybrid HQ atau animasi pekerja hilang.');
           new vm.Script(app, { filename: 'android-standalone/app.js' });
           new vm.Script(patch, { filename: 'android-standalone/github-pr.js' });
+          new vm.Script(selfImprovement, { filename: 'android-standalone/self-improvement.js' });
+          new vm.Script(intro, { filename: 'android-standalone/intro.js' });
+          if (!html.includes('id=\"intro-screen\"') || !html.includes('id=\"intro-video\"') || !html.includes('id=\"intro-skip\"') || !html.includes('./intro.js')) throw new Error('Startup intro overlay is not wired into the APK HTML.');
+          if (!intro.includes('./assets/intro.mp4') || !intro.includes('video.addEventListener(\'ended\', finish') || !intro.includes('skip.addEventListener(\'click\', finish)')) throw new Error('Startup intro playback, completion, or skip flow is missing.');
+          if (!html.includes('./self-improvement.js') || !selfImprovement.includes('SELF-IMPROVEMENT ENGINE') || !selfImprovement.includes('unhandledrejection')) throw new Error('Self-improvement monitor tidak tersambung atau tidak mencatat promise rejection.');
+          if (!selfImprovement.includes('Tidak ada perubahan kode diam-diam') && !selfImprovement.includes('tidak mengubah kode')) throw new Error('Batas keamanan self-improvement tidak terdokumentasi.');
+          for (const feature of ['function makePlan()', 'self-plan-work', 'self-feature-scan', 'self-qa-plan', 'self-skill-search', 'self-skill-use', 'self-release-checks', 'data-release-check', 'data-plan-task']) {
+            if (!selfImprovement.includes(feature)) throw new Error('Fitur self-improvement hilang: ' + feature);
+          }
+          if (!officeCss.includes('.self-release-checks') || !officeCss.includes('#self-skill-search')) throw new Error('CSS planner, pustaka pengetahuan, atau gerbang QA hilang.');
           const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
           const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
           if (duplicates.length) throw new Error('ID HTML duplikat: ' + [...new Set(duplicates)].join(', '));
-          for (const id of ['multi-pr-paths', 'multi-pr-load', 'multi-pr-instruction', 'multi-pr-generate', 'multi-pr-editors', 'multi-pr-branch', 'multi-pr-create', 'model-id', 'model-options', 'discover-models', 'free-models-only']) {
+          for (const id of ['multi-pr-paths', 'multi-pr-load', 'multi-pr-instruction', 'multi-pr-generate', 'multi-pr-editors', 'multi-pr-branch', 'multi-pr-create', 'model-id', 'model-options', 'discover-models', 'free-models-only', 'ai-mode', 'ai-mode-status', 'free-chat-form', 'free-chat-input', 'free-chat-output', 'local-llm-download', 'local-llm-prepare', 'local-llm-reset', 'local-llm-progress', 'local-llm-status']) {
             if (!html.includes('id="' + id + '"')) throw new Error('Kontrol UI hilang: ' + id);
           }
           for (const ref of ['./github-pr.js', './github-pr.css']) {
@@ -63,6 +78,18 @@ jobs:
           }
           if (!css.includes('.multi-file-editor')) throw new Error('CSS editor multi-file hilang.');
           if (!app.includes('function discoverModels()') || !app.includes('openrouter/free') || !app.includes('models?')) throw new Error('Penemuan model AI belum lengkap.');
+          if (!app.includes('benchmark-provider') || !app.includes('data.aiBenchmarks') || !html.includes('id="benchmark-provider"')) throw new Error('Benchmark provider AI belum tersambung.');
+          if (!app.includes('async function callModelWithFallback') || !app.includes('data.autoProviderFallback') || !html.includes('id="auto-provider-fallback"')) throw new Error('Fallback provider AI belum tersambung.');
+          if (!app.includes('function localLiteAnswer(') || !app.includes('data.aiMode===\"local\"') || !html.includes('Gratis Lokal — tanpa API key')) throw new Error('Mode lokal gratis belum tersambung.');
+          if (!app.includes('async function generateLocalAnswer(') || !app.includes('await generateLocalAnswer(prompt,worker?.role||\"Asisten umum\")')) throw new Error('Task Board belum menggunakan LLM lokal native saat tersedia.');
+          if (!app.includes('await callModelWithFallback(providerId,prompt,$("free-chat-role").value,1200)')) throw new Error('Chat API Mode belum diarahkan ke provider terpilih dan fallback opsional.');
+          if (!app.includes('Chat, Task Board, dan Patch Lab menggunakan provider API yang dipilih')) throw new Error('Keterangan UI Mode API tidak sesuai dengan routing chat.');
+          const localLlm = readFileSync('android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplayLocalLLMPlugin.kt', 'utf8');
+          if (!localLlm.includes('com.google.ai.edge.litertlm.Engine') || !localLlm.includes('fun generate(call: PluginCall)') || !localLlm.includes('MODEL_URL')) throw new Error('Integrasi native LLM lokal belum lengkap.');
+          if (!html.includes('local-llm-download') || !html.includes('local-llm-status')) throw new Error('UI pengelola model generatif belum lengkap.');
+          if (!app.includes('MAX_TASKS=500') || !app.includes('data.tasks.length>=MAX_TASKS')) throw new Error('Batas aman jumlah tugas tidak diterapkan.');
+          if (!app.includes('backup.tasks.length>MAX_TASKS') || !app.includes('ID pekerja duplikat') || !app.includes('ID tugas duplikat')) throw new Error('Validasi integritas backup belum lengkap.');
+          if (!app.includes('API key tidak ikut diekspor') || !app.includes('Impor akan mengganti daftar pekerja dan tugas saat ini')) throw new Error('Peringatan privasi atau konfirmasi impor backup hilang.');
           console.log('Validasi APK mandiri lulus: sintaks, ID HTML, modul, dan UI multi-file.');
           NODE
 
@@ -85,8 +112,52 @@ jobs:
           npx cap add android
           mkdir -p android/app/src/main/java/id/mazkiplay/agentoffice
           cp android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplaySecureStoragePlugin.java android/app/src/main/java/id/mazkiplay/agentoffice/
+          cp android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplayLocalLLMPlugin.kt android/app/src/main/java/id/mazkiplay/agentoffice/
           cp android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MainActivity.java android/app/src/main/java/id/mazkiplay/agentoffice/
           npx cap sync android
+
+      - name: Siapkan Kotlin dan LiteRT-LM untuk AI generatif offline
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+          root = Path('android')
+          top = root / 'build.gradle'
+          app = root / 'app' / 'build.gradle'
+          wrapper = root / 'gradle' / 'wrapper' / 'gradle-wrapper.properties'
+          s = top.read_text()
+          s = re.sub(r"com\.android\.tools\.build:gradle:[^'\"]+", "com.android.tools.build:gradle:8.13.2", s)
+          if 'org.jetbrains.kotlin:kotlin-gradle-plugin:' in s:
+              s = re.sub(r"org\.jetbrains\.kotlin:kotlin-gradle-plugin:[^'\"]+", "org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.0", s)
+          else:
+              s = re.sub(r"(dependencies\s*\{)", r"\1\n        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.0'", s, count=1)
+          top.write_text(s)
+          a = app.read_text()
+          if "apply plugin: 'org.jetbrains.kotlin.android'" not in a:
+              a = a.replace("apply plugin: 'com.android.application'", "apply plugin: 'com.android.application'\napply plugin: 'org.jetbrains.kotlin.android'", 1)
+          if 'litertlm-android' not in a:
+              a = re.sub(r"dependencies\s*\{", "dependencies {\n    implementation 'com.google.ai.edge.litertlm:litertlm-android:0.18.0'\n    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'", a, count=1)
+          if 'kotlinOptions { jvmTarget' not in a:
+              a = a.replace('android {', "android {\n    kotlinOptions { jvmTarget = '21' }", 1)
+          app.write_text(a)
+          w = wrapper.read_text()
+          w = re.sub(r'gradle-[0-9.]+-(?:all|bin)\.zip', 'gradle-8.13-all.zip', w)
+          wrapper.write_text(w)
+          variables = root / 'variables.gradle'
+          if variables.exists():
+              v = variables.read_text()
+              v = re.sub(r'minSdkVersion\s*=\s*\d+', 'minSdkVersion = 24', v)
+              variables.write_text(v)
+          manifest = root / 'app' / 'src' / 'main' / 'AndroidManifest.xml'
+          m = manifest.read_text()
+          if 'android.permission.INTERNET' not in m:
+              m = re.sub(r'(<manifest[^>]*>)', r'\1\n    <uses-permission android:name="android.permission.INTERNET"/>', m, count=1)
+          manifest.write_text(m)
+          assert 'litertlm-android:0.18.0' in app.read_text(), 'LiteRT-LM dependency was not added'
+          assert 'org.jetbrains.kotlin.android' in app.read_text(), 'Kotlin Android plugin was not applied'
+          assert 'gradle-8.13-all.zip' in wrapper.read_text(), 'Gradle wrapper was not upgraded'
+          print('LiteRT-LM, Kotlin plugin, Gradle, and model download permission configured.')
+          PY
 
       - name: Siapkan Java
         uses: actions/setup-java@v4
@@ -110,13 +181,25 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publikasikan GitHub Release (opsional)
-        if: inputs.publish_release
+      - name: Siapkan checksum APK
+        run: |
+          cd apk-output
+          sha256sum Mazkiplay-Agent-Office.apk > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Publikasikan GitHub Release publik
+        if: inputs.publish_release || (github.event_name == 'push' && github.ref == 'refs/heads/feat/free-local-ai-mode')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           tag="android-standalone-${GITHUB_RUN_NUMBER}"
-          gh release create "$tag" apk-output/Mazkiplay-Agent-Office.apk \
-            --title "Mazkiplay Agent Office Android ${GITHUB_RUN_NUMBER}" \
-            --notes "APK Android mandiri versi prototipe. UI kantor, profil pekerja dan task board berjalan lokal; integrasi provider AI memerlukan internet/API key. Terminal coding agent, eksekusi AI otonom dan integrasi panggilan/SMS belum tersedia di versi ini." \
-            --latest
+          notes="Mazkiplay Agent Office — APK Android standalone. Berisi UI kantor, profil pekerja, Task Board, koneksi provider AI, AI lokal Qwen3 setelah model diunduh, GitHub workspace, dan modul monitor/perencana perbaikan. Provider cloud membutuhkan internet/API key dan dapat memakai kuota/biaya. AI tidak mengedit kode diam-diam; perubahan kode tetap perlu review, tes, dan build tervalidasi. Belum diverifikasi pada perangkat Android fisik; gunakan sebagai preview publik dan laporkan bug melalui Issues."
+          if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            gh release create "$tag" apk-output/Mazkiplay-Agent-Office.apk apk-output/SHA256SUMS.txt \
+              --title "Mazkiplay Agent Office Android ${GITHUB_RUN_NUMBER} Preview" \
+              --notes "$notes" --prerelease
+          else
+            gh release create "$tag" apk-output/Mazkiplay-Agent-Office.apk apk-output/SHA256SUMS.txt \
+              --title "Mazkiplay Agent Office Android ${GITHUB_RUN_NUMBER}" \
+              --notes "$notes" --latest
+          fi

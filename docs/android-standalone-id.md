@@ -31,3 +31,20 @@ Workflow Android APK membundel isi folder ini tanpa URL hosting, menyalin plugin
 Penemuan model AI: tombol "Cari model tersedia" mengambil katalog model melalui API provider yang dipilih (OpenRouter, OpenAI, Gemini, DeepSeek, Anthropic, atau endpoint OpenAI-compatible). Model yang terdeteksi muncul sebagai saran pada kolom Model ID, namun ID tetap dapat diisi manual. Filter "Hanya model gratis" hanya memberi label gratis secara otomatis untuk katalog OpenRouter berdasarkan metadata harga/ID gratis; untuk provider lain daftar model umumnya tidak menjamin harga atau akses gratis. OpenRouter Free Router `openrouter/free` ditawarkan sebagai pilihan routing ke model gratis yang tersedia, dengan kuota dan ketersediaan yang dapat berubah. Pengguna tetap membutuhkan API key provider masing-masing dan harus meninjau biaya/limit akun.
 
 Endpoint LLM lokal/custom: provider custom OpenAI-compatible dapat dikonfigurasi tanpa API key untuk endpoint lokal atau endpoint tepercaya yang memang tidak memakai autentikasi. Pengguna harus mengisi URL chat completions dan model ID yang sesuai. Model lokal tidak otomatis berjalan di dalam APK; server Ollama/LM Studio atau layanan kompatibel harus sudah berjalan dan dapat dijangkau perangkat. Jangan gunakan HTTP endpoint publik yang tidak tepercaya.
+
+## Dua mode penggunaan AI
+- **Gratis Lokal (default):** integrasi native LiteRT-LM menyiapkan AI generatif offline dengan model Qwen3 0.6B INT4 (berkas `.litertlm` sekitar 347 MB) yang diunduh sesuai permintaan dari repositori publik berlisensi Apache 2.0. Model tidak dibundel ke APK dan prompt tetap di perangkat. Unduhan butuh internet satu kali; sesudah model tersimpan, inferensi dirancang berjalan offline.
+- Tombol **Unduh model** mengunduh berkas ke penyimpanan internal aplikasi, menampilkan progres, memvalidasi rentang ukuran, lalu menyimpan model. Tombol **Aktifkan model** memuat model di background melalui LiteRT-LM CPU. Chat lokal dan Task Board akan memanggil model generatif jika native plugin tersedia dan model sudah diunduh; di APK, tugas lokal tidak lagi dialihkan ke jawaban aturan Lite. Di preview browser yang tidak memiliki plugin native, Asisten Lokal Lite berbasis aturan tetap menjadi fallback dan tidak boleh dianggap sebagai LLM generatif.
+- **API Mode:** gunakan provider/model yang dikonfigurasi pada Pengaturan AI. Panggilan cloud memerlukan API key, internet, dan tunduk pada kuota/harga provider. Endpoint custom tanpa key hanya cocok untuk server lokal/tepercaya.
+- Patch Lab satu file dan multi-file hanya tersedia dalam API Mode karena membutuhkan model generatif yang mampu mengusulkan konten file.
+- **Kompatibilitas:** LiteRT-LM memerlukan Android 7.0/API 24 atau lebih baru; build ini menetapkan minimum SDK 24. Perangkat Android 6 tidak akan bisa memasang APK versi LLM ini.
+- **Status verifikasi:** integrasi kode bukan bukti bahwa model sudah berjalan pada semua perangkat. Build Android dan uji nyata tetap diperlukan; model 0.6B INT4 lebih kecil daripada varian 586 MB, tetapi penggunaan RAM dan kecepatan tetap bergantung pada perangkat. Pada ponsel RAM 4 GB, tutup aplikasi berat dan pastikan ruang kosong memadai sebelum mengaktifkan model.
+
+
+## Visual kantor hybrid (pembaruan)
+
+- Area HQ memakai foto interior kantor dari Unsplash sebagai latar, dengan overlay gelap agar tetap serasi dengan tema navy dan kontras teks.
+- Elemen meja, pekerja, badge status, dan efek kedalaman tetap berupa CSS ringan; animasi idle pekerja sengaja dibatasi agar tidak membebani perangkat.
+- Layout responsif untuk layar kecil dan mendukung `prefers-reduced-motion`.
+- Foto latar memerlukan koneksi internet. Jika gambar eksternal tidak tersedia/offline, warna dasar dan overlay CSS tetap memberi fallback visual; fitur AI lokal, Task Board, dan GitHub tidak bergantung pada gambar tersebut.
+- Visual ini adalah pendekatan hybrid UI/CSS dengan foto latar, bukan simulasi manusia 3D penuh atau video manusia nyata.
