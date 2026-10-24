@@ -32,3 +32,9 @@ $('canvas-download').addEventListener('click',()=>{
  status.textContent='File diekspor ke perangkat: '+name;
 });
 setStarter();
+
+$('canvas-send-task').addEventListener('click',()=>{
+ const detail={filename:(filename.value.trim()||'source.txt'),kind:kind.value,source:source.value};
+ window.dispatchEvent(new CustomEvent('mazkiplay:canvas-source',{detail}));
+ status.textContent='Source dikirim ke Task Board untuk ditinjau AI.';
+});
