@@ -70,9 +70,12 @@ test('real-device release checklist covers checksum, true local inference, offli
 });
 
 test('diagnostic redactor removes representative bearer, GitHub, and API key samples', () => {
-  const declaration = improvement.match(/  function redact\(value\) \{[\\s\\S]*?\n  \}/);
-  assert.ok(declaration, 'redact helper must remain directly testable');
+  const start = improvement.indexOf('  function redact(value) {');
+  const end = improvement.indexOf('\n  }', start);
+  assert.ok(start >= 0 && end > start, 'redact helper must remain directly testable');
+  const declaration = improvement.slice(start, end + 4);
   const sandbox = {};
+  runInNewContext(declaration + '; globalThis.testRedact = redact;', sandbox);
   runInNewContext(declaration[0] + '; globalThis.testRedact = redact;', sandbox);
   const redact = (sandbox as Record<string, unknown>).testRedact as (value: string) => string;
   assert.equal(redact('Bearer abcdefghijklmnopqrstuvwxyz0123456789'), 'Bearer [REDACTED]');
