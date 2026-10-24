@@ -1,0 +1,39 @@
+.command-chat { display: flex; flex-direction: column; gap: 10px; width: min(760px, calc(100vw - 20px)); height: min(88dvh, 850px); max-height: calc(100dvh - 16px); }
+.command-chat > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.command-chat > header h2 { margin: 0; }
+.command-eyebrow { margin: 0 0 4px; color: #6655bd; font-size: 11px; font-weight: 950; letter-spacing: .12em; }
+.command-subtitle { margin: 5px 38px 0 0; font-size: 12px; color: #61616f; line-height: 1.35; }
+.command-messages { flex: 1; min-height: 140px; overflow: auto; display: flex; flex-direction: column; gap: 10px; padding: 12px; border: 1px solid #ddd9ea; border-radius: 16px; background: #f8f7fb; }
+.command-message { max-width: 88%; padding: 10px 13px; border-radius: 16px; overflow-wrap: anywhere; box-shadow: 0 2px 7px #12132f14; }
+.command-message p { margin: 0; white-space: pre-wrap; line-height: 1.4; font-size: 14px; }
+.command-message small { display: block; margin-top: 5px; font-size: 10px; opacity: .72; }
+.command-open { width: auto; margin: 7px 0 0; padding: 5px 9px; border: 1px solid #bcb6d6; border-radius: 9px; color: #393355; background: #f5f3fc; font: 800 11px system-ui, sans-serif; cursor: pointer; box-shadow: none; }
+.command-message.user { align-self: flex-end; color: #fff; background: #5d4bd6; border-bottom-right-radius: 5px; }
+.command-message.office { align-self: flex-start; color: #25243a; background: #fff; border: 1px solid #e5e2ef; border-bottom-left-radius: 5px; }
+.command-config { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.command-config label { display: grid; gap: 4px; font-size: 11px; font-weight: 850; }
+.command-config label:first-child { grid-column: 1 / -1; }
+.command-config input, .command-config select { width: 100%; min-height: 40px; padding: 8px 10px; border: 1px solid #c9c6d6; border-radius: 10px; font: 600 14px system-ui, sans-serif; background: #fff; color: #222; }
+.command-compose { display: flex; align-items: flex-end; gap: 8px; }
+.command-compose textarea { flex: 1; width: 1px; min-height: 48px; max-height: 130px; resize: vertical; padding: 11px; border: 1px solid #c9c6d6; border-radius: 14px; font: 14px/1.4 system-ui, sans-serif; }
+.command-compose button { min-height: 48px; width: auto; margin: 0; padding: 8px 12px; border-radius: 12px; font-size: 13px; box-shadow: none; }
+.command-chat > footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 10px; color: #626173; font-size: 11px; }
+.command-profile-hint { margin: 0; }
+.command-live-note { font-weight: 800; }
+.delegation-modal { width: min(620px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); }
+.delegation-modal .body label { display: grid; gap: 6px; margin: 14px 0; font-weight: 800; }
+.delegation-modal .body label span { font-size: 13px; }
+.delegation-modal .body select, .delegation-modal .body textarea { width: 100%; min-height: 44px; }
+.lite-delegate { flex: none; align-self: center; min-width: 44px; height: 44px; margin-right: 8px; padding: 0 8px; justify-content: center; font-size: 17px; }
+.lite-delegate:focus-visible { outline: 3px solid #6f52ed; outline-offset: 2px; }
+.lite-delegate .body label { display: grid; gap: 6px; margin: 14px 0; font-weight: 800; }
+.lite-delegate .body label span { font-size: 13px; }
+.lite-delegate .body select, .lite-delegate .body textarea { width: 100%; min-height: 44px; }
+@media (max-width: 520px) {
+  .command-chat { width: calc(100vw - 16px); height: calc(100dvh - 16px); max-height: calc(100dvh - 16px); padding: 12px; }
+  .command-config { grid-template-columns: 1fr; }
+  .command-config label:first-child { grid-column: auto; }
+  .command-compose { align-items: stretch; flex-direction: column; }
+  .command-compose textarea { width: 100%; }
+  .command-compose button { width: 100%; }
+}

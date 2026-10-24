@@ -1,11 +1,15 @@
 <!doctype html>
-<html lang="en">
+<html lang="id">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#fff1de" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="M4zK1pL4Y Office" />
     <title>Agent Office</title>
-    <link rel="icon" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
     <link rel="stylesheet" href="./lite.css" />
   </head>
   <body class="lite">
@@ -27,7 +31,7 @@
       <button id="btn-issues" class="btn" type="button">📌 Issues <span class="n"></span></button>
       <button id="btn-pulls" class="btn" type="button">🔀 PRs <span class="n"></span></button>
       <button id="btn-queue" class="btn" type="button">📋 Queue <span class="n"></span></button>
-      <button id="btn-new" class="btn primary" type="button">✨ New task</button>
+      <button id="btn-new" class="btn primary" type="button">💬 Chat</button>
     </nav>
     <div id="toasts"></div>
     <div id="conn" class="conn hidden">Reconnecting…</div>
