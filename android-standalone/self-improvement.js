@@ -8,6 +8,14 @@
   const $ = id => document.getElementById(id);
   const day = () => new Date().toISOString().slice(0, 10);
   const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  // Redact common credentials before diagnostic data is persisted or shared.
+  function redact(value) {
+    return String(value ?? "")
+      .replace(/\bBearer\s+[A-Za-z0-9._~+\/-]+=*/gi, "Bearer [REDACTED]")
+      .replace(/\b(?:gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,})\b/g, "[REDACTED_GITHUB_TOKEN]")
+      .replace(/\bsk-[A-Za-z0-9_-]{20,}\b/g, "[REDACTED_API_KEY]")
+      .replace(/\b(api[_-]?key|access[_-]?token|refresh[_-]?token|token|secret|password|authorization)\s*[:=]\s*["']?[^\s,"'&;]+/gi, "$1=[REDACTED]");
+  }
   const initial = { events: [], lessons: [], ideas: [], activeDays: [], lastReview: null, releaseChecks: {} };
   function read() {
     try {
@@ -32,11 +40,11 @@
     catch { status("Penyimpanan diagnostik penuh. Ekspor laporan dan hapus riwayat lama.", true); return false; }
   }
   function record(kind, message, source = "") {
-    const clean = String(message || kind).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, " ").slice(0, 800);
+    const clean = redact(String(message || kind).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, " ").slice(0, 800);
     const now = Date.now();
     const duplicate = state.events.find(event => event.kind === kind && event.message === clean && now - event.at < 30000);
     if (duplicate) { duplicate.count = (duplicate.count || 1) + 1; duplicate.at = now; }
-    else state.events.push({ id: now.toString(36) + Math.random().toString(36).slice(2, 7), at: now, kind, message: clean, source: String(source || "").slice(0, 250), count: 1 });
+    else state.events.push({ id: now.toString(36) + Math.random().toString(36).slice(2, 7), at: now, kind, message: clean, source: redact(source || "").slice(0, 250), count: 1 });
     state.events = state.events.slice(-MAX);
     save(); render();
   }
@@ -253,13 +261,13 @@
     } else if (button.id === "self-create-task") {
       const findings = reviewWithoutSaving();
       const recent = state.events.slice(-12).filter(e => e.kind === "error" || e.kind === "rejection");
-      const report = "SELF-IMPROVEMENT: analisis diagnostik secara aman. Jangan mengubah kode produksi tanpa review.\n\nTemuan:\n" + (findings.map(f => "- [" + f.level + "] " + f.title + ": " + f.detail).join("\n") || "Tidak ada temuan dasar.") + "\n\nError terbaru:\n" + (recent.map(e => "- " + new Date(e.at).toISOString() + " " + e.kind + ": " + e.message).join("\n") || "Tidak ada error tercatat.") + "\n\nKriteria selesai: akar masalah, reproduksi, patch di branch terpisah, tes regresi, build, rollback.";
+      const report = "SELF-IMPROVEMENT: analisis diagnostik secara aman. Jangan mengubah kode produksi tanpa review.\n\nTemuan:\n" + (findings.map(f => "- [" + f.level + "] " + f.title + ": " + f.detail).join("\n") || "Tidak ada temuan dasar.") + "\n\nError terbaru:\n" + (recent.map(e => "- " + new Date(e.at).toISOString() + " " + e.kind + ": " + redact(e.message)).join("\n") || "Tidak ada error tercatat.") + "\n\nKriteria selesai: akar masalah, reproduksi, patch di branch terpisah, tes regresi, build, rollback.";
       const input = $("task-input");
       if (!input || !$("task-form")) return status("Kolom Task Board tidak ditemukan.", true);
       input.value = report; input.dispatchEvent(new Event("input", { bubbles: true })); $("task-form").requestSubmit();
       status("Laporan diagnostik dikirim ke Task Board sebagai tugas.");
     } else if (button.id === "self-export") {
-      const payload = { app: "Mazkiplay Agent Office", generatedAt: new Date().toISOString(), scope: "local diagnostics only", events: state.events, lessons: state.lessons, ideas: state.ideas, activeDays: state.activeDays, lastReview: state.lastReview, note: "Periksa isi file sebelum dibagikan. Modul ini tidak sengaja mengumpulkan API key." };
+      const payload = { app: "Mazkiplay Agent Office", generatedAt: new Date().toISOString(), scope: "local diagnostics only", events: state.events.map(e => ({ ...e, message: redact(e.message), source: redact(e.source) })), lessons: state.lessons.map(e => ({ ...e, note: redact(e.note) })), ideas: state.ideas.map(e => ({ ...e, title: redact(e.title), detail: redact(e.detail) })), activeDays: state.activeDays, lastReview: state.lastReview, note: "Periksa isi file sebelum dibagikan. Modul ini tidak sengaja mengumpulkan API key." };
       const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }));
       const a = document.createElement("a"); a.href = url; a.download = "mazkiplay-diagnostics-" + day() + ".json"; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
       status("Laporan diagnostik diekspor. Periksa informasi sebelum membagikan.");
