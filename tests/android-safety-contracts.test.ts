@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 const app = readFileSync(new URL('../android-standalone/app.js', import.meta.url), 'utf8');
 const html = readFileSync(new URL('../android-standalone/index.html', import.meta.url), 'utf8');
 const localLlm = readFileSync(new URL('../android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplayLocalLLMPlugin.kt', import.meta.url), 'utf8');
+const secureStorage = readFileSync(new URL('../android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplaySecureStoragePlugin.java', import.meta.url), 'utf8');
 const improvement = readFileSync(new URL('../android-standalone/self-improvement.js', import.meta.url), 'utf8');
 
 test('provider and GitHub credentials are not written into the app localStorage record', () => {
@@ -30,6 +31,15 @@ test('local model downloads are bounded, staged, and reject incomplete or unexpe
   assert.match(localLlm, /downloaded !in MIN_MODEL_BYTES\.\.MAX_MODEL_BYTES/);
   assert.match(localLlm, /partial\.delete\(\)/);
   assert.match(localLlm, /output\.fd\.sync\(\)/);
+});
+
+test('Android secret storage uses Keystore-backed AES-GCM with randomized encryption', () => {
+  assert.match(secureStorage, /AndroidKeyStore/);
+  assert.match(secureStorage, /AES\/GCM\/NoPadding/);
+  assert.match(secureStorage, /setRandomizedEncryptionRequired\(true\)/);
+  assert.match(secureStorage, /GCMParameterSpec\(GCM_TAG_BITS, iv\)/);
+  assert.match(secureStorage, /prefs\.edit\(\)\.putString\(storageKey\(key\), encrypt\(value\)\)/);
+  assert.match(secureStorage, /\.remove\(storageKey\(key\)\)/);
 });
 
 test('self-improvement records suggestions but never silently rewrites code or installs updates', () => {
