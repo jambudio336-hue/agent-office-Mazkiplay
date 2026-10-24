@@ -74,6 +74,7 @@ jobs:
           }
           if (!css.includes('.multi-file-editor')) throw new Error('CSS editor multi-file hilang.');
           if (!app.includes('function discoverModels()') || !app.includes('openrouter/free') || !app.includes('models?')) throw new Error('Penemuan model AI belum lengkap.');
+          if (!app.includes('benchmark-provider') || !app.includes('data.aiBenchmarks') || !html.includes('id="benchmark-provider"')) throw new Error('Benchmark provider AI belum tersambung.');
           if (!app.includes('function localLiteAnswer(') || !app.includes('data.aiMode===\"local\"') || !html.includes('Gratis Lokal — tanpa API key')) throw new Error('Mode lokal gratis belum tersambung.');
           if (!app.includes('async function generateLocalAnswer(') || !app.includes('await generateLocalAnswer(prompt,worker?.role||\"Asisten umum\")')) throw new Error('Task Board belum menggunakan LLM lokal native saat tersedia.');
           if (!app.includes('await callModel(providerId,prompt,$("free-chat-role").value,1200)')) throw new Error('Chat API Mode belum diarahkan ke provider terpilih.');
