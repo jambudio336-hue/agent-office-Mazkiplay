@@ -83,6 +83,9 @@ jobs:
           const localLlm = readFileSync('android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplayLocalLLMPlugin.kt', 'utf8');
           if (!localLlm.includes('com.google.ai.edge.litertlm.Engine') || !localLlm.includes('fun generate(call: PluginCall)') || !localLlm.includes('MODEL_URL')) throw new Error('Integrasi native LLM lokal belum lengkap.');
           if (!html.includes('local-llm-download') || !html.includes('local-llm-status')) throw new Error('UI pengelola model generatif belum lengkap.');
+          if (!app.includes('MAX_TASKS=500') || !app.includes('data.tasks.length>=MAX_TASKS')) throw new Error('Batas aman jumlah tugas tidak diterapkan.');
+          if (!app.includes('backup.tasks.length>MAX_TASKS') || !app.includes('ID pekerja duplikat') || !app.includes('ID tugas duplikat')) throw new Error('Validasi integritas backup belum lengkap.');
+          if (!app.includes('API key tidak ikut diekspor') || !app.includes('Impor akan mengganti daftar pekerja dan tugas saat ini')) throw new Error('Peringatan privasi atau konfirmasi impor backup hilang.');
           console.log('Validasi APK mandiri lulus: sintaks, ID HTML, modul, dan UI multi-file.');
           NODE
 
