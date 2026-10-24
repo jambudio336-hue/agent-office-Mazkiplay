@@ -438,6 +438,24 @@ $("test-provider").onclick=async()=>{
  }finally{b.disabled=false;b.textContent="Uji koneksi"}
 };
 
+$("benchmark-provider").onclick=async()=>{
+ const id=$("provider").value,p=data.providers[id],label=$("benchmark-status");
+ const show=(message,bad=false)=>{if(label){label.textContent=message;label.style.color=bad?"#ff7e8a":"#64e0a4"}};
+ if(!p||(!p.key&&id!=="custom")||!p.model||!p.url){show("Simpan dan uji konfigurasi provider terlebih dahulu.",true);return;}
+ const button=$("benchmark-provider"),start=performance.now();
+ button.disabled=true;button.textContent="Mengukur…";
+ show("Mengirim satu permintaan singkat ke "+(P[id]?.label||id)+"…");
+ try{
+  const answer=await callModel(id,"Balas persis satu token teks: BENCHMARK_OK","QA / Tester",64);
+  const elapsed=Math.round(performance.now()-start);
+  const result={provider:id,model:p.model,latencyMs:elapsed,responseChars:String(answer||"").length,at:new Date().toISOString()};
+  data.aiBenchmarks=Array.isArray(data.aiBenchmarks)?data.aiBenchmarks:[];
+  data.aiBenchmarks.unshift(result);data.aiBenchmarks=data.aiBenchmarks.slice(0,10);save();
+  show("Benchmark berhasil · "+(P[id]?.label||id)+" / "+p.model+" · "+(elapsed/1000).toFixed(2)+" detik · "+result.responseChars+" karakter. Ini pengukuran satu sampel, bukan peringkat kualitas atau jaminan kecepatan.");
+ }catch(err){show("Benchmark gagal · "+(P[id]?.label||id)+" · "+(err?.message||"periksa jaringan, key, model, atau kuota."),true);}
+ finally{button.disabled=false;button.textContent="Benchmark singkat";}
+};
+
 function backupStatus(message,bad=false){const el=$("backup-status");if(el){el.textContent=message;el.style.color=bad?"#ff7e8a":"#64e0a4"}}
 $("export-data").onclick=()=>{
  try{
