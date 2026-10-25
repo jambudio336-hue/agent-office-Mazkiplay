@@ -40,3 +40,16 @@ test('Plugin credentials use native secure storage and only non-secret metadata 
   assert.match(app, /mazkiplay:plugin-context/);
   assert.match(plugin, /summary:detail/);
 });
+
+
+test('Device Bridge provides named employee task dispatch and explicit device permission boundaries', () => {
+  assert.match(html, /id="device-bridge"/);
+  assert.match(html, /id="employee-command-form"/);
+  assert.match(html, /id="employee-command-worker"/);
+  assert.match(app, /function refreshEmployeeCommandChoices/);
+  assert.match(app, /employee-command-form/);
+  assert.match(app, /SpeechRecognition/);
+  assert.match(app, /api\.github\.com\/repos\/jambudio336-hue\/agent-office-Mazkiplay\/releases/);
+  assert.match(html, /Android Accessibility Service native/);
+  assert.match(app, /tidak diunggah otomatis/);
+});
