@@ -136,6 +136,7 @@ jobs:
           cp android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplayLocalLLMPlugin.kt android/app/src/main/java/id/mazkiplay/agentoffice/
           cp android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MainActivity.java android/app/src/main/java/id/mazkiplay/agentoffice/
           cp android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplayDeviceBridgePlugin.java android/app/src/main/java/id/mazkiplay/agentoffice/
+          cp android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplayNotificationsPlugin.java android/app/src/main/java/id/mazkiplay/agentoffice/
           cp android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplayAccessibilityService.java android/app/src/main/java/id/mazkiplay/agentoffice/
           mkdir -p android/app/src/main/res/xml android/app/src/main/res/values
           cp android-standalone/native-android/src/main/res/xml/mazkiplay_accessibility_service.xml android/app/src/main/res/xml/
@@ -159,13 +160,16 @@ jobs:
                       android:resource="@xml/mazkiplay_accessibility_service" />
               </service>
           '''
+          if 'android.permission.POST_NOTIFICATIONS' not in text:
+              text = text.replace('<application', '<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\\n    <application', 1)
           if 'id.mazkiplay.agentoffice.MazkiplayAccessibilityService' not in text:
               if '</application>' not in text:
                   raise SystemExit('Android manifest has no application element')
               text = text.replace('</application>', service + '\n</application>', 1)
               manifest.write_text(text)
           assert 'android.permission.BIND_ACCESSIBILITY_SERVICE' in manifest.read_text()
-          print('User-enabled assistive accessibility service registered.')
+          assert 'android.permission.POST_NOTIFICATIONS' in manifest.read_text()
+          print('Assistive accessibility service and notification permission registered.')
           PY
           npx cap sync android
 
