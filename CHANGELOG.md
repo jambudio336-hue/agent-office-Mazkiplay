@@ -1,3 +1,15 @@
+## [Unreleased] — Adaptive launcher icon coverage
+
+### Fixed
+- Workflow APK kini menghasilkan ikon karakter anime dark untuk bitmap launcher biasa, ikon bulat, dan adaptive foreground Android pada semua density standar.
+- Menambahkan pemeriksaan resource agar foreground adaptive ikut tersedia ketika template launcher Capacitor merujuknya.
+
+### Validation
+- Perubahan workflow sudah dikomit; status build baru harus diperiksa di GitHub Actions sebelum APK dinyatakan berhasil.
+- Tampilan ikon pada launcher perangkat fisik tetap belum diverifikasi.
+
+---
+
 ## [Unreleased] — Android launcher icon
 
 ### Added
