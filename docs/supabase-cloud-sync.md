@@ -22,6 +22,10 @@ The server must have a secret key to activate cloud sync. Without it, `GET /api/
 - Because the secret role bypasses RLS, backend owner filters are mandatory and must be tested. Never return the secret key to a client.
 - Client task updates are restricted to queued tasks; clients cannot set a task to `running` or `succeeded`.
 
+## UI
+
+Open `/cloud` after signing in, or use the Cloud link in Office Lite. The page displays the cloud configuration state and lets a named account create/list workspaces, create/list task metadata, and cancel a queued metadata record. It disables forms when cloud sync is unavailable.
+
 ## Endpoints
 
 - `GET /api/cloud/status`: whether server-side cloud sync is configured and whether the current session has a named account.
