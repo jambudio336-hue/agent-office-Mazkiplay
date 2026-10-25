@@ -67,3 +67,14 @@ test('native device bridge is packaged with explicit opt-in accessibility', () =
   assert.match(app, /!confirm\("Pulihkan "/);
   assert.match(app, /Token dan API key tidak akan diimpor/);
 });
+
+\ntest('Task board supports local search, status filters, live counts, and reset', () => {
+  assert.match(html, /id="task-search"/);
+  assert.match(html, /id="task-filter"/);
+  assert.match(html, /value="running"/);
+  assert.match(html, /id="task-filter-summary"/);
+  assert.match(app, /function taskStatusOf\(t\)/);
+  assert.match(app, /function visibleTasks\(\)/);
+  assert.match(app, /task-clear-filters/);
+  assert.match(app, /Menampilkan .* dari .* tugas/);
+});

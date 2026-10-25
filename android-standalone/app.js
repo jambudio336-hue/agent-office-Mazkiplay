@@ -49,16 +49,21 @@ function decodeGithubFile(content){
 }
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function optionsForWorkers(selected=""){return '<option value="">Tanpa penugasan</option>'+data.workers.map(w=>'<option value="'+esc(w.id)+'" '+(w.id===selected?"selected":"")+'>'+esc(w.name)+" — "+esc(w.role)+"</option>").join("")}
+let taskSearchQuery="",taskStatusFilter="all";
+function taskStatusOf(t){if(t.running)return "running";if(t.error)return "error";if(t.done)return "done";return "open"}
+function visibleTasks(){const q=taskSearchQuery.toLocaleLowerCase("id-ID");return data.tasks.filter(t=>{const status=taskStatusOf(t);const worker=data.workers.find(w=>w.id===t.workerId);const hay=[t.text,t.output,t.error,worker?.name,worker?.role].filter(Boolean).join(" ").toLocaleLowerCase("id-ID");return(!q||hay.includes(q))&&(taskStatusFilter==="all"||status===taskStatusFilter)})}
 function render(){
  $("worker-count").textContent=data.workers.length;$("task-count").textContent=data.tasks.length;
  $("provider-count").textContent=Object.values(data.providers).filter(p=>p&&p.key&&p.model).length;
  $("cap").textContent=data.workers.length+" / "+MAX;$("add-worker").disabled=data.workers.length>=MAX;
  $("workers").innerHTML=data.workers.length?data.workers.map(w=>'<div class="card"><div class="avatar">'+esc(w.name.slice(0,2).toUpperCase())+'</div><div class="meta"><b>'+esc(w.name)+'</b><small>'+esc(w.role)+' · '+esc((P[w.provider]||P.custom).label)+'</small>'+(w.task?'<small>Tugas awal: '+esc(w.task)+'</small>':'<small>Profil tersimpan lokal</small>')+'</div><button class="remove" data-remove="'+esc(w.id)+'" aria-label="Hapus pekerja">×</button></div>').join(""):'<div class="empty">Belum ada pekerja. Tambahkan anggota tim pertamamu.</div>';
  const assign=$("task-worker");if(assign){const previous=assign.value;assign.innerHTML=optionsForWorkers(previous);if([...assign.options].some(o=>o.value===previous))assign.value=previous}
- $("tasks").innerHTML=data.tasks.length?data.tasks.map(t=>{
+ const shownTasks=visibleTasks();
+ const summary=$("task-filter-summary");if(summary)summary.textContent="Menampilkan "+shownTasks.length+" dari "+data.tasks.length+" tugas · "+data.tasks.filter(t=>taskStatusOf(t)==="open").length+" belum selesai · "+data.tasks.filter(t=>taskStatusOf(t)==="running").length+" berjalan · "+data.tasks.filter(t=>taskStatusOf(t)==="done").length+" selesai · "+data.tasks.filter(t=>taskStatusOf(t)==="error").length+" perlu diperiksa.";
+ $("tasks").innerHTML=shownTasks.length?shownTasks.map(t=>{
  const worker=data.workers.find(w=>w.id===t.workerId);
  return '<article class="task-card"><div class="task"><input type="checkbox" data-done="'+esc(t.id)+'" '+(t.done?"checked":"")+' aria-label="Tandai tugas selesai"><span class="'+(t.done?"done":"")+'">'+esc(t.text)+'</span><button class="delete" data-delete="'+esc(t.id)+'">Hapus</button></div><div class="task-tools"><label>Pekerja<select data-assign="'+esc(t.id)+'">'+optionsForWorkers(t.workerId||"")+'</select></label><button class="run-ai" data-run="'+esc(t.id)+'" '+(t.running?"disabled":"")+'>'+(t.running?"AI sedang bekerja…":"▶ Jalankan AI")+'</button></div>'+(t.output?'<div class="task-result-actions"><button type="button" class="secondary" data-canvas-result="'+esc(t.id)+'">Buka hasil di Canvas</button></div><pre class="task-output">'+esc(t.output)+'</pre>':"")+(t.error?'<p class="task-error">'+esc(t.error)+'</p>':"")+'</article>'
- }).join(""):'<div class="empty">Belum ada tugas. Tambahkan pekerjaan untuk timmu.</div>';
+ }).join(""):(data.tasks.length?'<div class="empty">Tidak ada tugas yang cocok dengan pencarian atau filter ini.</div>':'<div class="empty">Belum ada tugas. Tambahkan pekerjaan untuk timmu.</div>');
  if(typeof refreshEmployeeCommandChoices==="function")refreshEmployeeCommandChoices();
 }
 function openDialog(){if(data.workers.length>=MAX){alert("Maksimum 20 pekerja. Hapus profil yang tidak dipakai dahulu.");return}$("worker-name").value="";$("worker-task").value="";$("worker-dialog").showModal()}
@@ -66,6 +71,9 @@ $("add-worker").onclick=openDialog;$("close-dialog").onclick=()=>$("worker-dialo
 $("open-settings").onclick=()=>$("settings").scrollIntoView({behavior:"smooth",block:"start"});
 $("worker-form").onsubmit=e=>{e.preventDefault();if(data.workers.length>=MAX)return alert("Maksimum 20 pekerja.");if(data.tasks.length>=MAX_TASKS&&$("worker-task").value.trim())return alert("Batas 500 tugas tercapai. Hapus tugas lama atau buat cadangan terlebih dahulu.");const name=$("worker-name").value.trim();if(!name)return;const w={id:String(Date.now())+Math.random().toString(16).slice(2),name,role:$("worker-role").value,provider:$("worker-provider").value,task:$("worker-task").value.trim()};data.workers.push(w);if(w.task)data.tasks.unshift({id:w.id,text:w.task,done:false,workerId:w.id});save();render();$("worker-dialog").close()};
 $("workers").onclick=e=>{const b=e.target.closest("[data-remove]");if(!b)return;const w=data.workers.find(x=>x.id===b.dataset.remove);if(w&&confirm("Hapus profil pekerja "+w.name+"?")){data.workers=data.workers.filter(x=>x.id!==w.id);save();render()}};
+$("task-search")?.addEventListener("input",e=>{taskSearchQuery=e.target.value.trim();render()});
+$("task-filter")?.addEventListener("change",e=>{taskStatusFilter=e.target.value;render()});
+$("task-clear-filters")?.addEventListener("click",()=>{taskSearchQuery="";taskStatusFilter="all";$("task-search").value="";$("task-filter").value="all";render()});
 $("task-form").onsubmit=e=>{e.preventDefault();if(data.tasks.length>=MAX_TASKS)return alert("Batas 500 tugas tercapai. Hapus tugas lama atau buat cadangan terlebih dahulu.");const text=$("task-input").value.trim();if(!text)return;data.tasks.unshift({id:String(Date.now())+Math.random().toString(16).slice(2),text,done:false,workerId:$("task-worker")?.value||"",output:"",error:""});$("task-input").value="";save();render()};
 $("tasks").onchange=e=>{
  if(e.target.dataset.done){const t=data.tasks.find(x=>x.id===e.target.dataset.done);if(t)t.done=e.target.checked}
