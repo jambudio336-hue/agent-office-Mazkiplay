@@ -7,6 +7,7 @@
 <a class="drawer-link" href="#free-ai"><span>✳</span>AI Generatif Offline</a>
 <a class="drawer-link" href="#task-board"><span>☷</span>Manajemen Tugas</a>
 <a class="drawer-link" href="#mission-control"><span>◈</span>AI Mission Control</a>
+<a class="drawer-link" href="#qa-release-gate"><span>✓</span>QA Lab & Release Gate</a>
 <a class="drawer-link" href="#github-workspace"><span>⌘</span>GitHub & Repository</a>
 <a class="drawer-link" href="#github-patch-lab"><span>⌗</span>Patch & Coding</a>
 <a class="drawer-link" href="#code-canvas"><span>▧</span>Code Canvas</a>
@@ -41,6 +42,22 @@
  <p id="mission-status" class="status" aria-live="polite">Belum ada misi. Buat tujuan untuk menghasilkan rencana bertahap.</p>
  <div id="mission-progress" class="mission-progress" role="progressbar" aria-label="Kemajuan misi" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0"><span id="mission-progress-bar"></span></div>
  <ol id="mission-steps" class="mission-steps"><li class="empty">Rencana misi akan tampil di sini.</li></ol>
+</section>
+<section id="qa-release-gate" class="panel qa-release-gate">
+ <div class="heading"><div><small class="eyebrow">QUALITY & RELEASE</small><h2>QA Lab · Release Gate</h2></div><span class="pill">VERIFIKASI</span></div>
+ <p class="notice">Periksa hasil GitHub Actions untuk commit terbaru dan tandai hanya pemeriksaan yang benar-benar sudah dilakukan. Gate ini membantu mencegah rilis prematur; checklist manual adalah pernyataan operator, bukan hasil tes otomatis.</p>
+ <div class="actions"><button type="button" id="qa-ci-refresh">Periksa GitHub Actions</button><a id="qa-ci-link" class="secondary qa-ci-link" href="https://github.com/jambudio336-hue/agent-office-Mazkiplay/actions/workflows/android-apk.yml" target="_blank" rel="noopener noreferrer">Buka workflow</a></div>
+ <p id="qa-ci-status" class="status" aria-live="polite">Hubungkan GitHub di bagian Hub GitHub dengan token yang memiliki izin Actions: read untuk memeriksa status build terbaru.</p>
+ <pre id="qa-ci-details" class="task-output" aria-live="polite">Status build belum diperiksa pada sesi ini.</pre>
+ <h3>Checklist verifikasi manual</h3>
+ <div class="qa-checklist">
+  <label><input type="checkbox" data-qa-check="sourceReview"> Source dan perubahan ditinjau</label>
+  <label><input type="checkbox" data-qa-check="apkInstall"> APK dari run yang tepat berhasil dipasang</label>
+  <label><input type="checkbox" data-qa-check="localAi"> Model AI lokal berhasil dimuat dan menghasilkan jawaban</label>
+  <label><input type="checkbox" data-qa-check="permissions"> Izin notifikasi dan aksesibilitas diuji pada perangkat target</label>
+  <label><input type="checkbox" data-qa-check="artifactChecksum"> APK dan checksum SHA-256 dari run yang sama diverifikasi</label>
+ </div>
+ <p id="qa-release-status" class="status" aria-live="polite">Belum siap dinyatakan layak rilis. Periksa CI dan lengkapi bukti pengujian.</p>
 </section>
 <section id="task-board" class="panel"><div class="heading"><div><small class="eyebrow">ALUR KERJA</small><h2>Task board</h2></div></div><form id="task-form" class="taskform"><input id="task-input" maxlength="240" placeholder="Contoh: Buat rancangan aplikasi kasir..." required><select id="task-worker" aria-label="Pilih pekerja"><option value="">Tanpa penugasan</option></select><button type="submit">Simpan tugas</button></form><div class="task-templates" aria-label="Template tugas cepat"><strong>Mulai cepat:</strong> <button type="button" class="secondary" data-task-template="qa">🧪 Audit QA</button> <button type="button" class="secondary" data-task-template="security">🛡️ Audit keamanan</button> <button type="button" class="secondary" data-task-template="web">🌐 Rancang aplikasi web</button> <button type="button" class="secondary" data-task-template="android">📱 Rancang aplikasi Android</button><p class="status">Template membuat instruksi awal; AI tetap perlu dijalankan dan hasilnya wajib ditinjau.</p></div><div class="task-filter-tools"><label for="task-search">Cari tugas<input id="task-search" type="search" maxlength="120" placeholder="Cari nama tugas atau hasil…"></label><label for="task-filter">Status<select id="task-filter"><option value="all">Semua tugas</option><option value="open">Belum selesai</option><option value="running">Sedang berjalan</option><option value="done">Selesai</option><option value="error">Perlu diperiksa</option></select></label><button type="button" id="task-clear-filters" class="secondary">Reset filter</button></div><p id="task-filter-summary" class="status" aria-live="polite">Menampilkan semua tugas.</p><div id="tasks" class="tasklist"></div><div class="local-backup-tools"><div><strong>Cadangan data kantor</strong><p>Ekspor/impor profil pekerja dan tugas lokal. API key dan token tidak ikut dicadangkan.</p></div><div class="actions"><button id="backup-export" type="button" class="secondary">Ekspor cadangan JSON</button><button id="backup-import-trigger" type="button" class="secondary">Pulihkan cadangan</button><input id="backup-import-file" type="file" accept="application/json,.json" hidden></div><p id="backup-status" class="status" aria-live="polite">Cadangan hanya disimpan di tempat yang kamu pilih.</p></div></section><section id="github-workspace" class="panel">
 <div class="heading"><div><small class="eyebrow">WORKSPACE DEVELOPER</small><h2>Hub GitHub</h2></div><span class="pill">READ-ONLY</span></div>
