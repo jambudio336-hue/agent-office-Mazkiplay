@@ -140,3 +140,15 @@
 .canvas-help p{margin:8px 0 0;color:var(--muted,#aab9cc)}
 @media(max-width:760px){.canvas-workspace{grid-template-columns:1fr}.canvas-source,#canvas-frame{height:300px}.canvas-toolbar .actions{width:100%;display:flex;flex-wrap:wrap}.canvas-toolbar .actions button{flex:1}}
 @media(prefers-reduced-motion:reduce){.canvas-workspace *{scroll-behavior:auto}}
+
+/* Multi-file explorer workspace */
+.canvas-workspace-pro{grid-template-columns:minmax(145px,.65fr) minmax(0,1.25fr) minmax(0,1.25fr);align-items:stretch}
+.canvas-tree-pane{min-width:0;border:1px solid var(--line,#29384d);border-radius:14px;overflow:hidden;background:rgba(5,12,24,.6)}
+.canvas-file-tree{display:grid;gap:3px;padding:8px;max-height:420px;overflow:auto}
+.canvas-file-item{display:flex;align-items:center;gap:8px;width:100%;padding:9px 8px;text-align:left;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--text,#e5edf8);font:12px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere;cursor:pointer}
+.canvas-file-item.active{background:#15304a;border-color:#3d7396;color:#bcecff}
+.canvas-file-item:hover{background:#12283d}
+.canvas-file-icon{color:#74c9ed;flex:none}
+.canvas-tree-help{padding:0 10px 10px;font-size:11px;color:var(--muted,#9fb0c7)}
+@media(max-width:900px){.canvas-workspace-pro{grid-template-columns:minmax(0,1fr) minmax(0,2fr)}.canvas-preview-pane{grid-column:1/-1}}
+@media(max-width:640px){.canvas-workspace-pro{grid-template-columns:1fr}.canvas-preview-pane{grid-column:auto}.canvas-file-tree{max-height:180px}.canvas-toolbar .actions{display:flex;flex-wrap:wrap}.canvas-toolbar .actions button{flex:1 1 42%}}
