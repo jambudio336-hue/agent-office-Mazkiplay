@@ -1,3 +1,15 @@
+## [Unreleased] — Task Board quick-start templates
+
+### Added
+- Template tugas cepat untuk audit QA, audit keamanan defensif, rancangan aplikasi web full-stack, dan rancangan aplikasi Android.
+- Setiap template menyimpan instruksi khusus bersama tugas sehingga konteks tersebut benar-benar dikirim ke model AI saat tugas dijalankan.
+- Template tetap menjadi titik awal: hasil harus ditinjau, dan aplikasi tidak mengklaim pengujian atau perubahan kode telah terjadi tanpa bukti.
+
+### Validation
+- Android APK workflow perlu diperiksa pada commit terbaru sebelum menyatakan build lulus.
+
+---
+
 ## [Unreleased] — Task reliability and checkpoints
 
 ### Added
