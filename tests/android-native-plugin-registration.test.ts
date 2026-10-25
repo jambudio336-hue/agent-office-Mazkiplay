@@ -39,34 +39,34 @@ test('native inference is bounded and explicitly reports offline model identity'
 });
 
 test('Capacitor registers the native device bridge and notification plugin', () => {
-  assert.match(activity, /registerPlugin\\(MazkiplayDeviceBridgePlugin\\.class\\)/);
-  assert.match(activity, /registerPlugin\\(MazkiplayNotificationsPlugin\\.class\\)/);
+  assert.ok(activity.includes('registerPlugin(MazkiplayDeviceBridgePlugin.class)'));
+  assert.ok(activity.includes('registerPlugin(MazkiplayNotificationsPlugin.class)'));
   const notificationPlugin = readFileSync(new URL('../android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplayNotificationsPlugin.java', import.meta.url), 'utf8');
-  assert.match(notificationPlugin, /@CapacitorPlugin\\(name = "MazkiplayNotifications"/);
-  assert.match(notificationPlugin, /requestPermission\\(PluginCall call\\)/);
-  assert.match(notificationPlugin, /@PluginMethod public void notify\\(PluginCall call\\)/);
-  assert.match(notificationPlugin, /POST_NOTIFICATIONS/);
+  assert.ok(notificationPlugin.includes('@CapacitorPlugin(name = "MazkiplayNotifications"'));
+  assert.ok(notificationPlugin.includes('requestPermission(PluginCall call)'));
+  assert.ok(notificationPlugin.includes('public void notify(PluginCall call)'));
+  assert.ok(notificationPlugin.includes('POST_NOTIFICATIONS'));
 });
 
 test('Android workflow packages the notification bridge and declares runtime permission', () => {
   const workflow = readFileSync(new URL('../.github/workflows/android-apk.yml', import.meta.url), 'utf8');
-  assert.match(workflow, /MazkiplayNotificationsPlugin\\.java/);
-  assert.match(workflow, /android\\.permission\\.POST_NOTIFICATIONS/);
-  assert.match(workflow, /npm run typecheck/);
-  assert.match(workflow, /npm test/);
+  assert.ok(workflow.includes('MazkiplayNotificationsPlugin.java'));
+  assert.ok(workflow.includes('android.permission.POST_NOTIFICATIONS'));
+  assert.ok(workflow.includes('npm run typecheck'));
+  assert.ok(workflow.includes('npm test'));
 });
 
 test('standalone app wires persistent theme, Indonesian live clock, and native notification UI', () => {
   const styles = readFileSync(new URL('../android-standalone/styles.css', import.meta.url), 'utf8');
-  assert.match(html, /id="theme-toggle"/);
-  assert.match(html, /id="live-date"/);
-  assert.match(html, /id="live-time"/);
-  assert.match(app, /localStorage\\.getItem\\('mazkiplay-theme'\\)/);
-  assert.match(app, /localStorage\\.setItem\\('mazkiplay-theme',next\\)/);
-  assert.match(app, /Intl\\.DateTimeFormat\\('id-ID'/);
-  assert.match(app, /setInterval\\(tickClock,1000\\)/);
-  assert.match(app, /MazkiplayNotifications/);
-  assert.match(app, /notification-permission/);
-  assert.match(app, /notification-test/);
-  assert.match(styles, /data-theme="light"/);
+  assert.ok(html.includes('id="theme-toggle"'));
+  assert.ok(html.includes('id="live-date"'));
+  assert.ok(html.includes('id="live-time"'));
+  assert.ok(app.includes("localStorage.getItem('mazkiplay-theme'"));
+  assert.ok(app.includes("localStorage.setItem('mazkiplay-theme',next)"));
+  assert.ok(app.includes("Intl.DateTimeFormat('id-ID'"));
+  assert.ok(app.includes('setInterval(tickClock,1000)'));
+  assert.ok(app.includes('MazkiplayNotifications'));
+  assert.ok(app.includes('notification-permission'));
+  assert.ok(app.includes('notification-test'));
+  assert.ok(styles.includes('data-theme="light"'));
 });
