@@ -7,6 +7,7 @@ const app = readFileSync(new URL('../android-standalone/app.js', import.meta.url
 const html = readFileSync(new URL('../android-standalone/index.html', import.meta.url), 'utf8');
 const canvas = readFileSync(new URL('../android-standalone/canvas-workspace.js', import.meta.url), 'utf8');
 const css = readFileSync(new URL('../android-standalone/styles.css', import.meta.url), 'utf8');
+const intro = readFileSync(new URL('../android-standalone/intro.js', import.meta.url), 'utf8');
 
 test('Android standalone JavaScript and embedded office activity script parse without syntax errors', () => {
   try { new Script(app, { filename: 'android-standalone/app.js' }); } catch (error) { assert.fail('app.js parse error: ' + error.stack); }
@@ -89,4 +90,14 @@ test('AI employee profiles can be renamed safely and remain callable by their ch
   assert.match(app, /function refreshEmployeeCommandChoices\(\)/);
   assert.match(app, /esc\(w\.name\)\+" — "\+esc\(w\.role\)/);
   assert.match(app, /Kamu bisa memanggilnya dari Pusat Perintah Perangkat/);
+});
+
+
+test('Startup intro references the packaged PNG asset and has a safe skip path', () => {
+  assert.match(html, /src="\.\/assets\/mazkiplay-intro\.png"/);
+  assert.match(intro, /android-standalone\/assets\/mazkiplay-intro\.png/);
+  assert.doesNotMatch(intro, /mazkiplay-intro\.jpg/);
+  assert.match(html, /id="intro-skip"/);
+  assert.match(intro, /skip\.addEventListener\("click", finish\)/);
+  assert.match(intro, /audio\.addEventListener\("error"/);
 });
