@@ -1,3 +1,14 @@
+## [Unreleased] — Android launcher icon
+
+### Added
+- Workflow Android kini merender aset `assets/dark-anime-app-icon.svg` menjadi bitmap launcher `ic_launcher.png` untuk density mdpi sampai xxxhdpi saat build APK.
+- Pemasangan ikon dijalankan setelah Capacitor membuat proyek Android, sehingga tidak perlu menyimpan hasil PNG turunan secara manual di repository.
+
+### Validation
+- Periksa hasil Android APK workflow terbaru. Keberhasilan build tidak menggantikan verifikasi visual ikon di launcher perangkat fisik.
+
+---
+
 ## [Unreleased] — Visual refresh
 
 ### Added
