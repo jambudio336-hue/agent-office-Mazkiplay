@@ -105,3 +105,15 @@ test('task results offer a copy action with a clipboard fallback for Android Web
   assert.ok(app.includes('document.execCommand("copy")'));
   assert.ok(app.includes('Tidak bisa menyalin otomatis'));
 });
+
+
+test('Task Board exposes QA, security, web, and Android templates and sends template instructions to the model', () => {
+  assert.ok(html.includes('data-task-template="qa"'));
+  assert.ok(html.includes('data-task-template="security"'));
+  assert.ok(html.includes('data-task-template="web"'));
+  assert.ok(html.includes('data-task-template="android"'));
+  assert.ok(app.includes('const TASK_TEMPLATES={qa:'));
+  assert.ok(app.includes('INSTRUKSI TEMPLATE KHUSUS:'));
+  assert.ok(app.includes('t.prompt'));
+  assert.ok(app.includes('Batas 500 tugas tercapai'));
+});
