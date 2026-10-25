@@ -98,6 +98,16 @@ Laporkan kerentanan secara bertanggung jawab melalui halaman [Issues](https://gi
 - [ ] Memperbaiki alur koneksi provider serta pesan error agar dapat ditindaklanjuti
 - [ ] Menambah otomasi lintas aplikasi yang aman, transparan, dan hanya dengan persetujuan pengguna
 
+## ⚡ Pusat Performa & Diagnostik
+
+Panel **Pusat Performa & Diagnostik** menyediakan:
+- Mode Hemat Performa untuk mengurangi animasi dan transisi dekoratif pada perangkat terbatas.
+- Ringkasan lokal jumlah pekerja/tugas tersimpan dan indikator perangkat yang tersedia melalui browser.
+- Estimasi penggunaan/kuota penyimpanan origin jika runtime mendukung Storage API.
+- Pemeriksaan lokal tanpa telemetry dan tanpa mengirim data diagnostik ke server.
+
+**Batasan:** mode hemat mengurangi beban efek visual, bukan mempercepat komputasi model atau jaringan secara otomatis. Indikator thread/RAM tidak tersedia pada semua WebView. Diagnostik bukan benchmark CPU/GPU, uji inferensi, atau pemeriksaan keamanan menyeluruh. Untuk menilai kecepatan AI, jalankan benchmark provider terpisah; model lokal tetap bergantung pada kompatibilitas runtime, RAM, chipset, dan ukuran model.
+
 ## 🧪 Validasi
 
 Sebelum rilis, periksa:
