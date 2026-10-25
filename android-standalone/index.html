@@ -46,6 +46,7 @@
 <section id="qa-release-gate" class="panel qa-release-gate">
  <div class="heading"><div><small class="eyebrow">QUALITY & RELEASE</small><h2>QA Lab · Release Gate</h2></div><span class="pill">VERIFIKASI</span></div>
  <p class="notice">Periksa hasil GitHub Actions untuk commit terbaru dan tandai hanya pemeriksaan yang benar-benar sudah dilakukan. Gate ini membantu mencegah rilis prematur; checklist manual adalah pernyataan operator, bukan hasil tes otomatis.</p>
+ <div class="providerform qa-target"><label>Repository<input id="qa-repo" value="jambudio336-hue/agent-office-Mazkiplay" autocomplete="off"></label><label>Branch<input id="qa-branch" value="feat/free-local-ai-mode" autocomplete="off"></label></div>
  <div class="actions"><button type="button" id="qa-ci-refresh">Periksa GitHub Actions</button><a id="qa-ci-link" class="secondary qa-ci-link" href="https://github.com/jambudio336-hue/agent-office-Mazkiplay/actions/workflows/android-apk.yml" target="_blank" rel="noopener noreferrer">Buka workflow</a></div>
  <p id="qa-ci-status" class="status" aria-live="polite">Hubungkan GitHub di bagian Hub GitHub dengan token yang memiliki izin Actions: read untuk memeriksa status build terbaru.</p>
  <pre id="qa-ci-details" class="task-output" aria-live="polite">Status build belum diperiksa pada sesi ini.</pre>
