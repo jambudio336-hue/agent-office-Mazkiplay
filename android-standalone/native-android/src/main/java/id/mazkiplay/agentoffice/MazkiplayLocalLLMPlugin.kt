@@ -71,17 +71,34 @@ class MazkiplayLocalLLMPlugin : Plugin() {
                     return@execute
                 }
                 partial.delete()
-                connection = (URL(MODEL_URL).openConnection() as HttpURLConnection).apply {
-                    requestMethod = "GET"
-                    connectTimeout = 20000
-                    readTimeout = 60000
-                    instanceFollowRedirects = true
-                    setRequestProperty("User-Agent", "Mazkiplay-Agent-Office-Android")
+                var nextUrl = URL(MODEL_URL)
+                if (!nextUrl.protocol.equals("https", ignoreCase = true)) {
+                    throw IllegalStateException("URL sumber model harus menggunakan HTTPS.")
                 }
-                connection.connect()
-                val finalUrl = connection.url
-                if (!finalUrl.protocol.equals("https", ignoreCase = true)) {
-                    throw IllegalStateException("Unduhan model dihentikan karena koneksi akhir bukan HTTPS.")
+                var redirectCount = 0
+                while (true) {
+                    connection = (nextUrl.openConnection() as HttpURLConnection).apply {
+                        requestMethod = "GET"
+                        connectTimeout = 20000
+                        readTimeout = 60000
+                        instanceFollowRedirects = false
+                        setRequestProperty("User-Agent", "Mazkiplay-Agent-Office-Android")
+                    }
+                    connection.connect()
+                    val response = connection.responseCode
+                    if (response !in listOf(301, 302, 303, 307, 308)) break
+                    val location = connection.getHeaderField("Location")
+                    if (location.isNullOrBlank() || redirectCount >= 5) {
+                        throw IllegalStateException("Redirect unduhan model tidak valid atau terlalu banyak.")
+                    }
+                    val redirectedUrl = URL(nextUrl, location)
+                    if (!redirectedUrl.protocol.equals("https", ignoreCase = true)) {
+                        throw IllegalStateException("Redirect unduhan model dihentikan karena bukan HTTPS.")
+                    }
+                    connection.disconnect()
+                    connection = null
+                    nextUrl = redirectedUrl
+                    redirectCount++
                 }
                 val code = connection.responseCode
                 if (code !in 200..299) throw IllegalStateException("Server model membalas HTTP $code.")
