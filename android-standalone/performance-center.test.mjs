@@ -5,7 +5,7 @@ import vm from "node:vm";
 
 const source = readFileSync(new URL("./performance-center.js", import.meta.url), "utf8");
 
-function createHarness({ stored = "{}", storageEstimate = { usage: 1024, quota: 4096 }, state = { workers: [{ id: "w1" }], tasks: [{ id: "t1" }, { id: "t2" }] } } = {}) {
+function createHarness({ stored = "{}", storageEstimate = { usage: 1024, quota: 4096 }, state = { workers: [{ id: "w1" }], tasks: [{ id: "t1" }, { id: "t2" }] }, runtimeFailure = false } = {}) {
   const listeners = {};
   const elements = new Map();
   const classes = new Set();
@@ -44,6 +44,11 @@ function createHarness({ stored = "{}", storageEstimate = { usage: 1024, quota: 
     onLine: true,
     storage: { estimate: async () => storageEstimate }
   };
+  if (runtimeFailure) {
+    Object.defineProperty(navigator, "hardwareConcurrency", {
+      get() { throw new Error("hardware probe failed"); }
+    });
+  }
   vm.runInNewContext(source, { document, localStorage, navigator, JSON, Number, String, Math, Promise });
   return { listeners, element, classes, local, document };
 }
@@ -89,4 +94,12 @@ test("diagnostics degrade gracefully when storage estimates and local state are 
   const output = h.element("performance-diagnostics").textContent;
   assert.match(output, /Estimasi kuota penyimpanan: tidak didukung runtime/);
   assert.match(output, /Ringkasan data aplikasi tidak dapat dibaca/);
+});
+
+test("diagnostics report unexpected runtime errors and always re-enable the button", async () => {
+  const h = createHarness({ runtimeFailure: true });
+  h.listeners.DOMContentLoaded();
+  await h.element("performance-check").handlers.click();
+  assert.match(h.element("performance-diagnostics").textContent, /hardware probe failed/);
+  assert.equal(h.element("performance-check").disabled, false);
 });
