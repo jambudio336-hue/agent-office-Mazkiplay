@@ -608,4 +608,69 @@ window.addEventListener("mazkiplay:canvas-source",event=>{
  status("Source Canvas ditambahkan ke Task Board. Pilih pekerja dan jalankan AI untuk mendapatkan tinjauan.");
 });
 
+
+/* Device Bridge: user-triggered actions only; no hidden cross-app control. */
+function refreshEmployeeCommandChoices(){
+ const el=$("employee-command-worker");if(!el)return;
+ const old=el.value;el.innerHTML='<option value="">Pilih karyawan</option>'+data.workers.map(w=>'<option value="'+esc(w.id)+'">'+esc(w.name)+' — '+esc(w.role)+'</option>').join('');
+ if(data.workers.some(w=>w.id===old))el.value=old;
+}
+function deviceStatus(message,bad=false){const el=$("device-bridge-status");if(el){el.textContent=message;el.style.color=bad?"#ff7e8a":"#64e0a4"}}
+const employeeCommandForm=$("employee-command-form");
+if(employeeCommandForm){
+ refreshEmployeeCommandChoices();
+ employeeCommandForm.addEventListener("submit",e=>{
+  e.preventDefault();
+  const workerId=$("employee-command-worker").value,command=$("employee-command-text").value.trim();
+  if(!command)return deviceStatus("Tulis perintah terlebih dahulu.",true);
+  if(!data.workers.length)return deviceStatus("Buat karyawan AI terlebih dahulu melalui tombol Tambah pekerja.",true);
+  if(!workerId)return deviceStatus("Pilih karyawan AI yang akan menerima tugas.",true);
+  if(data.tasks.length>=MAX_TASKS)return deviceStatus("Batas tugas lokal tercapai. Hapus tugas lama terlebih dahulu.",true);
+  const worker=data.workers.find(w=>w.id===workerId);
+  data.tasks.unshift({id:String(Date.now())+Math.random().toString(16).slice(2),text:command,context:"Perintah dikirim melalui Device Bridge. Karyawan: "+worker.name+" ("+worker.role+"). Jalankan hanya tindakan yang didukung; minta persetujuan untuk tindakan sensitif. Jangan mengklaim kontrol perangkat yang tidak tersedia.",done:false,workerId,output:"",error:""});
+  save();render();refreshEmployeeCommandChoices();
+  $("employee-command-text").value="";
+  $("tasks").scrollIntoView({behavior:"smooth",block:"start"});
+  deviceStatus("Perintah diberikan kepada "+worker.name+" dan masuk ke Task Board. Tekan Jalankan AI untuk mengeksekusi bagian tugas yang didukung.");
+ });
+}
+const voiceButton=$("employee-command-voice");
+if(voiceButton)voiceButton.addEventListener("click",()=>{
+ const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!Recognition)return deviceStatus("Dikte suara tidak didukung WebView ini. Gunakan keyboard atau fitur dikte keyboard Android.",true);
+ const rec=new Recognition();rec.lang="id-ID";rec.interimResults=false;rec.maxAlternatives=1;
+ voiceButton.disabled=true;deviceStatus("Mendengarkan perintah suara…");
+ rec.onresult=e=>{$("employee-command-text").value=e.results?.[0]?.[0]?.transcript||"";deviceStatus("Ucapan ditranskripsikan. Periksa teks lalu tekan Panggil & beri tugas.")};
+ rec.onerror=()=>deviceStatus("Dikte gagal atau izin mikrofon belum tersedia. Coba dikte keyboard Android.",true);
+ rec.onend=()=>{voiceButton.disabled=false};
+ try{rec.start()}catch{voiceButton.disabled=false;deviceStatus("Tidak bisa memulai dikte di perangkat ini.",true)}
+});
+document.querySelectorAll("[data-device-action]").forEach(button=>button.addEventListener("click",()=>{
+ const action=button.dataset.deviceAction;
+ if(action==="google"){window.open("https://www.google.com/","_blank","noopener,noreferrer");deviceStatus("Permintaan membuka Google dikirim ke browser/WebView.")}
+ if(action==="search"){const q=$("device-search-query").value.trim();if(!q)return deviceStatus("Isi kata kunci pencarian dahulu.",true);window.open("https://www.google.com/search?q="+encodeURIComponent(q),"_blank","noopener,noreferrer");deviceStatus("Pencarian Google dibuka.")}
+ if(action==="file")$("device-file-input").click();
+}));
+$("device-file-input")?.addEventListener("change",e=>{
+ const f=e.target.files?.[0];if(!f)return;
+ $("device-file-status").textContent=f.name+" · "+f.size+" byte · "+(f.type||"tipe tidak diketahui");
+ deviceStatus("Berkas dipilih melalui pemilih sistem. Isi file tidak diunggah otomatis.");
+});
+$("device-accessibility-help")?.addEventListener("click",()=>{
+ alert("Untuk otomatisasi lintas aplikasi, versi APK harus memiliki Android Accessibility Service native dan deklarasi layanan yang transparan. Buka Pengaturan Android > Aksesibilitas hanya jika layanan resmi Mazkiplay Agent Office tersedia di daftar. Jangan aktifkan layanan yang tidak kamu kenali. Fitur ini belum diaktifkan oleh halaman web saja.");
+});
+$("device-load-releases")?.addEventListener("click",async()=>{
+ const host=$("device-release-list"),button=$("device-load-releases");button.disabled=true;host.textContent="Memeriksa release publik…";
+ try{
+  const response=await fetch("https://api.github.com/repos/jambudio336-hue/agent-office-Mazkiplay/releases?per_page=5",{headers:{Accept:"application/vnd.github+json"}});
+  if(!response.ok)throw Error("GitHub API HTTP "+response.status);
+  const releases=await response.json(),assets=releases.flatMap(r=>(r.assets||[]).filter(a=>/\.apk$/i.test(a.name)).map(a=>({name:a.name,url:a.browser_download_url,size:a.size,tag:r.tag_name})));
+  if(!assets.length){host.textContent="Belum ada APK .apk yang terlampir pada 5 release terakhir. Periksa GitHub Actions/artifact.";return}
+  host.replaceChildren();
+  for(const a of assets){const link=document.createElement("a");link.href=a.url;link.target="_blank";link.rel="noopener noreferrer";link.textContent=a.name+" · "+a.tag+" · "+(a.size?Math.round(a.size/1024/1024*10)/10+" MB":"ukuran tidak diketahui");link.className="device-release-link";host.append(link)}
+  deviceStatus("Menemukan "+assets.length+" APK release. Buka tautan lalu ikuti prompt instalasi Android; izin install aplikasi tidak dikenal mungkin diperlukan.");
+ }catch(error){host.textContent="Gagal memeriksa release: "+(error?.message||"kesalahan jaringan");deviceStatus("Tidak dapat mengambil release. Coba lagi saat internet tersedia.",true)}
+ finally{button.disabled=false}
+});
+
 initializeApp();
