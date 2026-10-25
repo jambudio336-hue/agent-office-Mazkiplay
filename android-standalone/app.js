@@ -765,4 +765,22 @@ function setOfficeStatus(detail){
 }
 window.addEventListener("mazkiplay:office-task",event=>setOfficeStatus(event.detail||{}));
 
+// Native Android notifications are permission-gated and never silently enabled.
+function notificationStatus(message,bad=false){const el=$("notification-status");if(el){el.textContent=message;el.style.color=bad?"#ff7e8a":"#64e0a4"}}
+function nativeNotifications(){return window.Capacitor?.Plugins?.MazkiplayNotifications||null}
+async function requestNotificationPermission(){
+ const plugin=nativeNotifications();
+ if(!plugin){notificationStatus("Jembatan notifikasi native belum tersedia. Instal APK hasil build terbaru.",true);return false}
+ try{const result=await plugin.requestPermission();const granted=Boolean(result?.granted);const pill=$("notification-pill");if(pill)pill.textContent=granted?"IZIN AKTIF":"IZIN DITOLAK";notificationStatus(granted?"Izin notifikasi Android aktif.":"Izin notifikasi belum diberikan.");return granted}
+ catch(error){notificationStatus("Gagal memeriksa izin: "+(error?.message||"kesalahan native"),true);return false}
+}
+async function sendNativeNotification(title,body){
+ const plugin=nativeNotifications();if(!plugin)return false;
+ try{const permission=await plugin.requestPermission();if(!permission?.granted){notificationStatus("Notifikasi belum diizinkan.",true);return false}await plugin.notify({title:String(title||"M4zk1pL4y.ap").slice(0,80),body:String(body||"Aktivitas AI diperbarui.").slice(0,220)});notificationStatus("Notifikasi Android dikirim.");return true}
+ catch(error){notificationStatus("Notifikasi gagal: "+(error?.message||"kesalahan native"),true);return false}
+}
+$("notification-permission")?.addEventListener("click",requestNotificationPermission);
+$("notification-test")?.addEventListener("click",async()=>{if(await requestNotificationPermission())await sendNativeNotification("M4zk1pL4y.ap — Uji","Notifikasi Android berhasil dipanggil dari aplikasi.")});
+window.addEventListener("mazkiplay:office-task",event=>{const detail=event.detail||{};if(detail.status==="done")sendNativeNotification("Tugas AI selesai",String(detail.task||"Tugas selesai"));if(detail.status==="error")sendNativeNotification("Tugas AI perlu diperiksa",String(detail.task||detail.error||"Buka Task Board untuk detail."))});
+
 initializeApp();
