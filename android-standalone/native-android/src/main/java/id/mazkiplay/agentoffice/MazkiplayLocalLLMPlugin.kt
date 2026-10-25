@@ -19,7 +19,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
-import java.security.MessageDigest
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -80,6 +79,10 @@ class MazkiplayLocalLLMPlugin : Plugin() {
                     setRequestProperty("User-Agent", "Mazkiplay-Agent-Office-Android")
                 }
                 connection.connect()
+                val finalUrl = connection.url
+                if (!finalUrl.protocol.equals("https", ignoreCase = true)) {
+                    throw IllegalStateException("Unduhan model dihentikan karena koneksi akhir bukan HTTPS.")
+                }
                 val code = connection.responseCode
                 if (code !in 200..299) throw IllegalStateException("Server model membalas HTTP $code.")
                 val declaredLength = connection.contentLengthLong
@@ -94,6 +97,9 @@ class MazkiplayLocalLLMPlugin : Plugin() {
                         var count: Int
                         var lastUpdate = 0L
                         while (input.read(buffer).also { count = it } != -1) {
+                            if (downloaded + count > MAX_MODEL_BYTES) {
+                                throw IllegalStateException("Unduhan melewati batas aman ukuran model (" + MAX_MODEL_BYTES + " byte). Berkas sementara dihapus.")
+                            }
                             output.write(buffer, 0, count)
                             downloaded += count
                             val now = System.currentTimeMillis()
