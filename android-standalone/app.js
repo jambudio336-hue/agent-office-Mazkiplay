@@ -22,6 +22,7 @@ for(const task of data.tasks){
   task.running=false;
   task.error=task.error||"Tugas terhenti ketika aplikasi ditutup atau dihentikan. Periksa hasil sebelumnya, lalu jalankan ulang jika diperlukan.";
   task.output=task.output||"";
+  task.updatedAt=new Date().toISOString();
  }
 }
 if(!data.providers||typeof data.providers!=="object")data.providers={};
@@ -71,7 +72,7 @@ function render(){
  const summary=$("task-filter-summary");if(summary)summary.textContent="Menampilkan "+shownTasks.length+" dari "+data.tasks.length+" tugas · "+data.tasks.filter(t=>taskStatusOf(t)==="open").length+" belum selesai · "+data.tasks.filter(t=>taskStatusOf(t)==="running").length+" berjalan · "+data.tasks.filter(t=>taskStatusOf(t)==="done").length+" selesai · "+data.tasks.filter(t=>taskStatusOf(t)==="error").length+" perlu diperiksa.";
  $("tasks").innerHTML=shownTasks.length?shownTasks.map(t=>{
  const worker=data.workers.find(w=>w.id===t.workerId);
- return '<article class="task-card"><div class="task"><input type="checkbox" data-done="'+esc(t.id)+'" '+(t.done?"checked":"")+' aria-label="Tandai tugas selesai"><span class="'+(t.done?"done":"")+'">'+esc(t.text)+'</span><button class="delete" data-delete="'+esc(t.id)+'">Hapus</button></div><div class="task-tools"><label>Pekerja<select data-assign="'+esc(t.id)+'">'+optionsForWorkers(t.workerId||"")+'</select></label><button class="run-ai" data-run="'+esc(t.id)+'" '+(t.running?"disabled":"")+'>'+(t.running?"AI sedang bekerja…":"▶ Jalankan AI")+'</button></div>'+(t.output?'<div class="task-result-actions"><button type="button" class="secondary" data-canvas-result="'+esc(t.id)+'">Buka hasil di Canvas</button></div><pre class="task-output">'+esc(t.output)+'</pre>':"")+(t.error?'<p class="task-error">'+esc(t.error)+'</p>':"")+'</article>'
+ return '<article class="task-card"><div class="task"><input type="checkbox" data-done="'+esc(t.id)+'" '+(t.done?"checked":"")+' aria-label="Tandai tugas selesai"><span class="'+(t.done?"done":"")+'">'+esc(t.text)+'</span><button class="delete" data-delete="'+esc(t.id)+'">Hapus</button></div><div class="task-tools"><label>Pekerja<select data-assign="'+esc(t.id)+'">'+optionsForWorkers(t.workerId||"")+'</select></label><button class="run-ai" data-run="'+esc(t.id)+'" '+(t.running?"disabled":"")+'>'+(t.running?"AI sedang bekerja…":(t.error?"↻ Coba lagi":"▶ Jalankan AI"))+'</button></div>'+(t.output?'<div class="task-result-actions"><button type="button" class="secondary" data-canvas-result="'+esc(t.id)+'">Buka hasil di Canvas</button></div><pre class="task-output">'+esc(t.output)+'</pre>':"")+(t.error?'<p class="task-error">'+esc(t.error)+'</p>':"")+'</article>'
  }).join(""):(data.tasks.length?'<div class="empty">Tidak ada tugas yang cocok dengan pencarian atau filter ini.</div>':'<div class="empty">Belum ada tugas. Tambahkan pekerjaan untuk timmu.</div>');
  if(typeof refreshEmployeeCommandChoices==="function")refreshEmployeeCommandChoices();
 }
@@ -415,13 +416,13 @@ async function callModelWithFallback(providerId,prompt,role,maxTokens=1200){
 async function runTask(id){
  const t=data.tasks.find(x=>x.id===id);if(!t||t.running)return;
  const worker=data.workers.find(w=>w.id===t.workerId),providerId=worker?.provider||$("provider").value;
- t.running=true;t.error="";t.output="";save();render();
+ t.running=true;t.error="";t.output="";t.attempts=(Number.isInteger(t.attempts)?t.attempts:0)+1;t.updatedAt=new Date().toISOString();save();render();
  window.dispatchEvent(new CustomEvent("mazkiplay:office-task",{detail:{status:"running",task:t.text,worker:worker?.name||"AI Agent",role:worker?.role||"Asisten umum"}}));
  try{
   const prompt="Kerjakan permintaan berikut dengan hasil yang bisa ditinjau. Untuk coding, berikan ringkasan pendek, daftar file beserta isi kode yang relevan, langkah pemasangan, cara uji, dan risiko/asumsi. Jika informasi kurang, sebutkan asumsi. Jangan mengklaim perubahan file atau pengujian sudah dilakukan. Jawaban AI bukan berarti tugas sudah benar-benar selesai; pengguna akan menandai selesai setelah memeriksa hasil.\n\nTUGAS: "+t.text+(t.context?"\n\nKONTEKS REPOSITORY/FILE:\n"+t.context:"");
   t.output=data.aiMode==="local"?await generateLocalAnswer(prompt,worker?.role||"Asisten umum"):await callModelWithFallback(providerId,prompt,worker?.role||"Asisten umum");
-  t.done=false;
- }catch(err){t.error=err?.message||"Gagal menjalankan tugas AI";}finally{t.running=false;save();render();window.dispatchEvent(new CustomEvent("mazkiplay:office-task",{detail:{status:t.error?"error":"done",task:t.text,worker:worker?.name||"AI Agent",role:worker?.role||"Asisten umum",error:t.error||""}}))}
+  t.done=false;t.updatedAt=new Date().toISOString();
+ }catch(err){t.error=err?.message||"Gagal menjalankan tugas AI";t.updatedAt=new Date().toISOString();}finally{t.running=false;t.updatedAt=new Date().toISOString();save();render();window.dispatchEvent(new CustomEvent("mazkiplay:office-task",{detail:{status:t.error?"error":"done",task:t.text,worker:worker?.name||"AI Agent",role:worker?.role||"Asisten umum",error:t.error||""}}))}
 }
 const fallbackToggle=$("auto-provider-fallback");if(fallbackToggle){fallbackToggle.checked=data.autoProviderFallback===true;fallbackToggle.addEventListener("change",()=>{data.autoProviderFallback=fallbackToggle.checked;save();status(fallbackToggle.checked?"Fallback otomatis aktif. Permintaan bisa memakai kuota/biaya provider lain.":"Fallback otomatis nonaktif.");});}
 $("ai-mode").value=data.aiMode;
