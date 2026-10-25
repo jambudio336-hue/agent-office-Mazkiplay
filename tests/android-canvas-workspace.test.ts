@@ -36,3 +36,24 @@ test('AI task results can be opened in Canvas and real task state reaches the of
   assert.match(html, /addEventListener\('mazkiplay:office-task'/);
   assert.match(html, /gerakan idle tetap simulasi/i);
 });
+
+
+test('native device bridge is packaged with explicit opt-in accessibility', () => {
+  const plugin = readFileSync(new URL('../android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplayDeviceBridgePlugin.java', import.meta.url), 'utf8');
+  const service = readFileSync(new URL('../android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplayAccessibilityService.java', import.meta.url), 'utf8');
+  const workflow = readFileSync(new URL('../.github/workflows/android-apk.yml', import.meta.url), 'utf8');
+  const activity = readFileSync(new URL('../android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MainActivity.java', import.meta.url), 'utf8');
+  const config = readFileSync(new URL('../android-standalone/native-android/src/main/res/xml/mazkiplay_accessibility_service.xml', import.meta.url), 'utf8');
+  assert.match(html, /id="device-accessibility-status"/);
+  assert.match(html, /id="device-read-screen"/);
+  assert.match(app, /MazkiplayDeviceBridge/);
+  assert.match(plugin, /Settings\.ACTION_ACCESSIBILITY_SETTINGS/);
+  assert.match(plugin, /readScreenSummary/);
+  assert.match(service, /if \(node\.isPassword\(\)\) return/);
+  assert.match(service, /does not click, type, submit forms/i);
+  assert.match(config, /canRetrieveWindowContent="true"/);
+  assert.match(config, /canPerformGestures="false"/);
+  assert.match(activity, /registerPlugin\(MazkiplayDeviceBridgePlugin\.class\)/);
+  assert.match(workflow, /MazkiplayAccessibilityService\.java/);
+  assert.match(workflow, /BIND_ACCESSIBILITY_SERVICE/);
+});
