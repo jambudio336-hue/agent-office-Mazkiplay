@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#182338" />
+    <title>Agent Office · Cloud Workspace</title>
+    <link rel="icon" href="/favicon.svg" />
+    <style>
+      :root{color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,sans-serif;background:#101827;color:#eef4ff}
+      *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#243753 0,#101827 55%);min-height:100vh}
+      header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px max(18px,calc((100vw - 1040px)/2));border-bottom:1px solid #34445d;background:#111b2bcc;position:sticky;top:0;backdrop-filter:blur(14px)}
+      a{color:#9dd6ff;text-decoration:none}main{max-width:1040px;margin:24px auto;padding:0 16px 48px}
+      h1{font-size:clamp(24px,4vw,34px);margin:0 0 4px}h2{font-size:18px;margin:0 0 14px}p{line-height:1.5;color:#bac8dc}
+      .subtitle{margin:0;font-size:14px}.status{margin:18px 0;padding:14px 16px;border:1px solid #42536c;border-radius:14px;background:#172338}
+      .status[data-state=bad]{border-color:#9a6349;background:#35241f}.status[data-state=good]{border-color:#3c7c65;background:#142c29}
+      .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:16px}
+      section{border:1px solid #34445d;background:#172235e8;border-radius:18px;padding:18px;min-width:0}
+      form{display:grid;gap:10px;margin-bottom:18px}label{font-size:13px;color:#c5d3e7;display:grid;gap:6px}
+      input,textarea,select{width:100%;border:1px solid #465a76;border-radius:10px;background:#0e1725;color:#f1f6ff;padding:11px;font:inherit}
+      textarea{min-height:88px;resize:vertical}button,.button{border:1px solid #6d9ecb;background:#24486a;color:white;padding:10px 13px;border-radius:10px;font:inherit;cursor:pointer}
+      button:disabled{opacity:.45;cursor:not-allowed}.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.item{border-top:1px solid #34445d;padding:13px 0}.item:first-child{border-top:0}
+      .muted{font-size:12px;color:#9fb1ca}.pill{display:inline-block;font-size:11px;border:1px solid #506681;border-radius:999px;padding:3px 8px;color:#b9d9f5}
+      .empty{border:1px dashed #465a76;border-radius:10px;padding:14px;text-align:center;color:#9fb1ca;font-size:13px}
+      #notice{white-space:pre-wrap}.danger{border-color:#b56b63;background:#432a2a}.toplinks{display:flex;gap:14px;flex-wrap:wrap;font-size:13px}
+      @media(max-width:520px){header{align-items:flex-start;flex-direction:column}main{margin-top:16px}section{padding:14px}}
+    </style>
+  </head>
+  <body>
+    <header>
+      <div><h1>🏢 Agent Office</h1><p class="subtitle">Cloud workspace & task metadata</p></div>
+      <nav class="toplinks"><a href="/">3D Office</a><a href="/lite">Office Lite</a><a href="/api/health">Server health</a></nav>
+    </header>
+    <main>
+      <div id="notice" class="status" role="status" aria-live="polite">Memeriksa konfigurasi cloud…</div>
+      <div class="grid">
+        <section>
+          <h2>Workspace</h2>
+          <form id="workspace-form">
+            <label>Nama workspace<input id="workspace-name" maxlength="120" required placeholder="Contoh: SATUOS Mobile" /></label>
+            <label>Deskripsi<textarea id="workspace-description" maxlength="2000" placeholder="Tujuan workspace (opsional)"></textarea></label>
+            <button id="workspace-submit" type="submit">+ Buat workspace</button>
+          </form>
+          <div id="workspaces"><div class="empty">Memuat workspace…</div></div>
+        </section>
+        <section>
+          <h2>Antrean tugas cloud</h2>
+          <p class="muted">Tugas di sini menyimpan metadata dan status. Worker belum mengeksekusi tugas cloud ini secara otomatis.</p>
+          <form id="task-form">
+            <label>Judul tugas<input id="task-title" maxlength="200" required placeholder="Contoh: Audit keamanan API" /></label>
+            <label>Instruksi<textarea id="task-prompt" maxlength="20000" placeholder="Instruksi agen (opsional)"></textarea></label>
+            <label>Workspace<select id="task-workspace"><option value="">Tanpa workspace</option></select></label>
+            <label>Prioritas<select id="task-priority"><option value="1">1 · Rendah</option><option value="2">2</option><option value="3" selected>3 · Normal</option><option value="4">4</option><option value="5">5 · Tinggi</option></select></label>
+            <button id="task-submit" type="submit">+ Simpan tugas</button>
+          </form>
+          <div id="tasks"><div class="empty">Memuat tugas…</div></div>
+        </section>
+      </div>
+    </main>
+    <script type="module" src="./cloud.ts"></script>
+  </body>
+</html>
