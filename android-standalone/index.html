@@ -106,9 +106,14 @@
 </div>
 <div class="device-accessibility">
 <div><strong>Otomatisasi antaraplikasi</strong><p>Untuk mengetuk tombol dan membaca elemen di aplikasi lain, diperlukan Android Accessibility Service native, layar izin sistem, dan aturan keamanan. Status di bawah tidak mengklaim layanan tersebut sudah aktif.</p></div>
-<button id="device-accessibility-help" type="button" class="secondary">Cara mengaktifkan aksesibilitas</button>
+<div class="actions">
+<button id="device-accessibility-help" type="button" class="secondary">Buka Pengaturan Aksesibilitas</button>
+<button id="device-accessibility-status" type="button" class="secondary">Periksa status izin</button>
+<button id="device-read-screen" type="button" class="secondary">Baca ringkasan layar</button>
 </div>
-<p id="device-bridge-status" class="status" aria-live="polite">Siap. Pilih tindakan; setiap tugas AI akan muncul di Task Board untuk ditinjau.</p>
+</div>
+<pre id="device-screen-summary" class="device-screen-summary" aria-live="polite">Ringkasan layar belum diminta.</pre>
+<p id="device-bridge-status" class="status" aria-live="polite">Siap. Aksesibilitas hanya aktif jika kamu menyalakannya di Pengaturan Android. Ringkasan layar hanya dibaca saat diminta.</p>
 </section>
 <section id="code-canvas" class="panel code-canvas">
 <div class="heading"><div><small class="eyebrow">AI BUILD STUDIO</small><h2>Canvas · Workspace & Live Preview</h2></div><span class="pill">LOCAL PROJECT</span></div>
