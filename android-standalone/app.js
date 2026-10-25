@@ -741,4 +741,28 @@ $("device-load-releases")?.addEventListener("click",async()=>{
  finally{button.disabled=false}
 });
 
+
+/* Operational office status is driven by real user-triggered task events, not idle animation. */
+function officeLog(message){
+ const host=$("office-activity-log");if(!host)return;
+ const row=document.createElement("div");row.textContent=new Date().toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"})+" · "+message;
+ host.prepend(row);while(host.children.length>8)host.lastElementChild.remove();
+}
+function setOfficeStatus(detail){
+ const pill=$("office-live-pill"),state=$("security-state"),summary=$("security-summary");
+ const workers=[...document.querySelectorAll(".office-worker")];
+ const active=detail.status==="running";
+ if(pill){pill.textContent=active?"● TUGAS AI BERJALAN":detail.status==="error"?"● TUGAS GAGAL":"● MENUNGGU TUGAS";pill.dataset.status=detail.status;}
+ if(state)state.textContent=detail.status==="error"?"STATUS: PERLU DICEK":active?"STATUS: PROSES AI":"STATUS: SIAP";
+ if(summary)summary.textContent=detail.status==="error"?"Tugas terakhir gagal; buka Task Board untuk detail error.":active?"Model AI sedang memproses tugas yang diminta pengguna.":"Tidak ada tugas AI aktif yang dilaporkan.";
+ workers.forEach((node,index)=>{
+  const label=node.querySelector("small"),task=node.querySelector(".worker-task");
+  const isAssigned=detail.worker&&label&&label.textContent===detail.worker;
+  if(isAssigned){if(task)task.textContent=active?"Memproses tugas":detail.status==="error"?"Perlu ditinjau":"Tugas selesai diproses";node.dataset.operationalStatus=detail.status;}
+  else if(label&&task&&!node.dataset.operationalStatus){task.textContent=["Siaga","Menunggu tugas","Tidak ditugaskan","Menunggu instruksi","Siaga"][index%5];}
+ });
+ officeLog((detail.worker||"AI Agent")+" · "+(detail.status==="running"?"mulai memproses: ":detail.status==="error"?"gagal: ":"selesai menghasilkan jawaban untuk: ")+(detail.task||"tugas")+(detail.error?" — "+detail.error:""));
+}
+window.addEventListener("mazkiplay:office-task",event=>setOfficeStatus(event.detail||{}));
+
 initializeApp();
