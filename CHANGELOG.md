@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — Android stability audit
+
+- Added regression tests for Capacitor native notification registration, Android notification permission wiring, and standalone clock/theme persistence.
+- Verified the latest Android APK workflow builds successfully and uploads the `Mazkiplay-Agent-Office-Android-APK` artifact.
+- A previous Android build failed before the notification plugin was registered in `MainActivity`; the plugin is now registered and the subsequent APK workflow passes.
+- CI success confirms automated build and checks only. Real-device tests for notification permission prompts, local model inference, accessibility permissions, and long-running background behavior remain required before calling the APK fully device-verified.
+
 Semua perubahan penting proyek dicatat di sini. Format mengikuti prinsip Keep a Changelog; versi dan tanggal rilis hanya ditetapkan ketika rilis benar-benar diterbitkan.
 
 ## [Unreleased] — 2026-10-25
