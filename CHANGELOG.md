@@ -1,3 +1,18 @@
+## [Unreleased] — Adaptive Performance Center
+
+### Added
+- Panel diagnostik lokal untuk menampilkan indikator perangkat yang tersedia, estimasi penyimpanan, jumlah pekerja, dan jumlah tugas.
+- Mode Hemat Performa yang mengurangi animasi/transisi dekoratif untuk membantu responsivitas pada perangkat terbatas.
+- Preferensi mode hemat disimpan secara lokal; panel tidak mengirim telemetry atau membuat permintaan jaringan.
+- Validasi workflow untuk sintaks modul, wiring UI, dan stylesheet pusat performa.
+
+### Notes
+- Mode hemat tidak mengubah kecepatan CPU/GPU, inferensi model, atau kualitas jaringan.
+- Nilai RAM/thread bergantung pada dukungan WebView; diagnostik bukan benchmark perangkat atau uji inferensi.
+- Status build Actions terbaru dan pengujian pada perangkat fisik tetap harus diperiksa.
+
+---
+
 ## [Unreleased] — Adaptive launcher icon coverage
 
 ### Fixed
