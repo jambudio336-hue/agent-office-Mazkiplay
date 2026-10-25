@@ -57,7 +57,7 @@ function render(){
  const assign=$("task-worker");if(assign){const previous=assign.value;assign.innerHTML=optionsForWorkers(previous);if([...assign.options].some(o=>o.value===previous))assign.value=previous}
  $("tasks").innerHTML=data.tasks.length?data.tasks.map(t=>{
  const worker=data.workers.find(w=>w.id===t.workerId);
- return '<article class="task-card"><div class="task"><input type="checkbox" data-done="'+esc(t.id)+'" '+(t.done?"checked":"")+' aria-label="Tandai tugas selesai"><span class="'+(t.done?"done":"")+'">'+esc(t.text)+'</span><button class="delete" data-delete="'+esc(t.id)+'">Hapus</button></div><div class="task-tools"><label>Pekerja<select data-assign="'+esc(t.id)+'">'+optionsForWorkers(t.workerId||"")+'</select></label><button class="run-ai" data-run="'+esc(t.id)+'" '+(t.running?"disabled":"")+'>'+(t.running?"AI sedang bekerja…":"▶ Jalankan AI")+'</button></div>'+(t.output?'<pre class="task-output">'+esc(t.output)+'</pre>':"")+(t.error?'<p class="task-error">'+esc(t.error)+'</p>':"")+'</article>'
+ return '<article class="task-card"><div class="task"><input type="checkbox" data-done="'+esc(t.id)+'" '+(t.done?"checked":"")+' aria-label="Tandai tugas selesai"><span class="'+(t.done?"done":"")+'">'+esc(t.text)+'</span><button class="delete" data-delete="'+esc(t.id)+'">Hapus</button></div><div class="task-tools"><label>Pekerja<select data-assign="'+esc(t.id)+'">'+optionsForWorkers(t.workerId||"")+'</select></label><button class="run-ai" data-run="'+esc(t.id)+'" '+(t.running?"disabled":"")+'>'+(t.running?"AI sedang bekerja…":"▶ Jalankan AI")+'</button></div>'+(t.output?'<div class="task-result-actions"><button type="button" class="secondary" data-canvas-result="'+esc(t.id)+'">Buka hasil di Canvas</button></div><pre class="task-output">'+esc(t.output)+'</pre>':"")+(t.error?'<p class="task-error">'+esc(t.error)+'</p>':"")+'</article>'
  }).join(""):'<div class="empty">Belum ada tugas. Tambahkan pekerjaan untuk timmu.</div>';
 }
 function openDialog(){if(data.workers.length>=MAX){alert("Maksimum 20 pekerja. Hapus profil yang tidak dipakai dahulu.");return}$("worker-name").value="";$("worker-task").value="";$("worker-dialog").showModal()}
@@ -73,6 +73,8 @@ $("tasks").onchange=e=>{
 };
 $("tasks").onclick=async e=>{
  const del=e.target.closest("[data-delete]");if(del){data.tasks=data.tasks.filter(x=>x.id!==del.dataset.delete);save();render();return}
+ const openCanvas=e.target.closest("[data-canvas-result]");
+ if(openCanvas){const task=data.tasks.find(x=>x.id===openCanvas.dataset.canvasResult);if(task?.output){window.dispatchEvent(new CustomEvent("mazkiplay:canvas-result",{detail:{output:task.output,title:task.text}}));$("code-canvas")?.scrollIntoView({behavior:"smooth",block:"start"});}return}
  const run=e.target.closest("[data-run]");if(run){await runTask(run.dataset.run)}
 };
 
@@ -361,11 +363,12 @@ async function runTask(id){
  const t=data.tasks.find(x=>x.id===id);if(!t||t.running)return;
  const worker=data.workers.find(w=>w.id===t.workerId),providerId=worker?.provider||$("provider").value;
  t.running=true;t.error="";t.output="";save();render();
+ window.dispatchEvent(new CustomEvent("mazkiplay:office-task",{detail:{status:"running",task:t.text,worker:worker?.name||"AI Agent",role:worker?.role||"Asisten umum"}}));
  try{
   const prompt="Kerjakan permintaan berikut dengan hasil yang bisa ditinjau. Untuk coding, berikan ringkasan pendek, daftar file beserta isi kode yang relevan, langkah pemasangan, cara uji, dan risiko/asumsi. Jika informasi kurang, sebutkan asumsi. Jangan mengklaim perubahan file atau pengujian sudah dilakukan. Jawaban AI bukan berarti tugas sudah benar-benar selesai; pengguna akan menandai selesai setelah memeriksa hasil.\n\nTUGAS: "+t.text+(t.context?"\n\nKONTEKS REPOSITORY/FILE:\n"+t.context:"");
   t.output=data.aiMode==="local"?await generateLocalAnswer(prompt,worker?.role||"Asisten umum"):await callModelWithFallback(providerId,prompt,worker?.role||"Asisten umum");
   t.done=false;
- }catch(err){t.error=err?.message||"Gagal menjalankan tugas AI";}finally{t.running=false;save();render()}
+ }catch(err){t.error=err?.message||"Gagal menjalankan tugas AI";}finally{t.running=false;save();render();window.dispatchEvent(new CustomEvent("mazkiplay:office-task",{detail:{status:t.error?"error":"done",task:t.text,worker:worker?.name||"AI Agent",role:worker?.role||"Asisten umum",error:t.error||""}}))}
 }
 const fallbackToggle=$("auto-provider-fallback");if(fallbackToggle){fallbackToggle.checked=data.autoProviderFallback===true;fallbackToggle.addEventListener("change",()=>{data.autoProviderFallback=fallbackToggle.checked;save();status(fallbackToggle.checked?"Fallback otomatis aktif. Permintaan bisa memakai kuota/biaya provider lain.":"Fallback otomatis nonaktif.");});}
 $("ai-mode").value=data.aiMode;
