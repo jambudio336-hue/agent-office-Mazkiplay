@@ -90,6 +90,26 @@
 <div class="plugin-connected-panel"><div class="heading"><div><small class="eyebrow">STATUS LOKAL</small><h3>Koneksi tersimpan</h3></div><button id="plugin-refresh" type="button" class="secondary">Segarkan</button></div><div id="plugin-connected-list" class="plugin-connected-list"><div class="empty">Belum ada plugin yang dikonfigurasi.</div></div></div>
 <div class="notice warning">Keamanan: jangan memasukkan kunci server berhak istimewa ke APK. Untuk operasi sensitif, OAuth, webhook, pengiriman email/pesan, dan deploy yang menulis, gunakan backend dengan rahasia server. Gmail membutuhkan OAuth scope yang sesuai; WhatsApp membutuhkan token bisnis dan Phone Number ID. Token akses OAuth dapat kedaluwarsa. Operasi tulis atau pengiriman pesan harus meminta konfirmasi pengguna.</div>
 </section>
+<section id="device-bridge" class="panel device-bridge">
+<div class="heading"><div><small class="eyebrow">ANDROID DEVICE BRIDGE</small><h2>Pusat Perintah Perangkat</h2></div><span id="device-bridge-status-pill" class="pill">IZIN TERKONTROL</span></div>
+<p class="notice warning">Jembatan ini menjalankan tindakan yang tersedia dari WebView/Android. Kontrol layar lintas aplikasi memerlukan layanan Aksesibilitas Android yang kamu aktifkan sendiri; APK tidak boleh melewati izin sistem atau berjalan diam-diam.</p>
+<form id="employee-command-form" class="providerform">
+<label>Panggil karyawan AI<select id="employee-command-worker"><option value="">Pilih karyawan</option></select></label>
+<label>Perintah / tugas<textarea id="employee-command-text" rows="3" maxlength="1200" placeholder="Contoh: Jarvis, analisis ide aplikasi kasir dan buat rancangan file HTML..." required></textarea></label>
+<div class="actions"><button id="employee-command-submit" type="submit">Panggil & beri tugas</button><button id="employee-command-voice" type="button" class="secondary">🎙️ Dikte perintah</button></div>
+</form>
+<div class="device-action-grid">
+<article><strong>🌐 Buka Google</strong><p>Buka Google di browser perangkat.</p><button type="button" data-device-action="google">Buka Google</button></article>
+<article><strong>🔎 Cari web</strong><label for="device-search-query">Kata kunci</label><input id="device-search-query" placeholder="Contoh: dokumentasi Android Accessibility" maxlength="200"><button type="button" data-device-action="search">Cari sekarang</button></article>
+<article><strong>📂 Pilih berkas</strong><p>Pakai pemilih berkas resmi Android/browser untuk memilih file.</p><button type="button" data-device-action="file">Pilih berkas</button><input id="device-file-input" type="file" hidden><small id="device-file-status" aria-live="polite">Belum ada berkas dipilih.</small></article>
+<article><strong>📦 APK terbaru</strong><p>Ambil APK dari release publik yang tersedia. Instalasi tetap melalui konfirmasi Android.</p><button type="button" id="device-load-releases">Cari APK release</button><div id="device-release-list" class="device-release-list" aria-live="polite">Belum diperiksa.</div></article>
+</div>
+<div class="device-accessibility">
+<div><strong>Otomatisasi antaraplikasi</strong><p>Untuk mengetuk tombol dan membaca elemen di aplikasi lain, diperlukan Android Accessibility Service native, layar izin sistem, dan aturan keamanan. Status di bawah tidak mengklaim layanan tersebut sudah aktif.</p></div>
+<button id="device-accessibility-help" type="button" class="secondary">Cara mengaktifkan aksesibilitas</button>
+</div>
+<p id="device-bridge-status" class="status" aria-live="polite">Siap. Pilih tindakan; setiap tugas AI akan muncul di Task Board untuk ditinjau.</p>
+</section>
 <section id="code-canvas" class="panel code-canvas">
 <div class="heading"><div><small class="eyebrow">AI BUILD STUDIO</small><h2>Canvas · Workspace & Live Preview</h2></div><span class="pill">LOCAL PROJECT</span></div>
 <p class="notice">Workspace multi-file lokal dengan struktur folder, editor source, preview HTML terisolasi, penyimpanan proyek di perangkat, dan ekspor proyek. Kode tidak otomatis menjadi APK: React perlu dependency/bundler dan Android perlu proyek Gradle serta build teruji.</p>
