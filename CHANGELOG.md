@@ -1,3 +1,16 @@
+## [Unreleased] — AI offline download hardening
+
+### Security
+- Batasi setiap unduhan model Qwen3 hingga batas maksimum ukuran berkas, termasuk ketika server tidak mengirim Content-Length, untuk mengurangi risiko penyimpanan terkuras oleh berkas berlebihan.
+- Tolak unduhan apabila URL akhir setelah redirect tidak menggunakan HTTPS.
+- Pulihkan tombol diagnostik performa pada blok `finally` meskipun runtime melempar error; tampilkan pesan error yang bisa ditindaklanjuti.
+
+### Validation
+- Menambahkan tes regresi untuk pemulihan diagnostik ketika probe runtime gagal.
+- Build Android dan tes runtime terbaru tetap harus dikonfirmasi lewat GitHub Actions; belum ada klaim verifikasi perangkat fisik.
+
+---
+
 ## [Unreleased] — Adaptive Performance Center
 
 ### Added
