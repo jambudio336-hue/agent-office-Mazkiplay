@@ -18,6 +18,7 @@ Semua perubahan penting proyek dicatat di sini. Format mengikuti prinsip Keep a 
 - README menjelaskan perbedaan animasi kantor, status tugas, konektor smoke-test, dan integrasi yang sudah berfungsi.
 
 ### Fixed
+- Menghapus deklarasi ganda backupStatus pada APK mandiri yang menyebabkan pemeriksaan sintaks JavaScript gagal sebelum suite pengujian selesai.
 - Memperbaiki ekspektasi pengujian lama yang mencari teks aksesibilitas yang sudah tidak digunakan sehingga tes tidak lagi gagal hanya karena perubahan label UI.
 
 ### Security
