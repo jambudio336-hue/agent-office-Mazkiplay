@@ -16,7 +16,7 @@ test('Plugin Hub is included in Android standalone and loads its module', () => 
 });
 
 test('Plugin catalog contains read-only smoke checks for developer, backend, hosting, mail and messaging APIs', () => {
-  for (const id of ['github', 'supabase', 'vercel', 'netlify', 'gmail', 'whatsapp', 'telegram']) {
+  for (const id of ['github', 'supabase', 'vercel', 'netlify', 'gmail', 'whatsapp', 'telegram', 'google_drive', 'google_calendar', 'discord', 'slack']) {
     assert.match(plugin, new RegExp(id + ': \\{name:'));
   }
   assert.match(plugin, /api\.github\.com\/user/);
