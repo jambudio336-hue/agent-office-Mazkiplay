@@ -16,7 +16,7 @@ main{width:min(90%,520px);padding:32px;border:1px solid #42648a;border-radius:22
 small{color:#7dd3fc;letter-spacing:.16em}h1{font-size:clamp(28px,7vw,44px);margin:12px 0}p{color:#b9cce3;line-height:1.65}
 button{border:0;border-radius:10px;padding:12px 18px;background:#38bdf8;color:#062039;font-weight:800;cursor:pointer}#count{font-weight:800;color:#7dd3fc}
 </style></head>
-<body><main><small>MAZKIPLAY BUILD STUDIO</small><h1>Halo, Developer! 👋</h1><p>Ini preview interaktif. Edit HTML/CSS/JavaScript di panel source, lalu jalankan preview lagi.</p><p>Jumlah klik: <span id="count">0</span></p><button id="go">Tes interaksi</button></main><script>let n=0;document.getElementById('go').addEventListener('click',()=>document.getElementById('count').textContent=++n)<\\/script></body></html>`;
+<body><main><small>MAZKIPLAY BUILD STUDIO</small><h1>Halo, Developer! 👋</h1><p>Ini preview interaktif. Edit HTML/CSS/JavaScript di panel source, lalu jalankan preview lagi.</p><p>Jumlah klik: <span id="count">0</span></p><button id="go">Tes interaksi</button></main><script>let n=0;document.getElementById('go').addEventListener('click',()=>document.getElementById('count').textContent=++n)</script></body></html>`;
   const kind = $("canvas-kind"), filename = $("canvas-filename"), source = $("canvas-source"), frame = $("canvas-frame");
   const status = $("canvas-status"), previewStatus = $("canvas-preview-status"), count = $("canvas-char-count");
   let files = {};
