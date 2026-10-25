@@ -59,6 +59,7 @@ function render(){
  const worker=data.workers.find(w=>w.id===t.workerId);
  return '<article class="task-card"><div class="task"><input type="checkbox" data-done="'+esc(t.id)+'" '+(t.done?"checked":"")+' aria-label="Tandai tugas selesai"><span class="'+(t.done?"done":"")+'">'+esc(t.text)+'</span><button class="delete" data-delete="'+esc(t.id)+'">Hapus</button></div><div class="task-tools"><label>Pekerja<select data-assign="'+esc(t.id)+'">'+optionsForWorkers(t.workerId||"")+'</select></label><button class="run-ai" data-run="'+esc(t.id)+'" '+(t.running?"disabled":"")+'>'+(t.running?"AI sedang bekerja…":"▶ Jalankan AI")+'</button></div>'+(t.output?'<div class="task-result-actions"><button type="button" class="secondary" data-canvas-result="'+esc(t.id)+'">Buka hasil di Canvas</button></div><pre class="task-output">'+esc(t.output)+'</pre>':"")+(t.error?'<p class="task-error">'+esc(t.error)+'</p>':"")+'</article>'
  }).join(""):'<div class="empty">Belum ada tugas. Tambahkan pekerjaan untuk timmu.</div>';
+ if(typeof refreshEmployeeCommandChoices==="function")refreshEmployeeCommandChoices();
 }
 function openDialog(){if(data.workers.length>=MAX){alert("Maksimum 20 pekerja. Hapus profil yang tidak dipakai dahulu.");return}$("worker-name").value="";$("worker-task").value="";$("worker-dialog").showModal()}
 $("add-worker").onclick=openDialog;$("close-dialog").onclick=()=>$("worker-dialog").close();
