@@ -86,3 +86,14 @@ test('task execution records attempts and timestamps, and failed tasks offer a r
   assert.ok(app.includes('(t.error?"↻ Coba lagi":"▶ Jalankan AI")'));
   assert.ok(app.includes('if(!t||t.running)return'));
 });
+
+test('task cards expose attempt metadata and preserve the previous output as a restorable checkpoint', () => {
+  assert.ok(app.includes('data-restore-output'));
+  assert.ok(app.includes('t.previousOutput=t.output'));
+  assert.ok(app.includes('task.previousOutput'));
+  assert.ok(app.includes('task.updatedAt=new Date().toISOString()'));
+  assert.ok(app.includes('task-metadata'));
+  const styles = readFileSync(new URL('../android-standalone/styles.css', import.meta.url), 'utf8');
+  assert.ok(styles.includes('.task-metadata'));
+  assert.ok(styles.includes('.task-result-actions'));
+});
