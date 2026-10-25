@@ -9,7 +9,6 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(MazkiplaySecureStoragePlugin.class);
         registerPlugin(MazkiplayLocalLLMPlugin.class);
         registerPlugin(MazkiplayDeviceBridgePlugin.class);
-        registerPlugin(MazkiplayNotificationsPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }
