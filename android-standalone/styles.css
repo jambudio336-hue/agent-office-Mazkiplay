@@ -222,7 +222,7 @@ header>.pill{margin-left:auto}
 .heading h2{margin:6px 0 0;font-size:clamp(19px,2.3vw,27px);letter-spacing:-.04em}
 .notice{color:#aab7c8;font-size:13px;line-height:1.7}
 .pill{border:1px solid #c9ab7044;background:#c9ab7012;color:#e5cc98;border-radius:999px;padding:7px 10px;font-size:9px;letter-spacing:.08em;font-weight:850;white-space:nowrap}
-button,.button-link{min-height:42px;border:1px solid #d4b77c66;border-radius:11px;padding:10px 15px;background:linear-gradient(135deg,#d5b77d,#a88650);color:#16191e;font:750 12px/1.2 inherit;cursor:pointer;transition:transform .16s ease,filter .16s ease,border-color .16s ease;box-shadow:0 5px 15px #0002}
+button,.button-link{min-height:42px;border:1px solid #d4b77c66;border-radius:11px;padding:10px 15px;background:linear-gradient(135deg,#d5b77d,#a88650);color:#16191e;font-family:inherit;font-size:12px;font-weight:750;line-height:1.2;cursor:pointer;transition:transform .16s ease,filter .16s ease,border-color .16s ease;box-shadow:0 5px 15px #0002}
 button:hover,.button-link:hover{filter:brightness(1.08);transform:translateY(-1px)}
 button:active{transform:translateY(0)}
 button.secondary,.secondary,.worker-rename,.remove,.delete{background:#172230;color:#dce7f3;border-color:#35465a;box-shadow:none}
