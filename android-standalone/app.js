@@ -657,9 +657,33 @@ $("device-file-input")?.addEventListener("change",e=>{
  $("device-file-status").textContent=f.name+" · "+f.size+" byte · "+(f.type||"tipe tidak diketahui");
  deviceStatus("Berkas dipilih melalui pemilih sistem. Isi file tidak diunggah otomatis.");
 });
-$("device-accessibility-help")?.addEventListener("click",()=>{
- alert("Untuk otomatisasi lintas aplikasi, versi APK harus memiliki Android Accessibility Service native dan deklarasi layanan yang transparan. Buka Pengaturan Android > Aksesibilitas hanya jika layanan resmi Mazkiplay Agent Office tersedia di daftar. Jangan aktifkan layanan yang tidak kamu kenali. Fitur ini belum diaktifkan oleh halaman web saja.");
+const nativeDeviceBridge=()=>window.Capacitor?.Plugins?.MazkiplayDeviceBridge;
+async function refreshNativeAccessibilityStatus(){
+ const bridge=nativeDeviceBridge();
+ if(!bridge){deviceStatus("Jembatan native hanya tersedia di APK Android yang sudah dibangun. Browser tidak dapat membaca izin aksesibilitas perangkat.",true);return}
+ try{const result=await bridge.getAccessibilityStatus();deviceStatus(result.message||"Status izin diperiksa.");$("device-bridge-status-pill").textContent=result.enabled?"AKSESIBILITAS AKTIF":"IZIN BELUM AKTIF"}
+ catch(error){deviceStatus("Gagal memeriksa izin aksesibilitas: "+(error?.message||"kesalahan native"),true)}
+}
+$("device-accessibility-help")?.addEventListener("click",async()=>{
+ const bridge=nativeDeviceBridge();
+ if(!bridge){deviceStatus("Buka fitur ini dari APK Android. Browser tidak bisa membuka Pengaturan Aksesibilitas perangkat.",true);return}
+ try{await bridge.openAccessibilitySettings();deviceStatus("Pengaturan Aksesibilitas dibuka. Jika kamu memilih mengaktifkan layanan, kembali ke aplikasi lalu tekan Periksa status izin.")}
+ catch(error){deviceStatus("Tidak bisa membuka Pengaturan Android: "+(error?.message||"kesalahan native"),true)}
 });
+$("device-accessibility-status")?.addEventListener("click",refreshNativeAccessibilityStatus);
+$("device-read-screen")?.addEventListener("click",async()=>{
+ const bridge=nativeDeviceBridge(),out=$("device-screen-summary");
+ if(!bridge){out.textContent="Fitur ringkasan layar memerlukan APK Android. Browser tidak memiliki akses lintas aplikasi.";deviceStatus("Jalankan dari APK Android untuk memakai jembatan native.",true);return}
+ out.textContent="Meminta ringkasan layar…";
+ try{
+  const result=await bridge.readScreenSummary();
+  if(!result.available){out.textContent=result.message||"Layanan belum aktif.";deviceStatus(out.textContent,true);return}
+  const summary=result.summary||{};
+  out.textContent="Aplikasi aktif: "+(summary.packageName||"tidak diketahui")+"\\n\\n"+(Array.isArray(summary.text)?summary.text.join("\\n"):"Tidak ada teks yang dapat dibaca.")+"\\n\\n"+(summary.note||"");
+  deviceStatus("Ringkasan layar dibaca atas permintaanmu dan hanya ditampilkan lokal. Periksa informasi sensitif sebelum membagikan hasil.");
+ }catch(error){out.textContent="Gagal membaca ringkasan layar: "+(error?.message||"kesalahan native");deviceStatus(out.textContent,true)}
+});
+
 $("device-load-releases")?.addEventListener("click",async()=>{
  const host=$("device-release-list"),button=$("device-load-releases");button.disabled=true;host.textContent="Memeriksa release publik…";
  try{
