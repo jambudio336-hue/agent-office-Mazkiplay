@@ -93,7 +93,7 @@ async function start(){
     if(!status.configured){enabled=false;setNotice('Cloud sync belum aktif di server. Atur AGENT_OFFICE_SUPABASE_SECRET_KEY di environment rahasia Node.js; jangan masukkan key ke browser, APK, atau GitHub.','bad')}
     else if(!status.accountEligible){enabled=false;setNotice('Cloud sync membutuhkan akun bernama. Sesi dengan password kantor bersama hanya dapat memakai mode lokal.','bad')}
     else{enabled=true;setNotice('Cloud database tersambung melalui server. Tugas cloud saat ini menyimpan metadata saja; worker belum terhubung.','good');await refresh()}
-  }catch(e){setNotice(e instanceof Error?e.message:'Tidak dapat memeriksa status cloud','bad')}
+  }catch(e){enabled=false;setNotice(e instanceof Error?e.message:'Tidak dapat memeriksa status cloud','bad')}
   for(const form of [workspaceForm,taskForm])for(const input of Array.from(form.elements))if(input instanceof HTMLInputElement||input instanceof HTMLTextAreaElement||input instanceof HTMLSelectElement||input instanceof HTMLButtonElement)input.disabled=!enabled;
 }
 void start();
