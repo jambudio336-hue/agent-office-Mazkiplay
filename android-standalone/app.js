@@ -528,7 +528,7 @@ $("clear-data").onclick=async()=>{
   githubToken="";window.dispatchEvent(new Event("github-token-disconnected"));githubLastFile=null;$("github-token").value="";data={workers:[],tasks:[],providers:{}};localStorage.removeItem(KEY);save();loadProvider();render();backupStatus("Data lokal aplikasi dan rahasia provider dihapus.");githubStatus("Token GitHub dan data lokal dihapus.");status("Data lokal dihapus.");
  }catch(err){backupStatus("Gagal menghapus semua data: "+(err?.message||"kesalahan penyimpanan"),true)}
 };
-async function initializeApp(){
+window.addEventListener("github-token-connected",async()=>{try{const token=await readGithubSecret();if(token){githubToken=token;const input=$("github-token");if(input)input.value=token;githubStatus("Token GitHub tersedia melalui Plugin Hub dan disimpan aman.");}}catch(err){githubStatus("Gagal membaca token GitHub aman.",true)}});\nwindow.addEventListener("github-token-disconnected",()=>{githubToken="";githubLastFile=null;const input=$("github-token");if(input)input.value="";});\nasync function initializeApp(){
  try{const secret=await readGithubSecret();if(secret!==null){githubToken=secret;$("github-token").value=secret;}}catch(err){githubStatus("Gagal membaca token GitHub dari Android Keystore.",true)}
  const store=secureStore();
  for(const [id,p] of Object.entries(data.providers)){
