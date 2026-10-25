@@ -122,8 +122,8 @@ jobs:
           console.log('Validasi APK mandiri lulus: sintaks, ID HTML, modul, dan UI multi-file.');
           NODE
 
-      - name: Uji runtime Pusat Performa
-        run: node --test android-standalone/performance-center.test.mjs
+      - name: Uji regresi modul Android mandiri
+        run: node --test android-standalone/performance-center.test.mjs android-standalone/mission-control.test.mjs
 
       - name: Siapkan Capacitor untuk aplikasi lokal
         run: |
