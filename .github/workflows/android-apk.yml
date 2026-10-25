@@ -162,7 +162,7 @@ jobs:
           if 'id.mazkiplay.agentoffice.MazkiplayAccessibilityService' not in text:
               if '</application>' not in text:
                   raise SystemExit('Android manifest has no application element')
-              text = text.replace('</application>', service + '\\n</application>', 1)
+              text = text.replace('</application>', service + '\n</application>', 1)
               manifest.write_text(text)
           assert 'android.permission.BIND_ACCESSIBILITY_SERVICE' in manifest.read_text()
           print('User-enabled assistive accessibility service registered.')
