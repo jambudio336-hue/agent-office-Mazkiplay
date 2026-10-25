@@ -1,6 +1,6 @@
 const KEY="mazkiplay-agent-office-v1",MAX=20,MAX_TASKS=500;
 const P={
- openrouter:{label:"OpenRouter",url:"https://openrouter.ai/api/v1/chat/completions",model:"openrouter/auto",format:"openai"},
+ openrouter:{label:"OpenRouter",url:"https://openrouter.ai/api/v1/chat/completions",model:"openrouter/free",format:"openai"},
  openai:{label:"OpenAI",url:"https://api.openai.com/v1/chat/completions",model:"gpt-4o-mini",format:"openai"},
  gemini:{label:"Google Gemini",url:"https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",model:"gemini-2.5-flash",format:"openai"},
  deepseek:{label:"DeepSeek",url:"https://api.deepseek.com/chat/completions",model:"deepseek-chat",format:"openai"},
@@ -174,7 +174,7 @@ $("free-models-only").addEventListener("change", () => {
   modelDiscoveryStatus("Filter diperbarui. Daftar harga dan ketersediaan dapat berubah.");
  }
 });
-function loadProvider(){const id=$("provider").value,p=P[id],s=data.providers[id]||{};$("api-key").value=s.key||"";$("model-id").value=s.model||p.model;$("endpoint").value=s.url||p.url;$("endpoint").readOnly=id!=="custom";$("endpoint-label").style.display=id==="custom"?"grid":"none";renderModelOptions();modelDiscoveryStatus("Provider dipilih: "+p.label+". Tekan Cari model tersedia untuk mengambil daftar terbaru.")}
+function loadProvider(){const id=$("provider").value,p=P[id],s=data.providers[id]||{};$("api-key").value=s.key||"";$("model-id").value=s.model||(id==="openrouter"?"openrouter/free":p.model);$("endpoint").value=s.url||p.url;$("endpoint").readOnly=id!=="custom";$("endpoint-label").style.display=id==="custom"?"grid":"none";renderModelOptions();modelDiscoveryStatus("Provider dipilih: "+p.label+". Tekan Cari model tersedia untuk mengambil daftar terbaru.")}
 $("provider").onchange=loadProvider;
 $("provider-form").onsubmit=async e=>{
  e.preventDefault();const id=$("provider").value,p={key:$("api-key").value.trim(),model:$("model-id").value.trim(),url:$("endpoint").value.trim(),format:P[id].format};
