@@ -317,3 +317,14 @@ html[data-theme="light"] .notice,html[data-theme="light"] input,html[data-theme=
 html[data-theme="light"] .theme-toggle{background:#fff;color:#172235}
 @media(max-width:620px){.live-clock{padding:5px 7px}.live-clock span{font-size:9px}.live-clock strong{font-size:13px}.theme-toggle{font-size:11px;padding:7px 8px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+
+/* Adaptive performance mode: preserve layout and controls while reducing decorative work. */
+.performance-center{margin-top:1.25rem;padding:1rem;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,rgba(13,34,55,.86),rgba(8,18,31,.92))}
+.performance-center h3{margin:.3rem 0;font-size:1.05rem}
+.performance-chip{display:inline-flex;align-items:center;padding:.3rem .55rem;border:1px solid rgba(104,224,232,.45);border-radius:999px;color:var(--cyan);font-size:.68rem;letter-spacing:.08em}
+.performance-toggle{display:flex;align-items:center;gap:.65rem;padding:.7rem 0;font-weight:650}
+.performance-diagnostics{white-space:pre-wrap;overflow-wrap:anywhere;max-height:16rem;overflow:auto;padding:.85rem;border:1px solid var(--line);border-radius:10px;background:rgba(0,0,0,.2);color:var(--muted);font: .82rem/1.55 ui-monospace,SFMono-Regular,Consolas,monospace}
+body.perf-lite *,body.perf-lite *::before,body.perf-lite *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+body.perf-lite .office-ambient,body.perf-lite .worker-idle,body.perf-lite .pulse,body.perf-lite .glow,body.perf-lite [class*="particle"]{animation:none!important;filter:none!important}
+@media(prefers-reduced-motion:reduce){.performance-center *{scroll-behavior:auto}}
