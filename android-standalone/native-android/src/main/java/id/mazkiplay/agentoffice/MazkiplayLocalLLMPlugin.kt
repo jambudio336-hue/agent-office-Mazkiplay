@@ -77,17 +77,18 @@ class MazkiplayLocalLLMPlugin : Plugin() {
                 }
                 var redirectCount = 0
                 while (true) {
-                    connection = (nextUrl.openConnection() as HttpURLConnection).apply {
+                    val activeConnection = (nextUrl.openConnection() as HttpURLConnection).apply {
                         requestMethod = "GET"
                         connectTimeout = 20000
                         readTimeout = 60000
                         instanceFollowRedirects = false
                         setRequestProperty("User-Agent", "Mazkiplay-Agent-Office-Android")
                     }
-                    connection.connect()
-                    val response = connection.responseCode
+                    connection = activeConnection
+                    activeConnection.connect()
+                    val response = activeConnection.responseCode
                     if (response !in listOf(301, 302, 303, 307, 308)) break
-                    val location = connection.getHeaderField("Location")
+                    val location = activeConnection.getHeaderField("Location")
                     if (location.isNullOrBlank() || redirectCount >= 5) {
                         throw IllegalStateException("Redirect unduhan model tidak valid atau terlalu banyak.")
                     }
@@ -95,20 +96,22 @@ class MazkiplayLocalLLMPlugin : Plugin() {
                     if (!redirectedUrl.protocol.equals("https", ignoreCase = true)) {
                         throw IllegalStateException("Redirect unduhan model dihentikan karena bukan HTTPS.")
                     }
-                    connection.disconnect()
+                    activeConnection.disconnect()
                     connection = null
                     nextUrl = redirectedUrl
                     redirectCount++
                 }
-                val code = connection.responseCode
+                val activeConnection = connection
+                    ?: throw IllegalStateException("Koneksi unduhan model tidak tersedia.")
+                val code = activeConnection.responseCode
                 if (code !in 200..299) throw IllegalStateException("Server model membalas HTTP $code.")
-                val declaredLength = connection.contentLengthLong
+                val declaredLength = activeConnection.contentLengthLong
                 if (declaredLength > 0 && declaredLength !in MIN_MODEL_BYTES..MAX_MODEL_BYTES) {
                     throw IllegalStateException("Ukuran model dari server tidak sesuai perkiraan model INT4 (sekitar 329 MiB).")
                 }
                 val total = if (declaredLength > 0) declaredLength else 0L
                 var downloaded = 0L
-                BufferedInputStream(connection.inputStream).use { input ->
+                BufferedInputStream(activeConnection.inputStream).use { input ->
                     FileOutputStream(partial).use { output ->
                         val buffer = ByteArray(1024 * 128)
                         var count: Int
