@@ -1,6 +1,8 @@
 ## [Unreleased] — Adaptive Performance Center
 
 ### Added
+- Tes runtime Node.js untuk memverifikasi pemulihan preferensi, penyimpanan toggle, estimasi storage, jumlah pekerja/tugas, dan penanganan storage yang tidak tersedia.
+- Workflow Android menjalankan tes runtime Performance Center sebelum membuat proyek native, sehingga regresi logika lokal dapat menghentikan build lebih awal.
 - Panel diagnostik lokal untuk menampilkan indikator perangkat yang tersedia, estimasi penyimpanan, jumlah pekerja, dan jumlah tugas.
 - Mode Hemat Performa yang mengurangi animasi/transisi dekoratif untuk membantu responsivitas pada perangkat terbatas.
 - Preferensi mode hemat disimpan secara lokal; panel tidak mengirim telemetry atau membuat permintaan jaringan.
