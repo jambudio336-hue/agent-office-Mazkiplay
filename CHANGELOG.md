@@ -5,6 +5,8 @@ Semua perubahan penting proyek dicatat di sini. Format mengikuti prinsip Keep a 
 ## [Unreleased] — 2026-10-25
 
 ### Added
+- Kontrol ganti nama untuk setiap profil karyawan AI; nama baru langsung tercermin di daftar dan pemilih perintah karyawan, dengan validasi nama kosong dan batas 48 karakter.
+- Pengujian regresi untuk alur ganti nama karyawan AI dan keterpanggilan melalui Pusat Perintah Perangkat.
 - Fondasi plugin native `MazkiplayDeviceBridge` untuk memeriksa status layanan aksesibilitas Android, membuka pengaturannya, dan meminta ringkasan layar.
 - Layanan aksesibilitas dengan opt-in manual, pembacaan atas permintaan, pengecualian node yang dikenali sebagai kolom kata sandi, batas jumlah teks, dan tanpa pengiriman otomatis.
 - Kontrol Device Bridge pada aplikasi mandiri untuk memeriksa izin serta menampilkan ringkasan layar lokal.
