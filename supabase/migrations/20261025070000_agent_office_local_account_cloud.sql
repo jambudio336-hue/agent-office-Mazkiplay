@@ -28,6 +28,7 @@ create table public.office_cloud_tasks (
   updated_at timestamptz not null default now(),
   started_at timestamptz,
   finished_at timestamptz,
+  unique (id, owner_account_id),
   constraint office_cloud_tasks_owner_workspace_fk
     foreign key (workspace_id, owner_account_id)
     references public.office_cloud_workspaces(id, owner_account_id)
