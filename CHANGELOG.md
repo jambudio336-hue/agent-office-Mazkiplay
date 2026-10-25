@@ -2,7 +2,7 @@
 
 ### Security
 - Batasi setiap unduhan model Qwen3 hingga batas maksimum ukuran berkas, termasuk ketika server tidak mengirim Content-Length, untuk mengurangi risiko penyimpanan terkuras oleh berkas berlebihan.
-- Tolak unduhan apabila URL akhir setelah redirect tidak menggunakan HTTPS.
+- Validasi setiap redirect unduhan model dan tolak tujuan HTTP/non-HTTPS atau rantai redirect berlebihan.
 - Pulihkan tombol diagnostik performa pada blok `finally` meskipun runtime melempar error; tampilkan pesan error yang bisa ditindaklanjuti.
 
 ### Validation
