@@ -79,6 +79,41 @@ $("tasks").onclick=async e=>{
  const run=e.target.closest("[data-run]");if(run){await runTask(run.dataset.run)}
 };
 
+// Portable local backup: secrets are intentionally excluded.
+const backupStatus=(message,bad=false)=>{const el=$("backup-status");if(el){el.textContent=message;el.style.color=bad?"#ff7e8a":"#64e0a4"}};
+function buildLocalBackup(){
+ const safeProviders=Object.fromEntries(Object.entries(data.providers||{}).map(([id,p])=>{const copy={...p};delete copy.key;return[id,copy]}));
+ return {format:"mazkiplay-agent-office-backup",version:1,exportedAt:new Date().toISOString(),data:{workers:data.workers.map(w=>({...w})),tasks:data.tasks.map(t=>({...t,running:false})),providers:safeProviders,aiMode:data.aiMode==="api"?"api":"local"}};
+}
+$("backup-export")?.addEventListener("click",()=>{
+ try{
+  const blob=new Blob([JSON.stringify(buildLocalBackup(),null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob),link=document.createElement("a");
+  link.href=url;link.download="mazkiplay-agent-office-backup-"+new Date().toISOString().slice(0,10)+".json";
+  document.body.append(link);link.click();link.remove();URL.revokeObjectURL(url);
+  backupStatus("Cadangan diekspor. Simpan file di lokasi aman; token dan API key tidak disertakan.");
+ }catch(error){backupStatus("Gagal mengekspor cadangan: "+(error?.message||"kesalahan lokal"),true)}
+});
+$("backup-import-trigger")?.addEventListener("click",()=>$("backup-import-file")?.click());
+$("backup-import-file")?.addEventListener("change",async event=>{
+ const file=event.target.files?.[0];event.target.value="";if(!file)return;
+ if(file.size>2*1024*1024)return backupStatus("File cadangan terlalu besar (maksimum 2 MB).",true);
+ try{
+  const parsed=parse(await file.text());
+  if(!parsed||parsed.format!=="mazkiplay-agent-office-backup"||parsed.version!==1||!parsed.data||!Array.isArray(parsed.data.workers)||!Array.isArray(parsed.data.tasks))throw Error("Format cadangan tidak dikenali atau rusak.");
+  if(parsed.data.workers.length>MAX||parsed.data.tasks.length>MAX_TASKS)throw Error("Cadangan melebihi batas 20 pekerja atau 500 tugas.");
+  const workers=parsed.data.workers;
+  if(workers.some(w=>!w||typeof w.name!=="string"||typeof w.id!=="string"||typeof w.role!=="string"))throw Error("Profil pekerja tidak valid.");
+  const workerIds=new Set(workers.map(w=>w.id));
+  if(parsed.data.tasks.some(t=>!t||typeof t.id!=="string"||typeof t.text!=="string"))throw Error("Daftar tugas tidak valid.");
+  if(!confirm("Pulihkan "+workers.length+" pekerja dan "+parsed.data.tasks.length+" tugas? Data kantor lokal saat ini akan diganti. Token dan API key tidak akan diimpor."))return;
+  const providers={};
+  for(const [id,p] of Object.entries(parsed.data.providers||{})){if(p&&typeof p==="object"){const copy={...p};delete copy.key;providers[id]=copy}}
+  data={workers:workers.map(w=>({...w})),tasks:parsed.data.tasks.map(t=>({...t,running:false,workerId:workerIds.has(t.workerId)?t.workerId:""})),providers,aiMode:parsed.data.aiMode==="api"?"api":"local"};
+  if(!save())throw Error("Penyimpanan lokal gagal; periksa ruang perangkat.");
+  render();backupStatus("Cadangan berhasil dipulihkan. Konfigurasi rahasia perlu dimasukkan kembali secara manual.");
+ }catch(error){backupStatus("Cadangan tidak dapat dipulihkan: "+(error?.message||"kesalahan file"),true)}
+});
 const modelCatalogs = Object.create(null);
 function modelDiscoveryStatus(message, bad = false) {
  const el = $("model-discovery-status");
