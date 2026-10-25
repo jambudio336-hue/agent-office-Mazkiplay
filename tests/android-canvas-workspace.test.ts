@@ -9,7 +9,7 @@ const canvas = readFileSync(new URL('../android-standalone/canvas-workspace.js',
 const css = readFileSync(new URL('../android-standalone/styles.css', import.meta.url), 'utf8');
 
 test('Android standalone JavaScript and embedded office activity script parse without syntax errors', () => {
-  assert.doesNotThrow(() => new Script(app, { filename: 'android-standalone/app.js' }));
+  try { new Script(app, { filename: 'android-standalone/app.js' }); } catch (error) { assert.fail('app.js parse error: ' + error.stack); }
   assert.doesNotThrow(() => new Script(canvas, { filename: 'android-standalone/canvas-workspace.js' }));
   const inlineOffice = html.match(/<script>\s*([\s\S]*?)<\/script>/);
   assert.ok(inlineOffice, 'inline office activity script exists');
