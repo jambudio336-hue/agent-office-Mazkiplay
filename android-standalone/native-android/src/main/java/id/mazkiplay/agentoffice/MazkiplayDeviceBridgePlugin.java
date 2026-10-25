@@ -2,6 +2,7 @@ package id.mazkiplay.agentoffice;
 
 import android.accessibilityservice.AccessibilityServiceInfo;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.provider.Settings;
 import android.view.accessibility.AccessibilityManager;
@@ -18,7 +19,7 @@ import java.util.List;
 public class MazkiplayDeviceBridgePlugin extends Plugin {
     @PluginMethod
     public void getAccessibilityStatus(PluginCall call) {
-        AccessibilityManager manager = (AccessibilityManager) getContext().getSystemService(ACCESSIBILITY_SERVICE);
+        AccessibilityManager manager = (AccessibilityManager) getContext().getSystemService(Context.ACCESSIBILITY_SERVICE);
         boolean enabled = false;
         if (manager != null) {
             List<AccessibilityServiceInfo> services =
