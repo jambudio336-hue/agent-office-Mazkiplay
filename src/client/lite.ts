@@ -23,12 +23,17 @@ import { openQueue } from './ui/queue';
 import { openAsk } from './ui/ask';
 import { openMeeting, type MeetingPreset } from './ui/meeting';
 import { openSignIns } from './ui/signins';
+import { openDelegation } from './ui/mobile/delegation';
+import { employeeProfile, openDashboardChat } from './ui/mobile/dashboard';
+import { installWelcomeIntro } from './ui/mobile/welcome';
 import { modelBadge, providerLabel } from './ui/provider';
 import { byUrgency, waitingInOrder, waitingLabel } from './nextup';
 import { askNotifyPermission, DesktopNotifier, notifyPermission, waitingOnSomeone } from './notify';
 import { repoChoices } from './shared/hiring';
 // The tab title counts the workers waiting on someone, on every floor, as the 3D office's does.
 import { renderTitle } from './shared/title';
+
+installWelcomeIntro();
 
 // Sent here because this browser can't draw the 3D office (see noWebGL in core/scene.ts).
 if (new URLSearchParams(location.search).get('why') === 'webgl') {
@@ -155,6 +160,7 @@ function workerCard(w: WorkerInfo): HTMLElement {
           : (w.task?.summary ?? w.activity);
   const sub = [
     w.kind === 'agent' ? `⚙️ ${providerLabel(w.provider, store.project)}${badge ? ` · ${badge}` : ''}` : '🐚 shell',
+    employeeProfile(w.id)?.role && `🪪 ${employeeProfile(w.id)!.role}`,
     desk && (desk.station ? `📌 ${desk.label}` : desk.label),
     w.worktree && `🌿 ${w.worktree.branch}`,
     w.pr && `🔀 PR #${w.pr.number}`,
@@ -179,6 +185,9 @@ function workerCard(w: WorkerInfo): HTMLElement {
     ),
     // One that's asking something is answered in its terminal, where the question is.
     asleep || w.lost || w.status === 'needs_input' ? null : h('button.btn.lite-say', { type: 'button', title: `Send ${w.name} a prompt`, 'aria-label': `Send ${w.name} a prompt`, onclick: () => promptWorker(w.id) }, '✍️'),
+    w.kind === 'agent' && !asleep && !w.lost && w.status !== 'needs_input'
+      ? h('button.btn.lite-delegate', { type: 'button', title: `Minta ${w.name} membuat lalu menyerahkan hasil kepada pekerja lain`, 'aria-label': `Delegasikan pekerjaan melalui ${w.name}`, onclick: () => openDelegation(w, [...store.workers.values()], (prompt) => net.send({ t: 'worker.prompt', workerId: w.id, prompt })) }, '🤝')
+      : null,
   );
 }
 
@@ -261,7 +270,7 @@ function hire(deskId: string, prompt: string, worktree: boolean, provider?: Agen
 }
 
 /** With `issue`, the worker the prompt goes to takes that GitHub issue. */
-function sendToWorker(title: string, text: { context?: string; initial?: string } = {}, issue?: number) {
+function sendToWorker(title: string, text: { context?: string; initial?: string } = {}, issue?: number, onDispatched?: (workerId?: string) => void) {
   if (!store.project) return toast('Pick a floor first', 'warn');
   // The back office's desks too, as far as the floor's built out (see WING).
   const desk = nextFreeSeat((id) => !!store.workerAtDesk(id), store.floorPlan.wing)?.id;
@@ -276,8 +285,13 @@ function sendToWorker(title: string, text: { context?: string; initial?: string 
     providerOption: true,
     repoOptions: repoChoices(),
     onSubmit: (prompt, to, worktree, provider, model, effort, repos) => {
-      if (to) net.send({ t: 'worker.prompt', workerId: to, prompt, issue });
-      else if (desk) hire(desk, prompt, worktree, provider, model, effort, repos, issue);
+      if (to) {
+        net.send({ t: 'worker.prompt', workerId: to, prompt, issue });
+        onDispatched?.(to);
+      } else if (desk) {
+        hire(desk, prompt, worktree, provider, model, effort, repos, issue);
+        onDispatched?.();
+      }
     },
   });
 }
@@ -320,7 +334,19 @@ function showMeeting(preset?: MeetingPreset) {
 $('btn-issues').addEventListener('click', () => openBoard('issues', net, boardActions()));
 $('btn-pulls').addEventListener('click', () => openBoard('pulls', net, boardActions()));
 $('btn-queue').addEventListener('click', () => openQueue(net, { openTerminal: openWorker }));
-$('btn-new').addEventListener('click', () => sendToWorker('✨ New task'));
+$('btn-new').textContent = '💬 Chat';
+$('btn-new').addEventListener('click', () => openDashboardChat({
+  workers: () => [...store.workers.values()],
+  openWorker,
+  dispatch: (targetId, prompt, _profile, onSent) => {
+    if (targetId) {
+      net.send({ t: 'worker.prompt', workerId: targetId, prompt });
+      onSent(targetId);
+    } else {
+      sendToWorker('✨ Tugaskan atau rekrut karyawan', { initial: prompt }, undefined, onSent);
+    }
+  },
+}));
 
 function renderNav() {
   const count = (id: string, n: number) => ($(id).querySelector('.n')!.textContent = n ? String(n) : '');
