@@ -679,7 +679,7 @@ $("device-read-screen")?.addEventListener("click",async()=>{
   const result=await bridge.readScreenSummary();
   if(!result.available){out.textContent=result.message||"Layanan belum aktif.";deviceStatus(out.textContent,true);return}
   const summary=result.summary||{};
-  out.textContent="Aplikasi aktif: "+(summary.packageName||"tidak diketahui")+"\\n\\n"+(Array.isArray(summary.text)?summary.text.join("\\n"):"Tidak ada teks yang dapat dibaca.")+"\\n\\n"+(summary.note||"");
+  out.textContent="Aplikasi aktif: "+(summary.packageName||"tidak diketahui")+"\n\n"+(Array.isArray(summary.text)?summary.text.join("\n"):"Tidak ada teks yang dapat dibaca.")+"\n\n"+(summary.note||"");
   deviceStatus("Ringkasan layar dibaca atas permintaanmu dan hanya ditampilkan lokal. Periksa informasi sensitif sebelum membagikan hasil.");
  }catch(error){out.textContent="Gagal membaca ringkasan layar: "+(error?.message||"kesalahan native");deviceStatus(out.textContent,true)}
 });
