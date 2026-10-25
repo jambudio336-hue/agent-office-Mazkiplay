@@ -8,6 +8,8 @@
 
 <p>
   <a href="https://github.com/jambudio336-hue/agent-office-Mazkiplay/actions"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/jambudio336-hue/agent-office-Mazkiplay/android-apk.yml?branch=feat%2Ffree-local-ai-mode&style=for-the-badge&label=ANDROID%20BUILD"></a>
+  <img alt="Animated dark anime theme" src="assets/dark-anime-app-icon.svg" width="52" height="52">
+  <a href="assets/office-hero.svg"><img alt="Animated neon office" src="https://img.shields.io/badge/Animated-Neon%20Office-8b5cf6?style=for-the-badge"></a>
   <a href="https://github.com/jambudio336-hue/agent-office-Mazkiplay/pull/5"><img alt="Development PR" src="https://img.shields.io/badge/Development-PR%20%235-7657ff?style=for-the-badge"></a>
   <a href="LICENSE"><img alt="License MIT" src="https://img.shields.io/badge/License-MIT-28c7a5?style=for-the-badge"></a>
   <img alt="Platform Android" src="https://img.shields.io/badge/Platform-Android-35b86b?style=for-the-badge">
@@ -128,3 +130,18 @@ Proyek ini merupakan fork/pengembangan dari **Agent Office** oleh AgentSystemLab
 *by.m4zk1pl4y*
 
 </div>
+
+
+## 🌌 Animasi & tema visual
+
+<div align="center">
+
+<img src="assets/office-hero.svg" alt="Animasi kantor AI neon" width="100%">
+
+<img src="assets/dark-anime-app-icon.svg" alt="Ikon karakter anime dark orisinal" width="180">
+
+</div>
+
+Ilustrasi ikon karakter anime dark dibuat sebagai aset SVG orisinal dan header kantor memakai SVG dengan animasi. GitHub dapat menonaktifkan sebagian animasi pada konteks tertentu; buka aset SVG langsung untuk melihat animasinya jika didukung.
+
+> **Catatan ikon APK:** aset karakter sudah ditambahkan ke repository. Ikon launcher Android perlu dikonversi ke PNG/adaptive icon dan dipasang pada resource Android yang dipakai workflow build sebelum APK dirilis; penambahan SVG ini sendiri belum mengganti ikon APK terpasang.
