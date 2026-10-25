@@ -78,6 +78,9 @@ jobs:
           new vm.Script(performanceCenter, { filename: 'android-standalone/performance-center.js' });
           if (!html.includes('./performance-center.js') || !html.includes('id="performance-lite"') || !html.includes('id="performance-check"') || !html.includes('id="performance-diagnostics"')) throw new Error('Adaptive Performance Center is not wired into the APK.');
           if (!officeCss.includes('body.perf-lite') || !officeCss.includes('.performance-diagnostics')) throw new Error('Performance mode CSS is missing.');
+          if (!html.includes('id="mission-control"') || !html.includes('id="mission-form"') || !html.includes('id="mission-run"') || !html.includes('id="mission-pause"') || !html.includes('id="mission-steps"')) throw new Error('AI Mission Control UI is incomplete.');
+          if (!app.includes('const MISSION_STAGES=') || !app.includes('async function runMission()') || !app.includes('task.context=prior.length') || !app.includes('data.missionPauseRequested')) throw new Error('AI Mission Control orchestration, chained context, or pause logic is missing.');
+          if (!officeCss.includes('.mission-control') || !officeCss.includes('.mission-steps') || !officeCss.includes('.mission-progress')) throw new Error('AI Mission Control responsive styles are missing.');
           if (!performanceCenter.includes('navigator.storage?.estimate?.()') || !performanceCenter.includes('localStorage') || !performanceCenter.includes('Mode Hemat Performa')) throw new Error('Performance diagnostics or local preference persistence is incomplete.');
           new vm.Script(patch, { filename: 'android-standalone/github-pr.js' });
           new vm.Script(selfImprovement, { filename: 'android-standalone/self-improvement.js' });
