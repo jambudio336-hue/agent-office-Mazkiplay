@@ -70,3 +70,11 @@ test('standalone app wires persistent theme, Indonesian live clock, and native n
   assert.ok(app.includes('notification-test'));
   assert.ok(styles.includes('data-theme="light"'));
 });
+
+test('interrupted tasks are recovered on startup instead of remaining stuck as running', () => {
+  const startup = app.slice(app.indexOf('if(!Array.isArray(data.tasks))'), app.indexOf('if(!data.providers'));
+  assert.ok(startup.includes('for(const task of data.tasks)'));
+  assert.ok(startup.includes('if(task&&task.running)'));
+  assert.ok(startup.includes('task.running=false'));
+  assert.ok(startup.includes('Tugas terhenti ketika aplikasi ditutup atau dihentikan'));
+});
