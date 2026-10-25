@@ -5,6 +5,8 @@ Semua perubahan penting proyek dicatat di sini. Format mengikuti prinsip Keep a 
 ## [Unreleased] — 2026-10-25
 
 ### Added
+- Menu hamburger responsif di pojok kiri atas dengan drawer navigasi untuk Dashboard, Karyawan AI, Kantor Virtual, AI Offline, Task Board, GitHub, Coding, Code Canvas, plugin, keamanan, cadangan, dan pengaturan.
+- Overlay drawer, penutupan lewat tombol tutup, backdrop, tombol Escape, navigasi ke bagian fitur, serta dukungan safe-area dan reduced-motion.
 - Kontrol ganti nama untuk setiap profil karyawan AI; nama baru langsung tercermin di daftar dan pemilih perintah karyawan, dengan validasi nama kosong dan batas 48 karakter.
 - Pengujian regresi untuk alur ganti nama karyawan AI dan keterpanggilan melalui Pusat Perintah Perangkat.
 - Fondasi plugin native `MazkiplayDeviceBridge` untuk memeriksa status layanan aksesibilitas Android, membuka pengaturannya, dan meminta ringkasan layar.
