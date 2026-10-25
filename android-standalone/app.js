@@ -16,6 +16,7 @@ let githubLastFile=null;
 if(!Array.isArray(data.workers))data.workers=[];
 if(!Array.isArray(data.tasks))data.tasks=[];
 if(!Array.isArray(data.missions))data.missions=[];
+if(!data.qaReleaseChecks||typeof data.qaReleaseChecks!=="object")data.qaReleaseChecks={};
 for(const mission of data.missions){if(mission?.status==="running"){mission.status="paused";mission.updatedAt=new Date().toISOString();}}
 /* Recover interrupted tasks after process death or a force-stop. A task marked
    running in localStorage cannot still be executing after a fresh app process. */
@@ -78,6 +79,7 @@ function render(){
  }).join(""):(data.tasks.length?'<div class="empty">Tidak ada tugas yang cocok dengan pencarian atau filter ini.</div>':'<div class="empty">Belum ada tugas. Tambahkan pekerjaan untuk timmu.</div>');
  if(typeof refreshEmployeeCommandChoices==="function")refreshEmployeeCommandChoices();
  renderMissionControl();
+ renderQaGate();
 }
 function openDialog(){if(data.workers.length>=MAX){alert("Maksimum 20 pekerja. Hapus profil yang tidak dipakai dahulu.");return}$("worker-name").value="";$("worker-task").value="";$("worker-dialog").showModal()}
 $("add-worker").onclick=openDialog;$("close-dialog").onclick=()=>$("worker-dialog").close();
@@ -495,6 +497,37 @@ async function runMission(){
 $("mission-form")?.addEventListener("submit",event=>{event.preventDefault();const goal=$("mission-goal")?.value.trim();if(!goal)return;createMission(goal);});
 $("mission-run")?.addEventListener("click",()=>{void runMission();});
 $("mission-pause")?.addEventListener("click",()=>{if(!missionRunnerActive)return;data.missionPauseRequested=true;const mission=data.missions[data.missions.length-1];if(mission)mission.updatedAt=new Date().toISOString();save();status("Permintaan jeda diterima; tugas AI yang sedang aktif akan diselesaikan terlebih dahulu.");renderMissionControl();});
+function qaCiIsCurrentSuccess(){const ci=data.qaLatestCi;return Boolean(ci&&ci.status==="completed"&&ci.conclusion==="success"&&ci.headSha&&ci.headSha===ci.branchSha);}
+function renderQaGate(){
+ const statusEl=$("qa-ci-status"),details=$("qa-ci-details"),link=$("qa-ci-link"),release=$("qa-release-status");
+ document.querySelectorAll("[data-qa-check]").forEach(input=>{input.checked=data.qaReleaseChecks?.[input.dataset.qaCheck]===true;});
+ const ci=data.qaLatestCi;
+ if(statusEl&&ci){
+  if(ci.status==="completed"&&ci.conclusion==="success"&&ci.headSha===ci.branchSha)statusEl.textContent="CI LULUS untuk commit branch terbaru ("+ci.headSha.slice(0,10)+").";
+  else if(ci.status==="completed"&&ci.conclusion==="success")statusEl.textContent="CI pernah lulus, tetapi hasil tersebut belum cocok dengan commit branch terbaru. Periksa ulang setelah build baru selesai.";
+  else statusEl.textContent="Status GitHub Actions: "+ci.status+(ci.conclusion?" / "+ci.conclusion:"")+"; commit "+String(ci.headSha||"tidak diketahui").slice(0,10)+". Periksa hasil akhir sebelum rilis.";
+  if(details)details.textContent="Repository: "+ci.repository+"\nBranch: "+ci.branch+"\nCommit workflow: "+ci.headSha+"\nHEAD branch saat diperiksa: "+ci.branchSha+"\nStatus: "+ci.status+"\nKesimpulan: "+(ci.conclusion||"belum selesai")+"\nDiperiksa: "+ci.checkedAt;
+  if(link&&/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/actions\/runs\/\d+/.test(ci.htmlUrl||"")){link.href=ci.htmlUrl;link.textContent="Buka run #"+ci.runNumber;}
+ }else{if(statusEl)statusEl.textContent="Belum ada status CI. Hubungkan GitHub di bagian Hub GitHub dengan token yang memiliki izin Actions: read.";if(details)details.textContent="Status build belum diperiksa pada sesi ini.";}
+ const checks=["sourceReview","apkInstall","localAi","permissions","artifactChecksum"];const checked=checks.filter(key=>data.qaReleaseChecks?.[key]===true).length;const passed=qaCiIsCurrentSuccess();
+ if(release)release.textContent=passed&&checked===checks.length?"Gate pemeriksaan lengkap: CI lulus pada commit terbaru dan semua pemeriksaan manual ditandai. Rilis tetap memerlukan penilaian operator.":"Belum siap dinyatakan layak rilis: CI commit terbaru "+(passed?"lulus":"belum lulus/terkonfirmasi")+"; checklist manual "+checked+"/"+checks.length+" selesai.";
+}
+async function refreshQaCi(){
+ const button=$("qa-ci-refresh"),statusEl=$("qa-ci-status");if(button)button.disabled=true;if(statusEl)statusEl.textContent="Mengambil status branch dan workflow dari GitHub…";
+ try{
+  if(!githubToken)throw Error("Hubungkan GitHub terlebih dahulu. Token harus memiliki izin Actions: read dan Contents: read.");
+  const repo=$("qa-repo")?.value.trim()||"",branch=$("qa-branch")?.value.trim()||"";if(!validRepo(repo))throw Error("Repository harus memakai format owner/nama.");if(!branch||branch.length>200)throw Error("Nama branch tidak valid.");
+  const parts=repo.split("/"),owner=encodeURIComponent(parts[0]),name=encodeURIComponent(parts[1]),branchPath=encodeURIComponent(branch);
+  const [branchInfo,runsInfo]=await Promise.all([githubRequest("/repos/"+owner+"/"+name+"/branches/"+branchPath),githubRequest("/repos/"+owner+"/"+name+"/actions/runs?branch="+encodeURIComponent(branch)+"&per_page=20")]);
+  const runs=Array.isArray(runsInfo.workflow_runs)?runsInfo.workflow_runs:[];const run=runs.filter(item=>item.path===".github/workflows/android-apk.yml"&&item.head_branch===branch).sort((a,b)=>String(b.created_at||"").localeCompare(String(a.created_at||"")))[0];
+  if(!run)throw Error("Tidak ditemukan run Android APK untuk branch ini. Pastikan workflow pernah dijalankan dan token punya izin Actions: read.");
+  const branchSha=branchInfo?.commit?.sha||"";data.qaLatestCi={repository:repo,branch,headSha:run.head_sha||"",branchSha,status:run.status||"unknown",conclusion:run.conclusion||"",htmlUrl:run.html_url||"",runNumber:run.run_number||0,checkedAt:new Date().toISOString()};save();renderQaGate();
+  if(data.qaLatestCi.headSha!==branchSha)status("CI run yang ditemukan belum sesuai dengan HEAD branch saat ini; tunggu build terbaru atau periksa commit.",true);else status("Status GitHub Actions diperbarui dari API resmi GitHub.");
+ }catch(error){if(statusEl)statusEl.textContent="Tidak dapat memverifikasi CI: "+(error?.message||"kesalahan tidak diketahui");const details=$("qa-ci-details");if(details)details.textContent="Periksa koneksi, repository, branch, dan izin token. Tidak ada status yang dianggap lulus tanpa respons GitHub yang valid.";status(error?.message||"Pemeriksaan CI gagal.",true);}
+ finally{if(button)button.disabled=false;}
+}
+$("qa-ci-refresh")?.addEventListener("click",()=>{void refreshQaCi();});
+document.querySelectorAll("[data-qa-check]").forEach(input=>input.addEventListener("change",()=>{data.qaReleaseChecks[input.dataset.qaCheck]=input.checked;save();renderQaGate();}));
 const fallbackToggle=$("auto-provider-fallback");if(fallbackToggle){fallbackToggle.checked=data.autoProviderFallback===true;fallbackToggle.addEventListener("change",()=>{data.autoProviderFallback=fallbackToggle.checked;save();status(fallbackToggle.checked?"Fallback otomatis aktif. Permintaan bisa memakai kuota/biaya provider lain.":"Fallback otomatis nonaktif.");});}
 $("ai-mode").value=data.aiMode;
 $("ai-mode").addEventListener("change",updateAiModeStatus);
