@@ -184,16 +184,21 @@ jobs:
           import shutil
           root = Path('android/app/src/main/res')
           sizes = {'mipmap-mdpi': 48, 'mipmap-hdpi': 72, 'mipmap-xhdpi': 96, 'mipmap-xxhdpi': 144, 'mipmap-xxxhdpi': 192}
-          source = Path('/tmp/mazkiplay-icon/icon-512.png')
+          foreground_sizes = {'mipmap-mdpi': 108, 'mipmap-hdpi': 162, 'mipmap-xhdpi': 216, 'mipmap-xxhdpi': 324, 'mipmap-xxxhdpi': 432}
           for folder, size in sizes.items():
               target_dir = root / folder
               target_dir.mkdir(parents=True, exist_ok=True)
               import subprocess
               subprocess.run(['rsvg-convert', '-o', str(target_dir / 'ic_launcher.png'), '-f', 'png', '-w', str(size), '-h', str(size), 'assets/dark-anime-app-icon.svg'], check=True)
-          # Capacitor's launcher XML may reference the legacy foreground/background pair.
-          # Preserve those resources when present; the generated ic_launcher.png overrides the standard launcher bitmap.
-          assert all((root / folder / 'ic_launcher.png').is_file() for folder in sizes)
-          print('Dark anime launcher bitmap generated for all standard Android densities.')
+              subprocess.run(['rsvg-convert', '-o', str(target_dir / 'ic_launcher_round.png'), '-f', 'png', '-w', str(size), '-h', str(size), 'assets/dark-anime-app-icon.svg'], check=True)
+              subprocess.run(['rsvg-convert', '-o', str(target_dir / 'ic_launcher_foreground.png'), '-f', 'png', '-w', str(foreground_sizes[folder]), '-h', str(foreground_sizes[folder]), 'assets/dark-anime-app-icon.svg'], check=True)
+          # Capacitor Android templates use both legacy bitmap icons and an adaptive icon foreground.
+          # Generate all three resource names so modern launchers do not keep the default Capacitor artwork.
+          assert all((root / folder / name).is_file() for folder in sizes for name in ('ic_launcher.png', 'ic_launcher_round.png', 'ic_launcher_foreground.png'))
+          adaptive = root / 'mipmap-anydpi-v26' / 'ic_launcher.xml'
+          if adaptive.exists() and 'ic_launcher_foreground' in adaptive.read_text():
+              assert all((root / folder / 'ic_launcher_foreground.png').is_file() for folder in foreground_sizes)
+          print('Dark anime launcher, round, and adaptive foreground bitmaps generated for all Android densities.')
           PY
 
       - name: Siapkan Kotlin dan LiteRT-LM untuk AI generatif offline
