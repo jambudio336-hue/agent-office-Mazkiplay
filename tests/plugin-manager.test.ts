@@ -50,6 +50,8 @@ test('Device Bridge provides named employee task dispatch and explicit device pe
   assert.match(app, /employee-command-form/);
   assert.match(app, /SpeechRecognition/);
   assert.match(app, /api\.github\.com\/repos\/jambudio336-hue\/agent-office-Mazkiplay\/releases/);
-  assert.match(html, /Android Accessibility Service native/);
+  assert.match(html, /Buka Pengaturan Aksesibilitas/);
+  assert.match(html, /id="device-read-screen"/);
+  assert.match(app, /MazkiplayDeviceBridge/);
   assert.match(app, /tidak diunggah otomatis/);
 });
