@@ -78,3 +78,11 @@ test('interrupted tasks are recovered on startup instead of remaining stuck as r
   assert.ok(startup.includes('task.running=false'));
   assert.ok(startup.includes('Tugas terhenti ketika aplikasi ditutup atau dihentikan'));
 });
+
+
+test('task execution records attempts and timestamps, and failed tasks offer a retry action', () => {
+  assert.ok(app.includes('t.attempts=(Number.isInteger(t.attempts)?t.attempts:0)+1'));
+  assert.ok(app.includes('t.updatedAt=new Date().toISOString()'));
+  assert.ok(app.includes('(t.error?"↻ Coba lagi":"▶ Jalankan AI")'));
+  assert.ok(app.includes('if(!t||t.running)return'));
+});
