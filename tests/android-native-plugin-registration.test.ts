@@ -97,3 +97,11 @@ test('task cards expose attempt metadata and preserve the previous output as a r
   assert.ok(styles.includes('.task-metadata'));
   assert.ok(styles.includes('.task-result-actions'));
 });
+
+
+test('task results offer a copy action with a clipboard fallback for Android WebView', () => {
+  assert.ok(app.includes('data-copy-result='));
+  assert.ok(app.includes('navigator.clipboard.writeText(task.output)'));
+  assert.ok(app.includes('document.execCommand("copy")'));
+  assert.ok(app.includes('Tidak bisa menyalin otomatis'));
+});
