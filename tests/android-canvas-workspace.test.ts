@@ -101,3 +101,12 @@ test('Startup intro references the packaged PNG asset and has a safe skip path',
   assert.match(intro, /skip\.addEventListener\("click", finish\)/);
   assert.match(intro, /audio\.addEventListener\("error"/);
 });
+
+
+test('Office operational status follows actual AI task events and does not claim idle animation is live work', () => {
+  assert.match(app, /Operational office status is driven by real user-triggered task events/);
+  assert.match(app, /window\.addEventListener\("mazkiplay:office-task",event=>setOfficeStatus/);
+  assert.match(app, /TUGAS AI BERJALAN/);
+  assert.match(app, /Tidak ada tugas AI aktif yang dilaporkan/);
+  assert.match(html, /Panel ini menampilkan status tugas AI yang benar-benar dijalankan/);
+});
