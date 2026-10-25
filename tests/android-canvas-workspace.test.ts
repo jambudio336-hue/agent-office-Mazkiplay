@@ -80,3 +80,13 @@ test('Task board supports local search, status filters, live counts, and reset',
   assert.match(app, /task-clear-filters/);
   assert.match(app, /Menampilkan .* dari .* tugas/);
 });
+
+
+test('AI employee profiles can be renamed safely and remain callable by their chosen name', () => {
+  assert.match(app, /data-rename=/);
+  assert.match(app, /prompt\("Nama baru untuk karyawan AI ini:",w\.name\)/);
+  assert.match(app, /name\.length>48/);
+  assert.match(app, /function refreshEmployeeCommandChoices\(\)/);
+  assert.match(app, /esc\(w\.name\)\+" — "\+esc\(w\.role\)/);
+  assert.match(app, /Kamu bisa memanggilnya dari Pusat Perintah Perangkat/);
+});
