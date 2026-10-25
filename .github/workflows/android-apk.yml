@@ -173,6 +173,29 @@ jobs:
           PY
           npx cap sync android
 
+      - name: Pasang ikon launcher anime dark
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y librsvg2-bin
+          mkdir -p /tmp/mazkiplay-icon
+          rsvg-convert -o /tmp/mazkiplay-icon/icon-512.png -f png -w 512 -h 512 assets/dark-anime-app-icon.svg
+          python3 <<'PY'
+          from pathlib import Path
+          import shutil
+          root = Path('android/app/src/main/res')
+          sizes = {'mipmap-mdpi': 48, 'mipmap-hdpi': 72, 'mipmap-xhdpi': 96, 'mipmap-xxhdpi': 144, 'mipmap-xxxhdpi': 192}
+          source = Path('/tmp/mazkiplay-icon/icon-512.png')
+          for folder, size in sizes.items():
+              target_dir = root / folder
+              target_dir.mkdir(parents=True, exist_ok=True)
+              import subprocess
+              subprocess.run(['rsvg-convert', '-o', str(target_dir / 'ic_launcher.png'), '-f', 'png', '-w', str(size), '-h', str(size), 'assets/dark-anime-app-icon.svg'], check=True)
+          # Capacitor's launcher XML may reference the legacy foreground/background pair.
+          # Preserve those resources when present; the generated ic_launcher.png overrides the standard launcher bitmap.
+          assert all((root / folder / 'ic_launcher.png').is_file() for folder in sizes)
+          print('Dark anime launcher bitmap generated for all standard Android densities.')
+          PY
+
       - name: Siapkan Kotlin dan LiteRT-LM untuk AI generatif offline
         run: |
           python3 <<'PY'
