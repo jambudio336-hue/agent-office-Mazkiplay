@@ -1,5 +1,8 @@
 ## [Unreleased] — AI offline download hardening
 
+### Fixed
+- Gunakan referensi koneksi HTTP non-null yang eksplisit untuk setiap hop redirect dan koneksi final; ini menghindari ketergantungan pada smart-cast variabel nullable saat kompilasi Kotlin.
+
 ### Security
 - Batasi setiap unduhan model Qwen3 hingga batas maksimum ukuran berkas, termasuk ketika server tidak mengirim Content-Length, untuk mengurangi risiko penyimpanan terkuras oleh berkas berlebihan.
 - Validasi setiap redirect unduhan model dan tolak tujuan HTTP/non-HTTPS atau rantai redirect berlebihan.
