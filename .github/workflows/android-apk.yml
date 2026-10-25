@@ -135,6 +135,38 @@ jobs:
           cp android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplaySecureStoragePlugin.java android/app/src/main/java/id/mazkiplay/agentoffice/
           cp android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplayLocalLLMPlugin.kt android/app/src/main/java/id/mazkiplay/agentoffice/
           cp android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MainActivity.java android/app/src/main/java/id/mazkiplay/agentoffice/
+          cp android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplayDeviceBridgePlugin.java android/app/src/main/java/id/mazkiplay/agentoffice/
+          cp android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplayAccessibilityService.java android/app/src/main/java/id/mazkiplay/agentoffice/
+          mkdir -p android/app/src/main/res/xml android/app/src/main/res/values
+          cp android-standalone/native-android/src/main/res/xml/mazkiplay_accessibility_service.xml android/app/src/main/res/xml/
+          cp android-standalone/native-android/src/main/res/values/mazkiplay_accessibility_strings.xml android/app/src/main/res/values/
+          python3 <<'PY'
+          from pathlib import Path
+          manifest = Path('android/app/src/main/AndroidManifest.xml')
+          text = manifest.read_text()
+          service = '''
+              <service
+                  android:name="id.mazkiplay.agentoffice.MazkiplayAccessibilityService"
+                  android:label="Mazkiplay Assistive Screen Summary"
+                  android:description="@string/mazkiplay_accessibility_description"
+                  android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+                  android:exported="true">
+                  <intent-filter>
+                      <action android:name="android.accessibilityservice.AccessibilityService" />
+                  </intent-filter>
+                  <meta-data
+                      android:name="android.accessibilityservice"
+                      android:resource="@xml/mazkiplay_accessibility_service" />
+              </service>
+          '''
+          if 'id.mazkiplay.agentoffice.MazkiplayAccessibilityService' not in text:
+              if '</application>' not in text:
+                  raise SystemExit('Android manifest has no application element')
+              text = text.replace('</application>', service + '\\n</application>', 1)
+              manifest.write_text(text)
+          assert 'android.permission.BIND_ACCESSIBILITY_SERVICE' in manifest.read_text()
+          print('User-enabled assistive accessibility service registered.')
+          PY
           npx cap sync android
 
       - name: Siapkan Kotlin dan LiteRT-LM untuk AI generatif offline
