@@ -1,3 +1,16 @@
+## [Unreleased] — Task reliability and checkpoints
+
+### Added
+- Metadata tugas yang menampilkan jumlah percobaan dan waktu pembaruan terakhir.
+- Checkpoint hasil: sebelum tugas dijalankan ulang, output lama disimpan dan dapat dipulihkan dari Task Board.
+- Tombol pemulihan checkpoint memperbarui penyimpanan lokal dan meminta pengguna memeriksa hasil sebelum dipakai.
+- Tes regresi untuk metadata tugas, penyimpanan output sebelumnya, kontrol pemulihan, dan styling terkait.
+
+### Notes
+- Checkpoint menyimpan output teks tugas, bukan snapshot penuh file repository atau rollback Git.
+- Hasil AI tetap perlu ditinjau; metadata dan checkpoint tidak membuktikan kode telah diuji atau diterapkan.
+- Validasi build setelah perubahan ini harus diperiksa pada GitHub Actions terbaru.
+
 # Changelog
 
 ## Unreleased — Android stability audit
