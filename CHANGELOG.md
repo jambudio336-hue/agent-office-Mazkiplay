@@ -14,6 +14,7 @@ Semua perubahan penting proyek dicatat di sini. Format mengikuti prinsip Keep a 
 - Dokumentasi proyek yang berorientasi pada APK Android: README, roadmap, panduan instalasi, validasi, privasi, dan keamanan.
 
 ### Changed
+- Panel operasional kantor kini menerima event mulai/selesai/gagal dari eksekusi tugas AI, memperbarui status serta log aktivitas berdasarkan tugas yang benar-benar dijalankan.
 - Refresh UI/UX premium dengan palet arang dan emas lembut, hierarki tipografi lebih rapi, panel dashboard yang konsisten, fokus keyboard, serta responsivitas layar kecil dan orientasi landscape.
 - Perbaikan safe-area intro pada Android: gambar memakai object-fit contain, teks dibatasi area aman, tombol Lewati intro tetap terjangkau, dan tinggi viewport dinamis.
 - Pembaruan visual kantor virtual agar zonasi, meja, layar, log aktivitas, dan status keamanan lebih terbaca tanpa menyamarkan animasi simulasi sebagai aktivitas AI nyata.
