@@ -34,5 +34,5 @@ test('Plugin credentials use native secure storage and only non-secret metadata 
   assert.match(plugin, /localStorage\.setItem\(STORE_KEY,JSON\.stringify\(configs\)\)/);
   assert.match(plugin, /window\.dispatchEvent\(new Event\("github-token-connected"\)\)/);
   assert.match(app, /github-token-connected/);
-  assert.match(plugin, /service_role|server key/i);
+  assert.match(plugin, /service_role|server key/i);\n  assert.match(html, /id="plugin-to-task"/);\n  assert.match(plugin, /mazkiplay:plugin-context/);\n  assert.match(app, /mazkiplay:plugin-context/);\n  assert.match(plugin, /configs\\[id\\]\\.summary=detail/);
 });
