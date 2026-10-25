@@ -27,29 +27,34 @@ async function diagnose(){
  if(!output)return;
  if(button)button.disabled=true;
  output.textContent="Memeriksa kemampuan perangkat dan penyimpanan lokal…";
- const lines=[];
- const cores=Number(navigator.hardwareConcurrency)||0;
- const memory=Number(navigator.deviceMemory)||0;
- lines.push("Thread logis: "+(cores?cores+" (indikator, bukan ukuran kecepatan CPU)":"tidak dilaporkan browser"));
- lines.push("RAM perkiraan: "+(memory?memory+" GB (informasi browser, jika didukung)":"tidak dilaporkan browser"));
- lines.push("Platform: "+(navigator.userAgentData?.platform||navigator.platform||"tidak dilaporkan"));
- lines.push("Koneksi: "+(navigator.onLine?"perangkat melaporkan online":"perangkat melaporkan offline")+"; ini tidak menjamin akses internet/provider");
  try{
-  const estimate=await navigator.storage?.estimate?.();
-  if(estimate){
-   lines.push("Penyimpanan origin terpakai: "+fmtBytes(estimate.usage));
-   lines.push("Kuota origin perkiraan: "+fmtBytes(estimate.quota));
-  }else lines.push("Estimasi kuota penyimpanan: tidak didukung runtime");
- }catch{lines.push("Estimasi penyimpanan tidak dapat dibaca")}
- try{
-  const state=JSON.parse(localStorage.getItem("mazkiplay-agent-office-v1")||"{}");
-  lines.push("Profil karyawan tersimpan: "+(Array.isArray(state.workers)?state.workers.length:0));
-  lines.push("Tugas tersimpan: "+(Array.isArray(state.tasks)?state.tasks.length:0));
- }catch{lines.push("Ringkasan data aplikasi tidak dapat dibaca")}
- lines.push("Model AI lokal/cloud: belum diuji oleh diagnostik ini; gunakan uji provider atau jalankan tugas uji.");
- lines.push("Privasi: diagnostik berjalan lokal dan tidak mengirim data ke server.");
- output.textContent=lines.join("\n");
- if(button)button.disabled=false;
+  const lines=[];
+  const cores=Number(navigator.hardwareConcurrency)||0;
+  const memory=Number(navigator.deviceMemory)||0;
+  lines.push("Thread logis: "+(cores?cores+" (indikator, bukan ukuran kecepatan CPU)":"tidak dilaporkan browser"));
+  lines.push("RAM perkiraan: "+(memory?memory+" GB (informasi browser, jika didukung)":"tidak dilaporkan browser"));
+  lines.push("Platform: "+(navigator.userAgentData?.platform||navigator.platform||"tidak dilaporkan"));
+  lines.push("Koneksi: "+(navigator.onLine?"perangkat melaporkan online":"perangkat melaporkan offline")+"; ini tidak menjamin akses internet/provider");
+  try{
+   const estimate=await navigator.storage?.estimate?.();
+   if(estimate){
+    lines.push("Penyimpanan origin terpakai: "+fmtBytes(estimate.usage));
+    lines.push("Kuota origin perkiraan: "+fmtBytes(estimate.quota));
+   }else lines.push("Estimasi kuota penyimpanan: tidak didukung runtime");
+  }catch{lines.push("Estimasi penyimpanan tidak dapat dibaca")}
+  try{
+   const state=JSON.parse(localStorage.getItem("mazkiplay-agent-office-v1")||"{}");
+   lines.push("Profil karyawan tersimpan: "+(Array.isArray(state.workers)?state.workers.length:0));
+   lines.push("Tugas tersimpan: "+(Array.isArray(state.tasks)?state.tasks.length:0));
+  }catch{lines.push("Ringkasan data aplikasi tidak dapat dibaca")}
+  lines.push("Model AI lokal/cloud: belum diuji oleh diagnostik ini; gunakan uji provider atau jalankan tugas uji.");
+  lines.push("Privasi: diagnostik berjalan lokal dan tidak mengirim data ke server.");
+  output.textContent=lines.join("\n");
+ }catch(error){
+  output.textContent="Diagnostik gagal diselesaikan: "+(error?.message||"kesalahan runtime tidak diketahui")+". Coba lagi atau periksa kompatibilitas WebView.";
+ }finally{
+  if(button)button.disabled=false;
+ }
 }
 document.addEventListener("DOMContentLoaded",()=>{
  setLiteMode(pref.liteMode===true);
