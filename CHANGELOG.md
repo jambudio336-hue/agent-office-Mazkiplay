@@ -1,3 +1,18 @@
+## [Unreleased] — QA Lab and Release Gate
+
+### Added
+- Panel QA Lab untuk memeriksa status workflow Android APK melalui GitHub API read-only setelah GitHub Workspace terhubung.
+- Status CI dianggap lulus hanya jika workflow Android APK selesai dengan kesimpulan sukses dan SHA run sama dengan HEAD branch yang diperiksa.
+- Checklist manual terpisah untuk review source, instalasi APK, inferensi AI lokal, izin perangkat, dan verifikasi checksum.
+- Tes regresi untuk validasi wiring QA Lab, perbandingan SHA branch, dan gerbang checklist; workflow Android menjalankan tes ini sebelum build native.
+
+### Security and limitations
+- Pemeriksaan status CI memerlukan token GitHub yang memiliki izin Actions: read dan Contents: read; token tetap dikelola melalui mekanisme penyimpanan rahasia aplikasi yang ada.
+- Checklist manual tidak memverifikasi perangkat secara otomatis dan hanya boleh ditandai setelah pengujian benar-benar dilakukan.
+- Status workflow terbaru masih berjalan saat dokumentasi ini diperbarui; APK belum dinyatakan lulus build dari run tersebut.
+
+---
+
 ## [Unreleased] — AI Mission Control
 
 ### Added
