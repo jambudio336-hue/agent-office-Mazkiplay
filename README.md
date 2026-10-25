@@ -2,9 +2,9 @@
 
 <img src="assets/office-hero.svg" alt="Mazkiplay Agent Office — neon AI workspace" width="100%">
 
-# Mazkiplay Agent Office
+# M4zk1pL4y.ap — Agent Office
 
-### Kantor AI pribadi untuk mengatur pekerja, tugas, dan alur pengembangan aplikasi.
+### AI workspace untuk menjalankan tugas, mengelola tim, dan meninjau hasil kerja.
 
 <p>
   <a href="https://github.com/jambudio336-hue/agent-office-Mazkiplay/actions"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/jambudio336-hue/agent-office-Mazkiplay/android-apk.yml?branch=feat%2Ffree-local-ai-mode&style=for-the-badge&label=ANDROID%20BUILD"></a>
@@ -24,7 +24,7 @@
 > [!IMPORTANT]
 > **Status: aktif dikembangkan.** Fitur, tampilan, kompatibilitas perangkat, dan format penyimpanan dapat berubah. Jangan gunakan build eksperimen untuk data yang tidak memiliki cadangan.
 
-## ✨ Tentang proyek
+## ✨ Tentang proyek\n\n**Developer / brand:** M4zk1pL4y.ap
 
 **Mazkiplay Agent Office** adalah pengembangan/fork dari [Agent Office](https://github.com/AgentSystemLabs/agent-office) yang diarahkan ke pengalaman Android: dashboard kantor virtual, pengelolaan tugas, pilihan provider AI, workspace developer, dan jembatan perangkat yang memerlukan izin pengguna.
 
@@ -118,7 +118,7 @@ Badge build di bagian atas mengacu pada workflow; statusnya dapat berubah. Selal
 - [Pull Request pengembangan #5](https://github.com/jambudio336-hue/agent-office-Mazkiplay/pull/5)
 - [Proyek upstream Agent Office](https://github.com/AgentSystemLabs/agent-office)
 
-## 🙌 Kredit dan lisensi
+## ⚙️ Batasan operasional yang transparan\n\n- Tugas hanya benar-benar dieksekusi ketika pengguna menekan tombol jalankan dan model AI tersedia.\n- Profil karyawan adalah pengatur peran/penugasan, bukan proses otonom yang selalu berjalan di latar belakang.\n- Tampilan ruang, meja, dan avatar adalah representasi visual antarmuka, bukan simulasi yang diklaim sebagai pekerja nyata.\n- Pengeditan repository, aksesibilitas Android, dan tindakan lintas aplikasi memerlukan integrasi, izin, dan konfirmasi yang sesuai.\n- Jangan menandai output AI sebagai perubahan file atau pengujian sukses sebelum diverifikasi.\n\n## 🙌 Kredit dan lisensi
 
 Proyek ini merupakan fork/pengembangan dari **Agent Office** oleh AgentSystemLabs. Lisensi MIT dan atribusi upstream dipertahankan; lihat [LICENSE](LICENSE) untuk ketentuan lengkap. Perubahan dan fitur khusus Mazkiplay harus dibaca bersama lisensi dependensi serta model yang digunakan.
 
