@@ -1,3 +1,16 @@
+## [Unreleased] — Visual refresh
+
+### Added
+- Menambahkan ilustrasi karakter anime dark orisinal dalam format SVG di `assets/dark-anime-app-icon.svg`.
+- Memperbarui README dengan aset visual animasi kantor neon dan ilustrasi karakter.
+- Menambahkan catatan transparan bahwa aset SVG belum otomatis menjadi launcher icon pada APK.
+
+### Pending verification
+- Pemasangan ikon Android memerlukan resource launcher yang sesuai dengan struktur native Android dan validasi build APK terbaru.
+- Build APK terbaru dan tampilan pada perangkat fisik belum dinyatakan lulus sampai GitHub Actions dan pengujian perangkat diperiksa.
+
+---
+
 ## [Unreleased] — Task Board quick-start templates
 
 ### Added
