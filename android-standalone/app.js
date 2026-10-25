@@ -533,7 +533,7 @@ $("benchmark-provider").onclick=async()=>{
  finally{button.disabled=false;button.textContent="Benchmark singkat";}
 };
 
-function backupStatus(message,bad=false){const el=$("backup-status");if(el){el.textContent=message;el.style.color=bad?"#ff7e8a":"#64e0a4"}}
+// Reuse the backupStatus helper declared near the app initialization.
 $("export-data").onclick=()=>{
  try{
   const backup={format:"mazkiplay-agent-office-backup",version:1,createdAt:new Date().toISOString(),workers:data.workers.map(w=>({id:w.id,name:w.name,role:w.role,provider:w.provider,task:w.task||""})),tasks:data.tasks.map(t=>({id:t.id,text:t.text,context:String(t.context||"").slice(0,12000),done:!!t.done,workerId:t.workerId||"",output:t.output||"",error:t.error||""}))};
