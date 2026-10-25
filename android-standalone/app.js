@@ -15,6 +15,8 @@ let githubToken="";
 let githubLastFile=null;
 if(!Array.isArray(data.workers))data.workers=[];
 if(!Array.isArray(data.tasks))data.tasks=[];
+if(!Array.isArray(data.missions))data.missions=[];
+for(const mission of data.missions){if(mission?.status==="running"){mission.status="paused";mission.updatedAt=new Date().toISOString();}}
 /* Recover interrupted tasks after process death or a force-stop. A task marked
    running in localStorage cannot still be executing after a fresh app process. */
 for(const task of data.tasks){
@@ -75,6 +77,7 @@ function render(){
  return '<article class="task-card"><div class="task"><input type="checkbox" data-done="'+esc(t.id)+'" '+(t.done?"checked":"")+' aria-label="Tandai tugas selesai"><span class="'+(t.done?"done":"")+'">'+esc(t.text)+'</span><button class="delete" data-delete="'+esc(t.id)+'">Hapus</button></div><div class="task-tools"><label>Pekerja<select data-assign="'+esc(t.id)+'">'+optionsForWorkers(t.workerId||"")+'</select></label><button class="run-ai" data-run="'+esc(t.id)+'" '+(t.running?"disabled":"")+'>'+(t.running?"AI sedang bekerja…":(t.error?"↻ Coba lagi":"▶ Jalankan AI"))+'</button></div><p class="task-metadata">Percobaan: '+(Number.isInteger(t.attempts)?t.attempts:0)+' · Diperbarui: '+esc(t.updatedAt?new Date(t.updatedAt).toLocaleString("id-ID"):"belum pernah")+'</p>'+(t.previousOutput?'<div class="task-result-actions"><button type="button" class="secondary" data-restore-output="'+esc(t.id)+'">Pulihkan hasil sebelumnya</button></div>':"")+(t.output?'<div class="task-result-actions"><button type="button" class="secondary" data-copy-result="'+esc(t.id)+'">Salin hasil</button><button type="button" class="secondary" data-canvas-result="'+esc(t.id)+'">Buka hasil di Canvas</button></div><pre class="task-output">'+esc(t.output)+'</pre>':"")+(t.error?'<p class="task-error">'+esc(t.error)+'</p>':"")+'</article>'
  }).join(""):(data.tasks.length?'<div class="empty">Tidak ada tugas yang cocok dengan pencarian atau filter ini.</div>':'<div class="empty">Belum ada tugas. Tambahkan pekerjaan untuk timmu.</div>');
  if(typeof refreshEmployeeCommandChoices==="function")refreshEmployeeCommandChoices();
+ renderMissionControl();
 }
 function openDialog(){if(data.workers.length>=MAX){alert("Maksimum 20 pekerja. Hapus profil yang tidak dipakai dahulu.");return}$("worker-name").value="";$("worker-task").value="";$("worker-dialog").showModal()}
 $("add-worker").onclick=openDialog;$("close-dialog").onclick=()=>$("worker-dialog").close();
@@ -434,6 +437,63 @@ async function runTask(id){
   t.done=false;t.updatedAt=new Date().toISOString();
  }catch(err){t.error=err?.message||"Gagal menjalankan tugas AI";t.updatedAt=new Date().toISOString();}finally{t.running=false;t.updatedAt=new Date().toISOString();save();render();window.dispatchEvent(new CustomEvent("mazkiplay:office-task",{detail:{status:t.error?"error":"done",task:t.text,worker:worker?.name||"AI Agent",role:worker?.role||"Asisten umum",error:t.error||""}}))}
 }
+let missionRunnerActive=false;
+const MISSION_STAGES=[
+ {key:"plan",title:"1. Perencanaan",role:/manajer proyek|project manager|arsitek/i,prompt:"Bertindak sebagai Project Manager dan Software Architect. Ubah tujuan menjadi ruang lingkup, asumsi, kriteria penerimaan, urutan implementasi, dependensi, dan risiko. Jangan mengklaim kode telah diubah atau tes telah dijalankan."},
+ {key:"build",title:"2. Implementasi",role:/developer|engineer|programmer/i,prompt:"Bertindak sebagai Senior Developer. Susun implementasi konkret berdasarkan tujuan dan rencana misi. Tampilkan file/komponen yang perlu diubah, contoh kode relevan, penanganan error, keamanan, dan langkah penerapan. Jangan mengklaim file telah diedit atau build berhasil."},
+ {key:"qa",title:"3. QA dan pengujian",role:/qa|tester|pengujian/i,prompt:"Bertindak sebagai QA Engineer. Tinjau tujuan, rencana, dan usulan implementasi. Buat matriks tes positif, negatif, edge cases, regresi, langkah reproduksi, serta kriteria lulus/gagal. Bedakan tes yang benar-benar dijalankan dari tes yang hanya direkomendasikan."},
+ {key:"security",title:"4. Tinjauan keamanan",role:/security|keamanan|security engineer/i,prompt:"Bertindak sebagai Security Reviewer defensif. Tinjau risiko privasi, validasi input, izin, rahasia, autentikasi/otorisasi, dependency, dan kegagalan operasional. Beri tingkat keparahan, mitigasi, serta hal yang belum bisa diverifikasi. Jangan menyatakan aplikasi aman tanpa bukti."}
+];
+function missionStatusLabel(mission){if(!mission)return"Belum ada misi.";const labels={planned:"Rencana siap dijalankan.",running:"Misi berjalan; satu tugas AI diproses pada satu waktu.",paused:"Misi dijeda. Kamu dapat melanjutkan kapan saja.", "needs-review":"Hasil tersedia atau ada tugas gagal. Periksa hasil sebelum menandai selesai."};return (labels[mission.status]||"Status misi: "+mission.status)+" ("+Math.min(mission.currentIndex||0,mission.taskIds?.length||0)+"/"+(mission.taskIds?.length||0)+" tahap).";}
+function renderMissionControl(){
+ const list=$("mission-steps"),label=$("mission-status"),bar=$("mission-progress-bar"),progress=$("mission-progress"),run=$("mission-run"),pause=$("mission-pause");
+ if(!list)return;
+ const mission=data.missions[data.missions.length-1];
+ if(!mission){list.innerHTML='<li class="empty">Rencana misi akan tampil di sini.</li>';if(label)label.textContent="Belum ada misi. Buat tujuan untuk menghasilkan rencana bertahap.";if(bar)bar.style.width="0%";if(progress)progress.setAttribute("aria-valuenow","0");if(run)run.disabled=true;if(pause)pause.disabled=true;return;}
+ const tasks=(mission.taskIds||[]).map(id=>data.tasks.find(task=>task.id===id)).filter(Boolean);
+ const done=Math.min(mission.currentIndex||0,tasks.length),pct=tasks.length?Math.round(done/tasks.length*100):0;
+ if(label)label.textContent=missionStatusLabel(mission)+(mission.error?" Detail: "+mission.error:"");
+ if(bar)bar.style.width=pct+"%";if(progress)progress.setAttribute("aria-valuenow",String(done));
+ if(run)run.disabled=missionRunnerActive||mission.status==="running"||done>=tasks.length&&mission.status==="needs-review"&&!mission.error;
+ if(run&&mission.status==="needs-review"&&mission.error)run.disabled=missionRunnerActive;
+ if(pause)pause.disabled=!missionRunnerActive;
+ list.innerHTML=tasks.map((task,index)=>{const stage=MISSION_STAGES[index];const statusText=task.error?"Perlu diperiksa":task.output?"Jawaban tersedia · tinjau di Task Board":index<done?"Diproses":"Menunggu";return '<li class="mission-step"><div class="mission-step-heading"><strong>'+esc(stage?.title||task.text)+'</strong><span class="mission-step-status">'+esc(statusText)+'</span></div><p>'+esc(task.text)+'</p>'+(task.error?'<p class="task-error">'+esc(task.error)+'</p>':"")+'</li>'}).join("");
+}
+function createMission(goal){
+ const taskCount=MISSION_STAGES.length;if(data.tasks.length+taskCount>MAX_TASKS)return alert("Rencana membutuhkan 4 tugas, tetapi batas 500 tugas akan terlampaui. Hapus tugas lama atau ekspor cadangan terlebih dahulu.");
+ if(data.missions.length>=30)data.missions=data.missions.slice(-29);
+ const id="mission-"+Date.now()+"-"+Math.random().toString(16).slice(2,8),now=new Date().toISOString();
+ const taskIds=[];
+ for(const stage of MISSION_STAGES){
+  const worker=data.workers.find(w=>stage.role.test(String(w.role||"")))||null;
+  const taskId=String(Date.now())+Math.random().toString(16).slice(2);taskIds.push(taskId);
+  data.tasks.unshift({id:taskId,text:stage.title+" — "+goal,done:false,workerId:worker?.id||"",output:"",error:"",attempts:0,createdAt:now,updatedAt:now,missionId:id,missionStage:stage.key,prompt:stage.prompt+"\n\nTUJUAN MISI: "+goal+"\n\nKONTRAK KERJA: Fokus hanya pada tahap ini. Gunakan keluaran tahap sebelumnya bila tersedia pada konteks. Tulis asumsi dan langkah selanjutnya. Jangan mengklaim perubahan kode, pengujian, atau deployment yang belum benar-benar terjadi."});
+ }
+ const mission={id,goal,taskIds,status:"planned",currentIndex:0,createdAt:now,updatedAt:now,error:""};data.missions.push(mission);data.missionPauseRequested=false;
+ save();render();status("Rencana misi dibuat: 4 tahap berurutan. Pilih Jalankan untuk memulai.");
+}
+async function runMission(){
+ const mission=data.missions[data.missions.length-1];if(!mission||missionRunnerActive)return;
+ const taskIds=mission.taskIds||[];if(!taskIds.length)return;
+ missionRunnerActive=true;data.missionPauseRequested=false;mission.status="running";mission.error="";mission.updatedAt=new Date().toISOString();save();render();
+ try{
+  while((mission.currentIndex||0)<taskIds.length){
+   if(data.missionPauseRequested){mission.status="paused";mission.updatedAt=new Date().toISOString();save();break;}
+   const task=data.tasks.find(item=>item.id===taskIds[mission.currentIndex]);if(!task){mission.status="needs-review";mission.error="Tahap misi tidak ditemukan di Task Board.";break;}
+   status("Mission Control: "+(MISSION_STAGES[mission.currentIndex]?.title||"Tahap berikutnya")+" sedang diproses.");
+   await runTask(task.id);
+   if(task.error){mission.status="needs-review";mission.error="Tahap "+(mission.currentIndex+1)+" gagal. Perbaiki konfigurasi AI atau coba ulang.";break;}
+   mission.currentIndex++;mission.updatedAt=new Date().toISOString();save();render();
+   if(data.missionPauseRequested){mission.status="paused";break;}
+  }
+  if((mission.currentIndex||0)>=taskIds.length){mission.status="needs-review";mission.error="Semua tahap menghasilkan jawaban. Periksa setiap hasil di Task Board sebelum menerapkan perubahan.";status("Misi menghasilkan 4 keluaran. Semua masih memerlukan tinjauan manusia.");}
+  else if(mission.status!=="needs-review"){mission.status="paused";status("Misi dijeda setelah tahap aktif selesai.");}
+ }catch(error){mission.status="needs-review";mission.error=error?.message||"Mission Control mengalami kesalahan.";status(mission.error,true);}
+ finally{missionRunnerActive=false;data.missionPauseRequested=false;mission.updatedAt=new Date().toISOString();save();render();}
+}
+$("mission-form")?.addEventListener("submit",event=>{event.preventDefault();const goal=$("mission-goal")?.value.trim();if(!goal)return;createMission(goal);});
+$("mission-run")?.addEventListener("click",()=>{void runMission();});
+$("mission-pause")?.addEventListener("click",()=>{if(!missionRunnerActive)return;data.missionPauseRequested=true;const mission=data.missions[data.missions.length-1];if(mission)mission.updatedAt=new Date().toISOString();save();status("Permintaan jeda diterima; tugas AI yang sedang aktif akan diselesaikan terlebih dahulu.");renderMissionControl();});
 const fallbackToggle=$("auto-provider-fallback");if(fallbackToggle){fallbackToggle.checked=data.autoProviderFallback===true;fallbackToggle.addEventListener("change",()=>{data.autoProviderFallback=fallbackToggle.checked;save();status(fallbackToggle.checked?"Fallback otomatis aktif. Permintaan bisa memakai kuota/biaya provider lain.":"Fallback otomatis nonaktif.");});}
 $("ai-mode").value=data.aiMode;
 $("ai-mode").addEventListener("change",updateAiModeStatus);
