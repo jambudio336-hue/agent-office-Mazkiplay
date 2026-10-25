@@ -21,7 +21,7 @@ let tasks:Task[]=[];
 let enabled=false;
 
 async function api<T>(path:string, init:RequestInit={}):Promise<T>{
-  const response=await fetch(path,{...init,credentials:'same-origin',cache:'no-store',headers:{'content-type':'application/json',...(init.headers??{})}});
+  const response=await fetch(path,{...init,credentials:'same-origin',cache:'no-store',headers:{'content-type':'application/json'}});
   const data=await response.json().catch(()=>({}));
   if(!response.ok)throw new Error(typeof data.error==='string'?data.error:`Permintaan gagal (HTTP ${response.status})`);
   return data as T;
