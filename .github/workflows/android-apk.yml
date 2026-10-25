@@ -66,6 +66,7 @@ jobs:
           import { readFileSync } from 'node:fs';
           import vm from 'node:vm';
           const app = readFileSync('android-standalone/app.js', 'utf8');
+          const performanceCenter = readFileSync('android-standalone/performance-center.js', 'utf8');
           const patch = readFileSync('android-standalone/github-pr.js', 'utf8');
           const selfImprovement = readFileSync('android-standalone/self-improvement.js', 'utf8');
           const intro = readFileSync('android-standalone/intro.js', 'utf8');
@@ -74,6 +75,10 @@ jobs:
           const officeCss = readFileSync('android-standalone/styles.css', 'utf8');
           if (!officeCss.includes('Hybrid HQ visual refresh') || !officeCss.includes('worker-idle') || !officeCss.includes('images.unsplash.com')) throw new Error('Visual hybrid HQ atau animasi pekerja hilang.');
           new vm.Script(app, { filename: 'android-standalone/app.js' });
+          new vm.Script(performanceCenter, { filename: 'android-standalone/performance-center.js' });
+          if (!html.includes('./performance-center.js') || !html.includes('id="performance-lite"') || !html.includes('id="performance-check"') || !html.includes('id="performance-diagnostics"')) throw new Error('Adaptive Performance Center is not wired into the APK.');
+          if (!officeCss.includes('body.perf-lite') || !officeCss.includes('.performance-diagnostics')) throw new Error('Performance mode CSS is missing.');
+          if (!performanceCenter.includes('navigator.storage?.estimate?.()') || !performanceCenter.includes('localStorage') || !performanceCenter.includes('Mode Hemat Performa')) throw new Error('Performance diagnostics or local preference persistence is incomplete.');
           new vm.Script(patch, { filename: 'android-standalone/github-pr.js' });
           new vm.Script(selfImprovement, { filename: 'android-standalone/self-improvement.js' });
           new vm.Script(intro, { filename: 'android-standalone/intro.js' });
