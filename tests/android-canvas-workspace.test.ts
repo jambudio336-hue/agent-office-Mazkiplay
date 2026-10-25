@@ -58,7 +58,8 @@ test('native device bridge is packaged with explicit opt-in accessibility', () =
   assert.match(workflow, /BIND_ACCESSIBILITY_SERVICE/);
 });
 
-\ntest('Local backup UI exports portable JSON without provider secrets and validates imports before replacement', () => {
+
+test('Local backup UI exports portable JSON without provider secrets and validates imports before replacement', () => {
   assert.match(html, /id="backup-export"/);
   assert.match(html, /id="backup-import-trigger"/);
   assert.match(app, /format:"mazkiplay-agent-office-backup"/);
@@ -68,7 +69,8 @@ test('native device bridge is packaged with explicit opt-in accessibility', () =
   assert.match(app, /Token dan API key tidak akan diimpor/);
 });
 
-\ntest('Task board supports local search, status filters, live counts, and reset', () => {
+
+test('Task board supports local search, status filters, live counts, and reset', () => {
   assert.match(html, /id="task-search"/);
   assert.match(html, /id="task-filter"/);
   assert.match(html, /value="running"/);
