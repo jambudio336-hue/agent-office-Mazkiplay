@@ -1,3 +1,19 @@
+## [Unreleased] — AI Mission Control
+
+### Added
+- Panel AI Mission Control untuk mengubah satu tujuan menjadi empat tahap: perencanaan, implementasi, QA, dan tinjauan keamanan.
+- Eksekusi misi berurutan melalui Task Board yang sudah ada; hanya satu tahap dijalankan pada satu waktu.
+- Keluaran tahap sebelumnya diteruskan sebagai konteks ke tahap berikutnya, dengan batas konteks agar ukuran prompt tetap terkendali.
+- Status progres, pemulihan misi yang terputus sebagai dijeda, percobaan ulang tahap gagal, serta kontrol jeda setelah tugas aktif selesai.
+- Tautan navigasi drawer dan pemeriksaan CI untuk kelengkapan UI, logika orkestrasi, serta CSS Mission Control.
+
+### Security and limitations
+- Mission Control menghasilkan keluaran AI untuk ditinjau; ia tidak menerapkan patch ke repository, tidak merge, dan tidak menyatakan tes lulus tanpa bukti.
+- Setiap tahap membutuhkan AI lokal yang aktif atau provider API yang sudah dikonfigurasi; provider cloud dapat memakai kuota/biaya.
+- Build Android dan pengujian runtime terbaru tetap perlu dikonfirmasi melalui GitHub Actions dan perangkat fisik.
+
+---
+
 ## [Unreleased] — AI offline download hardening
 
 ### Fixed
