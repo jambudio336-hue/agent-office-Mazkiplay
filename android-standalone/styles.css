@@ -186,3 +186,5 @@
 .device-accessibility>div{display:grid;gap:7px}
 .device-accessibility strong{font-size:13px;color:#f4d4a1}
 @media(max-width:640px){.device-bridge .device-action-grid{grid-template-columns:1fr}.device-accessibility{align-items:stretch;flex-direction:column}}
+
+.device-screen-summary{white-space:pre-wrap;overflow-wrap:anywhere;max-height:320px;overflow:auto;padding:12px;border:1px solid #28415a;border-radius:10px;background:#050c16;color:#bdeaff;font:12px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}
