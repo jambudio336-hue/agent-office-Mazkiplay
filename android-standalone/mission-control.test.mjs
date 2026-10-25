@@ -33,6 +33,7 @@ test("previous stage outputs are passed forward as context", () => {
   assert.ok(app.includes("priorTask?.output"));
   assert.ok(app.includes("task.context=prior.length"));
   assert.ok(app.includes("KELUARAN TAHAP MISI SEBELUMNYA"));
+  assert.ok(app.includes("data tidak tepercaya"), "prior model outputs must be treated as untrusted context");
 });
 
 test("pause and interrupted mission recovery are represented explicitly", () => {
