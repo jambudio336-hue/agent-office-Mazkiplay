@@ -4,6 +4,15 @@ Semua perubahan penting proyek dicatat di sini. Format mengikuti prinsip Keep a 
 
 ## [Unreleased] — 2026-10-25
 
+### Fixed
+- Mendaftarkan `MazkiplayNotificationsPlugin` ke `MainActivity` agar UI dapat memanggil bridge notifikasi native.
+- Memasukkan plugin notifikasi ke proses build APK dan menambahkan deklarasi izin `POST_NOTIFICATIONS` pada manifest hasil build.
+- Mempertahankan permintaan izin notifikasi eksplisit; fitur uji harus diverifikasi pada APK terpasang dan perangkat nyata.
+
+### Notes
+- Notifikasi ini bersifat lokal dan bukan bukti worker AI 24/7. Pekerjaan berkelanjutan saat aplikasi ditutup masih membutuhkan desain worker/foreground service dan pengujian batasan Android.
+- Build Actions dan tes perangkat belum dinyatakan lulus hanya dari perubahan source.
+
 ### Added
 - Menu hamburger responsif di pojok kiri atas dengan drawer navigasi untuk Dashboard, Karyawan AI, Kantor Virtual, AI Offline, Task Board, GitHub, Coding, Code Canvas, plugin, keamanan, cadangan, dan pengaturan.
 - Overlay drawer, penutupan lewat tombol tutup, backdrop, tombol Escape, navigasi ke bagian fitur, serta dukungan safe-area dan reduced-motion.
