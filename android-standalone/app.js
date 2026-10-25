@@ -15,6 +15,15 @@ let githubToken="";
 let githubLastFile=null;
 if(!Array.isArray(data.workers))data.workers=[];
 if(!Array.isArray(data.tasks))data.tasks=[];
+/* Recover interrupted tasks after process death or a force-stop. A task marked
+   running in localStorage cannot still be executing after a fresh app process. */
+for(const task of data.tasks){
+ if(task&&task.running){
+  task.running=false;
+  task.error=task.error||"Tugas terhenti ketika aplikasi ditutup atau dihentikan. Periksa hasil sebelumnya, lalu jalankan ulang jika diperlukan.";
+  task.output=task.output||"";
+ }
+}
 if(!data.providers||typeof data.providers!=="object")data.providers={};
 function status(message,bad=false){$("status").textContent=message;$("status").style.color=bad?"#ff7e8a":"#64e0a4"}
 function save(){
