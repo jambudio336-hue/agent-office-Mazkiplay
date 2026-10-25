@@ -783,4 +783,14 @@ $("notification-permission")?.addEventListener("click",requestNotificationPermis
 $("notification-test")?.addEventListener("click",async()=>{if(await requestNotificationPermission())await sendNativeNotification("M4zk1pL4y.ap — Uji","Notifikasi Android berhasil dipanggil dari aplikasi.")});
 window.addEventListener("mazkiplay:office-task",event=>{const detail=event.detail||{};if(detail.status==="done")sendNativeNotification("Tugas AI selesai",String(detail.task||"Tugas selesai"));if(detail.status==="error")sendNativeNotification("Tugas AI perlu diperiksa",String(detail.task||detail.error||"Buka Task Board untuk detail."))});
 
+(function(){
+ const root=document.documentElement,themeButton=document.getElementById('theme-toggle');
+ function applyTheme(theme){const light=theme==='light';root.dataset.theme=light?'light':'dark';root.style.colorScheme=light?'light':'dark';if(themeButton){themeButton.setAttribute('aria-pressed',String(light));themeButton.textContent=light?'🌙 Mode gelap':'☀️ Mode terang';themeButton.setAttribute('aria-label',light?'Aktifkan mode gelap':'Aktifkan mode terang')}}
+ try{applyTheme(localStorage.getItem('mazkiplay-theme')||'dark')}catch(_){applyTheme('dark')}
+ themeButton?.addEventListener('click',()=>{const next=root.dataset.theme==='light'?'dark':'light';applyTheme(next);try{localStorage.setItem('mazkiplay-theme',next)}catch(_){}});
+ const dateEl=document.getElementById('live-date'),timeEl=document.getElementById('live-time');
+ function tickClock(){const now=new Date();if(dateEl)dateEl.textContent=new Intl.DateTimeFormat('id-ID',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}).format(now);if(timeEl)timeEl.textContent=new Intl.DateTimeFormat('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(now)}
+ tickClock();setInterval(tickClock,1000);
+})();
+
 initializeApp();
