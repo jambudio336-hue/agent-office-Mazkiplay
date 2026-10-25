@@ -454,8 +454,7 @@ function renderMissionControl(){
  const done=Math.min(mission.currentIndex||0,tasks.length),pct=tasks.length?Math.round(done/tasks.length*100):0;
  if(label)label.textContent=missionStatusLabel(mission)+(mission.error?" Detail: "+mission.error:"");
  if(bar)bar.style.width=pct+"%";if(progress)progress.setAttribute("aria-valuenow",String(done));
- if(run)run.disabled=missionRunnerActive||mission.status==="running"||done>=tasks.length&&mission.status==="needs-review"&&!mission.error;
- if(run&&mission.status==="needs-review"&&mission.error)run.disabled=missionRunnerActive;
+ if(run)run.disabled=missionRunnerActive||mission.status==="running"||done>=tasks.length;
  if(pause)pause.disabled=!missionRunnerActive;
  list.innerHTML=tasks.map((task,index)=>{const stage=MISSION_STAGES[index];const statusText=task.error?"Perlu diperiksa":task.output?"Jawaban tersedia · tinjau di Task Board":index<done?"Diproses":"Menunggu";return '<li class="mission-step"><div class="mission-step-heading"><strong>'+esc(stage?.title||task.text)+'</strong><span class="mission-step-status">'+esc(statusText)+'</span></div><p>'+esc(task.text)+'</p>'+(task.error?'<p class="task-error">'+esc(task.error)+'</p>':"")+'</li>'}).join("");
 }
@@ -480,6 +479,8 @@ async function runMission(){
   while((mission.currentIndex||0)<taskIds.length){
    if(data.missionPauseRequested){mission.status="paused";mission.updatedAt=new Date().toISOString();save();break;}
    const task=data.tasks.find(item=>item.id===taskIds[mission.currentIndex]);if(!task){mission.status="needs-review";mission.error="Tahap misi tidak ditemukan di Task Board.";break;}
+   const prior=taskIds.slice(0,mission.currentIndex).map((priorId,index)=>{const priorTask=data.tasks.find(item=>item.id===priorId);return priorTask?.output?"TAHAP SEBELUMNYA "+(index+1)+": "+(priorTask.text||"")+"\n"+priorTask.output:"";}).filter(Boolean);
+   task.context=prior.length?"KELUARAN TAHAP MISI SEBELUMNYA (gunakan sebagai konteks, bukan fakta yang sudah diverifikasi):\n\n"+prior.join("\n\n").slice(0,10000):"";
    status("Mission Control: "+(MISSION_STAGES[mission.currentIndex]?.title||"Tahap berikutnya")+" sedang diproses.");
    await runTask(task.id);
    if(task.error){mission.status="needs-review";mission.error="Tahap "+(mission.currentIndex+1)+" gagal. Perbaiki konfigurasi AI atau coba ulang.";break;}
