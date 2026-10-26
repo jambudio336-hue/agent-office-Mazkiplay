@@ -76,7 +76,6 @@ test("persists the user's performance-mode toggle", () => {
 test("diagnostics show local counts and storage estimates without network calls", async () => {
   const h = createHarness();
   h.listeners.DOMContentLoaded();
-  await new Promise(resolve => setTimeout(resolve, 0)); // Allow startup diagnostics to settle before simulating a second click.
   await h.element("performance-check").handlers.click();
   const output = h.element("performance-diagnostics").textContent;
   assert.match(output, /Thread logis: 8/);
@@ -91,7 +90,6 @@ test("diagnostics show local counts and storage estimates without network calls"
 test("diagnostics degrade gracefully when storage estimates and local state are unavailable", async () => {
   const h = createHarness({ storageEstimate: null, state: null });
   h.listeners.DOMContentLoaded();
-  await new Promise(resolve => setTimeout(resolve, 0)); // Allow startup diagnostics to settle before simulating a second click.
   await h.element("performance-check").handlers.click();
   const output = h.element("performance-diagnostics").textContent;
   assert.match(output, /Estimasi kuota penyimpanan: tidak didukung runtime/);
@@ -101,7 +99,6 @@ test("diagnostics degrade gracefully when storage estimates and local state are 
 test("diagnostics report unexpected runtime errors and always re-enable the button", async () => {
   const h = createHarness({ runtimeFailure: true });
   h.listeners.DOMContentLoaded();
-  await new Promise(resolve => setTimeout(resolve, 0)); // Allow startup diagnostics to settle before simulating a second click.
   await h.element("performance-check").handlers.click();
   assert.match(h.element("performance-diagnostics").textContent, /hardware probe failed/);
   assert.equal(h.element("performance-check").disabled, false);
