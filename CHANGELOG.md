@@ -1,3 +1,17 @@
+## [Unreleased] — Patch Lab safety tests and diagnostics reliability
+
+### Improved
+- Tes regresi Patch Lab memeriksa validasi branch/path, pemuatan file sumber, konfirmasi sebelum menulis, Draft PR, serta batas 5 file dan 18.000 karakter konteks.
+- Tombol diagnostik mengembalikan Promise pemeriksaan agar dapat diuji secara deterministik tanpa jeda berbasis timer.
+- Default branch pada GitHub Workspace dan Patch Lab diselaraskan dengan branch pengembangan aktif `feat/free-local-ai-mode`.
+- Workflow Android memasukkan suite tes keamanan Patch Lab ke tahap validasi.
+
+### Verification
+- Pemeriksaan CI sebelumnya menemukan dua tes Pusat Performa membaca status sebelum pemeriksaan asinkron selesai. Handler dan tes telah diperbaiki agar pengujian dapat menunggu hasil sebenarnya.
+- Hasil build terbaru perlu dilihat pada run yang dipicu oleh commit pengujian ini; belum menyatakan APK final lulus sebelum run selesai.
+
+---
+
 ## [Unreleased] — QA Lab and Release Gate
 
 ### Added
