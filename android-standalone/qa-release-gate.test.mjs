@@ -35,3 +35,12 @@ test("release gate never treats unchecked manual tests as complete", () => {
   assert.ok(css.includes(".qa-release-gate"));
   assert.ok(css.includes(".qa-checklist"));
 });
+
+test("provider secrets restore from Android Keystore after restart without persisting API keys", () => {
+  assert.ok(app.includes("async function readProviderSecret(id)"));
+  assert.ok(app.includes('key = await readProviderSecret(id) || ""'));
+  assert.ok(app.includes('p.key=await readProviderSecret(providerId)||""'));
+  assert.ok(app.includes("async function loadProvider()"));
+  assert.ok(app.includes('delete copy.key'));
+  assert.ok(app.includes('filter(p=>p&&p.model&&p.url).length'), "configured providers should remain visible without plaintext keys in local state");
+});
