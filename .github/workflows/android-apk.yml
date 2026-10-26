@@ -295,7 +295,7 @@ jobs:
           sha256sum --check SHA256SUMS.txt
 
       - name: Simpan APK dan checksum sebagai artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: Mazkiplay-Agent-Office-Android-APK
           path: |
@@ -320,7 +320,7 @@ jobs:
           persist-credentials: false
 
       - name: Ambil APK dan checksum dari artifact terverifikasi
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: Mazkiplay-Agent-Office-Android-APK
           path: apk-output
