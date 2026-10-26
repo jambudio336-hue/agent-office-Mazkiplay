@@ -67,6 +67,7 @@
     </div>
     <div class="actions">
       <button type="button" id="self-run-check">Jalankan pemeriksaan</button>
+      <button type="button" id="self-evolve-now">Jalankan siklus evolusi</button>
       <button type="button" class="secondary" id="self-create-task">Buat tugas perbaikan</button>
       <button type="button" class="secondary" id="self-export">Ekspor diagnostik</button>
       <button type="button" class="secondary" id="self-clear">Bersihkan log error</button>
@@ -172,6 +173,36 @@
     $("task-form").requestSubmit();
     return true;
   }
+  // Evidence-driven evolution: automatically turns recurring runtime/task problems into bounded local proposals.
+  // It never edits source code, installs packages, publishes releases, or sends diagnostics to a server.
+  function autoEvolve(manual = false) {
+    const before = state.ideas.filter(item => item.status !== "Selesai").length;
+    const app = (() => { try { return JSON.parse(localStorage.getItem("mazkiplay-agent-office-v1") || "{}"); } catch { return {}; } })();
+    const tasks = Array.isArray(app.tasks) ? app.tasks : [];
+    const failedTasks = tasks.filter(task => task && task.error);
+    const runtimeEvents = state.events.filter(event => event.kind === "error" || event.kind === "rejection");
+    const recentRuntime = runtimeEvents.filter(event => Date.now() - Number(event.at || 0) < 30 * 86400000);
+    if (recentRuntime.length) {
+      const examples = recentRuntime.slice(-3).map(event => String(event.kind) + ": " + redact(event.message || "").slice(0, 140)).join("; ");
+      addIdea("Evolusi otomatis: kurangi error runtime", recentRuntime.length + " catatan error/rejection ditemukan dalam 30 hari. Buat reproduksi, perbaiki akar masalah, lalu tambahkan tes regresi. Contoh tersanitasi: " + examples, "Tinggi");
+    }
+    if (failedTasks.length) {
+      const examples = failedTasks.slice(0, 3).map(task => String(task.text || "tugas tanpa judul").slice(0, 100)).join("; ");
+      addIdea("Evolusi otomatis: tingkatkan pemulihan tugas gagal", failedTasks.length + " tugas menyimpan error. Periksa pesan, provider, koneksi, dan hasil sebelumnya sebelum mencoba ulang. Contoh tugas: " + examples, "Tinggi");
+    }
+    if (tasks.length > 100) {
+      addIdea("Evolusi otomatis: optimalkan riwayat tugas", tasks.length + " tugas tersimpan. Rancang arsip/pembersihan yang meminta persetujuan dan mempertahankan ekspor cadangan.", "Sedang");
+    }
+    if (state.events.length > 40) {
+      addIdea("Evolusi otomatis: ringkas diagnostik lokal", state.events.length + " catatan diagnostik tersedia. Rancang filter, retensi, dan ekspor yang disanitasi tanpa mengirim data otomatis.", "Sedang");
+    }
+    state.lastEvolution = { at: Date.now(), source: "local-evidence", runtimeEvents: recentRuntime.length, failedTasks: failedTasks.length };
+    save();
+    render();
+    const after = state.ideas.filter(item => item.status !== "Selesai").length;
+    if (manual) status("Siklus evolusi selesai. " + Math.max(0, after - before) + " usulan baru dibuat berdasarkan bukti lokal; tidak ada kode yang diubah otomatis.");
+    return { runtimeEvents: recentRuntime.length, failedTasks: failedTasks.length, proposals: Math.max(0, after - before) };
+  }
   function makePlan() {
     const findings = review();
     const app = (() => { try { return JSON.parse(localStorage.getItem("mazkiplay-agent-office-v1") || "{}"); } catch { return {}; } })();
@@ -208,7 +239,8 @@
   panel.addEventListener("click", event => {
     const button = event.target.closest("button");
     if (!button) return;
-    if (button.id === "self-feature-scan") {
+    if (button.id === "self-evolve-now") { autoEvolve(true); }
+    else if (button.id === "self-feature-scan") {
       const catalog = [
         ["Pemulihan tugas setelah aplikasi ditutup", "Simpan status tahap, waktu update, dan tombol lanjutkan untuk tugas yang terputus.", "Tinggi"],
         ["Pusat privasi dan ekspor data", "Tampilkan data lokal apa saja yang disimpan, tombol ekspor/hapus terpilih, dan peringatan sebelum berbagi diagnostik.", "Tinggi"],
@@ -303,6 +335,7 @@
   window.addEventListener("unhandledrejection", event => record("rejection", event.reason?.message || String(event.reason || "Unhandled promise rejection")));
   insert();
   if (!state.activeDays.includes(day())) { state.activeDays.push(day()); state.activeDays = state.activeDays.slice(-365); save(); }
+  autoEvolve(false);
   render();
-  status("Monitor lokal aktif. Tidak ada pengiriman log otomatis dan tidak ada perubahan kode diam-diam.");
+  status("Monitor dan siklus evolusi lokal aktif. Usulan dibuat dari bukti lokal; kode tidak diubah dan log tidak dikirim otomatis.");
 })();
