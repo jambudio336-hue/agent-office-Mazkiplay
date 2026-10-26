@@ -59,6 +59,6 @@ async function diagnose(){
 document.addEventListener("DOMContentLoaded",()=>{
  setLiteMode(pref.liteMode===true);
  $("performance-lite")?.addEventListener("change",event=>setLiteMode(event.target.checked));
- $("performance-check")?.addEventListener("click",()=>{void diagnose()});
+ $("performance-check")?.addEventListener("click",()=>diagnose());
  void diagnose();
 });
