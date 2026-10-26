@@ -76,6 +76,8 @@ jobs:
           if (!officeCss.includes('Hybrid HQ visual refresh') || !officeCss.includes('worker-idle') || !officeCss.includes('images.unsplash.com')) throw new Error('Visual hybrid HQ atau animasi pekerja hilang.');
           new vm.Script(app, { filename: 'android-standalone/app.js' });
           new vm.Script(performanceCenter, { filename: 'android-standalone/performance-center.js' });
+          new vm.Script(patch, { filename: 'android-standalone/github-pr.js' });
+          if (!patch.includes('function detectPotentialSecrets(files)') || !patch.includes('rejectPotentialSecrets([{ path, content }], status)') || !patch.includes('rejectPotentialSecrets(multiLoaded.map(file => ({ path: file.path, content: file.currentContent })), multiStatus)')) throw new Error('Patch Lab secret scanning is missing from one or more write paths.');
           if (!html.includes('./performance-center.js') || !html.includes('id="performance-lite"') || !html.includes('id="performance-check"') || !html.includes('id="performance-diagnostics"')) throw new Error('Adaptive Performance Center is not wired into the APK.');
           if (!officeCss.includes('body.perf-lite') || !officeCss.includes('.performance-diagnostics')) throw new Error('Performance mode CSS is missing.');
           if (!html.includes('id="qa-release-gate"') || !html.includes('id="qa-ci-refresh"') || !html.includes('id="qa-release-status"')) throw new Error('QA Lab / Release Gate UI is incomplete.');
