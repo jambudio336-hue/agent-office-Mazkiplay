@@ -397,3 +397,11 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--cyan)}
  button,.panel{transition:none}
 }
 html[data-theme="light"] header{background:rgba(255,255,255,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+
+/* Skill Registry */
+.skill-controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:12px 0}
+.skill-registry-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px}
+.skill-card{border:1px solid var(--line,#263346);border-radius:14px;padding:14px;background:rgba(255,255,255,.025);display:flex;flex-direction:column;gap:8px;min-width:0}
+.skill-card h3{margin:2px 0;font-size:1rem}.skill-card p{margin:0;color:var(--muted,#a6b2c4);font-size:.9rem;line-height:1.5;flex:1}
+.skill-tag{display:inline-flex;align-self:flex-start;padding:4px 8px;border-radius:999px;background:rgba(91,141,239,.14);color:#9bbcff;font-size:.75rem}
+.skill-card button{width:100%;margin-top:6px}
