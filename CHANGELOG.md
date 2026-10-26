@@ -1,3 +1,17 @@
+## [Unreleased] — Task runner reliability and CI stability
+
+### Improved
+- Membatasi eksekusi manual maksimal dua tugas AI bersamaan untuk mengurangi lonjakan permintaan, tabrakan status, dan risiko rate-limit provider.
+- Slot eksekusi selalu dilepas pada blok `finally`, termasuk ketika provider mengembalikan error.
+- Menambahkan tes regresi untuk batas konkurensi dan pelepasan slot eksekusi.
+- Workflow Android tidak lagi membatalkan build aktif hanya karena commit baru masuk ke branch yang sama; build yang lebih baru dapat menunggu antrean.
+
+### Notes
+- Batas konkurensi adalah proteksi lokal di satu proses aplikasi, bukan antrean lintas perangkat.
+- Build APK yang berhasil di CI tetap perlu pemeriksaan instalasi dan uji fitur pada perangkat fisik.
+
+---
+
 ## [Unreleased] — Skill Registry dan playbook lintas bidang
 
 ### Added
