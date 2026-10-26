@@ -633,13 +633,15 @@ $("test-provider").onclick=async()=>{
 };
 
 $("benchmark-provider").onclick=async()=>{
- const id=$("provider").value,p=data.providers[id],label=$("benchmark-status");
+ const id=$("provider").value,p={...(data.providers[$("provider").value]||{})},label=$("benchmark-status");
  const show=(message,bad=false)=>{if(label){label.textContent=message;label.style.color=bad?"#ff7e8a":"#64e0a4"}};
- if(!p||(!p.key&&id!=="custom")||!p.model||!p.url){show("Simpan dan uji konfigurasi provider terlebih dahulu.",true);return;}
+ if(!p.model||!p.url){show("Simpan dan uji konfigurasi provider terlebih dahulu.",true);return;}
  const button=$("benchmark-provider"),start=performance.now();
  button.disabled=true;button.textContent="Mengukur…";
  show("Mengirim satu permintaan singkat ke "+(P[id]?.label||id)+"…");
  try{
+  if(!p.key&&id!=="custom"){try{p.key=await readProviderSecret(id)||"";}catch{p.key="";}}
+  if(!p.key&&id!=="custom")throw Error("API key tidak tersedia. Masukkan key atau periksa penyimpanan aman Android.");
   const answer=await callModel(id,"Balas persis satu token teks: BENCHMARK_OK","QA / Tester",64);
   const elapsed=Math.round(performance.now()-start);
   const result={provider:id,model:p.model,latencyMs:elapsed,responseChars:String(answer||"").length,at:new Date().toISOString()};
