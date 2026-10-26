@@ -354,3 +354,46 @@ body.perf-lite .office-ambient,body.perf-lite .worker-idle,body.perf-lite .pulse
 .qa-checklist input{flex:0 0 auto;margin-top:.15rem;accent-color:#58d6d7}
 .qa-release-gate #qa-release-status{font-weight:700}
 @media(max-width:620px){.qa-checklist{grid-template-columns:1fr}.qa-release-gate .actions>*{flex:1 1 100%}}
+
+
+/* Release polish: consistent touch targets, hierarchy, and compact-screen layout. */
+:root{--surface-raised:#11243a;--surface-inset:#091523;--focus-ring:#8deaff;--radius-card:16px}
+html{scroll-padding-top:5.5rem;scroll-behavior:smooth}
+body{min-height:100vh;line-height:1.5;-webkit-text-size-adjust:100%;text-rendering:optimizeLegibility}
+.shell{width:100%;max-width:1160px}
+header{position:sticky;top:0;z-index:90;background:rgba(7,17,31,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.panel,.stats article{box-shadow:0 12px 32px rgba(0,0,0,.12)}
+button{min-height:42px;transition:filter .16s ease,transform .16s ease,border-color .16s ease}
+button:disabled{opacity:.48;cursor:not-allowed;filter:saturate(.45);transform:none}
+input:not([type=checkbox]),select,textarea{width:100%;min-width:0;line-height:1.4}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--cyan)}
+.panel{scroll-margin-top:5.5rem}
+.card,.task-card,.mission-step,.qa-checklist label{overflow-wrap:anywhere}
+.status,.notice,.task-output,.task-error,.performance-diagnostics{overflow-wrap:anywhere;word-break:normal}
+@media(hover:hover){
+ .panel{transition:border-color .18s ease,box-shadow .18s ease}
+ .panel:hover{border-color:#31536f;box-shadow:0 16px 38px rgba(0,0,0,.17)}
+ .card:hover,.task-card:hover{border-color:#31536f}
+}
+@media(max-width:480px){
+ .shell{padding-left:12px;padding-right:12px}
+ header{gap:7px;padding-top:10px;padding-bottom:10px}
+ header .logo{width:36px;height:36px;flex:0 0 36px}
+ header .live-clock{margin-left:auto}
+ .hero{grid-template-columns:minmax(0,1fr);padding-top:24px}
+ .scene{height:230px}
+ .panel{padding:14px;border-radius:14px}
+ .stats{gap:7px}
+ .stats article{padding:11px;gap:5px}
+ .stats strong{font-size:24px}
+ .taskform{flex-wrap:wrap}
+ .taskform input{flex:1 1 100%}
+ .heading{align-items:flex-start}
+ .heading h2{font-size:19px}
+ .pill{white-space:normal;line-height:1.35}
+}
+@media(prefers-reduced-motion:reduce){
+ html{scroll-behavior:auto}
+ button,.panel{transition:none}
+}
+html[data-theme="light"] header{background:rgba(255,255,255,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
