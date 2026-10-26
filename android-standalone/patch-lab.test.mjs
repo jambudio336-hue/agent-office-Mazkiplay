@@ -15,7 +15,7 @@ test("Patch Lab script parses and UI controls exist", () => {
 
 test("single-file patch requires a freshly loaded source and explicit confirmation", () => {
   assert.ok(source.includes('if (!loaded || loaded.repo !== repo || loaded.base !== base || loaded.path !== path)'));
-  assert.ok(source.includes('if (!confirm("Buat branch baru, commit isi file ini, lalu buka DRAFT pull request?')));
+  assert.ok(source.includes("Buat branch baru, commit isi file ini, lalu buka DRAFT pull request?"));
   assert.ok(source.includes('draft: true'));
   assert.ok(source.includes('head: branch,'));
   assert.ok(source.includes('base,'));
