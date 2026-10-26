@@ -43,7 +43,7 @@ Tujuannya adalah memberi satu tempat untuk mengatur pekerjaan AI tanpa berpura-p
 | AI generatif lokal | Integrasi eksperimen Qwen3 0.6B INT4 | Unduhan model besar; performa tergantung RAM/chipset dan kompatibilitas runtime |
 | Provider AI | Konfigurasi provider yang didukung aplikasi | API key/provider dapat memiliki batas dan biaya sendiri |
 | GitHub Workspace | Membaca konteks repository dan alur usulan patch/Draft PR | Izin token minimum; tinjau perubahan sebelum dikirim |
-| Patch Lab | Usulan AI untuk satu atau beberapa file, editor tinjauan, branch terpisah, commit, dan Draft PR | Maksimum 5 file / 18.000 karakter konteks; memerlukan izin tulis; tidak merge otomatis |
+| Patch Lab | Usulan AI satu/multi-file, editor tinjauan, branch terpisah, commit, Draft PR, dan pemindai pola rahasia lokal | Maksimum 5 file / 18.000 karakter konteks; pemindai berbasis pola bukan jaminan; tidak merge otomatis |
 | Canvas / workspace kode | Mengedit berkas lokal, preview HTML yang didukung, dan ekspor | Preview bukan sandbox keamanan untuk kode yang tidak tepercaya |
 | Plugin Hub | Pemeriksaan koneksi dasar untuk layanan terpilih | Banyak konektor masih berupa smoke test/read-only, bukan integrasi penuh |
 | Device Bridge | Membuka pengaturan aksesibilitas dan membaca ringkasan layar atas permintaan | Belum mendukung kendali otomatis penuh lintas aplikasi |
