@@ -1,3 +1,12 @@
+## [Unreleased] — Patch Lab secret guard
+
+### Security
+- Pemindai lokal sebelum operasi tulis memeriksa pola berkeyakinan tinggi untuk private key, GitHub token, AWS access key, OpenAI project key, dan Google API key pada usulan satu file maupun multi-file.
+- Jika pola terdeteksi, operasi pembuatan branch/commit/PR dibatalkan dan aplikasi menampilkan nama kategori serta path, tanpa menampilkan nilai rahasia.
+- Pemindai berbasis pola dapat melewatkan rahasia yang tidak dikenal dan dapat menghasilkan false positive; lakukan secret scanning khusus di CI dan rotasi kredensial yang terlanjur terekspos.
+
+---
+
 ## [Unreleased] — Patch Lab safety tests and diagnostics reliability
 
 ### Improved
