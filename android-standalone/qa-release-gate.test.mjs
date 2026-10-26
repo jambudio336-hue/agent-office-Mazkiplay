@@ -51,8 +51,8 @@ test("provider benchmark also restores its key from secure storage", () => {
 });
 
 test("all Android standalone HTML assets exist and script entrypoints parse", () => {
-  const scriptPaths = [...html.matchAll(/<script[^>]+src="([^"]+\\.js)"/g)].map(match => match[1]);
-  const stylePaths = [...html.matchAll(/<link[^>]+href="([^"]+\\.css)"/g)].map(match => match[1]);
+  const scriptPaths = [...html.matchAll(/<script[^>]+src="([^"]+\.js)"/g)].map(match => match[1]);
+  const stylePaths = [...html.matchAll(/<link[^>]+href="([^"]+\.css)"/g)].map(match => match[1]);
   assert.ok(scriptPaths.length >= 5, "expected all standalone script entrypoints");
   for (const assetPath of [...scriptPaths, ...stylePaths]) {
     assert.doesNotThrow(() => readFileSync(new URL(assetPath, import.meta.url), "utf8"), `missing HTML asset: ${assetPath}`);
@@ -64,10 +64,10 @@ test("all Android standalone HTML assets exist and script entrypoints parse", ()
 });
 
 test("HTML IDs are unique and all app/patch DOM references resolve", () => {
-  const ids = [...html.matchAll(/\\bid="([^"]+)"/g)].map(match => match[1]);
+  const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
   assert.equal(new Set(ids).size, ids.length, "duplicate HTML IDs found");
   for (const source of [app, readFileSync(new URL("./github-pr.js", import.meta.url), "utf8")]) {
-    for (const match of source.matchAll(/\\$\\("([^"]+)"\\)/g)) {
+    for (const match of source.matchAll(/\$\("([^"]+)"\)/g)) {
       assert.ok(ids.includes(match[1]), `missing DOM ID referenced by script: ${match[1]}`);
     }
   }
