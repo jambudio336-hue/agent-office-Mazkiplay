@@ -17,6 +17,7 @@
   const finish = () => {
     if (finished) return;
     finished = true;
+    window.clearTimeout(fallbackTimer);
     audio.pause();
     audio.currentTime = 0;
     screen.hidden = true;
@@ -25,6 +26,8 @@
 
   screen.hidden = false;
   main.hidden = true;
+  // Fail-safe: never strand the user on the intro if media events fail.
+  const fallbackTimer = window.setTimeout(finish, 15000);
   skip.addEventListener("click", finish);
   audio.addEventListener("ended", finish, { once: true });
   audio.addEventListener("error", () => {
