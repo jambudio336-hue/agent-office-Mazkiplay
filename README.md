@@ -59,6 +59,16 @@ Tujuannya adalah memberi satu tempat untuk mengatur pekerjaan AI tanpa berpura-p
 
 Jika belum ada release APK baru, buka [GitHub Actions](https://github.com/jambudio336-hue/agent-office-Mazkiplay/actions), pilih workflow **Android APK**, dan periksa status run terbaru. Build yang masih berjalan atau gagal bukan APK rilis yang tervalidasi.
 
+## 💻 Jalankan di localhost lintas platform
+
+Repository ini sekarang menyediakan skrip instalasi untuk Linux/macOS, Windows PowerShell, dan jalur eksperimental Termux. Panduan lengkap: [PLATFORM-INSTALL.md](PLATFORM-INSTALL.md).
+
+- Linux/macOS: `bash scripts/install-local.sh`
+- Windows PowerShell: `Set-ExecutionPolicy -Scope Process Bypass`, lalu `./scripts/install-local.ps1`
+- Termux: `bash scripts/install-termux.sh` — eksperimental karena modul terminal native mungkin tidak kompatibel dengan ABI Android.
+
+Server lokal menggunakan `127.0.0.1:4600` secara default. Ini menjalankan antarmuka server di browser, bukan membuat paket desktop native. Termux/macOS/Windows tetap harus diuji di perangkat/OS masing-masing; skrip akan berhenti jika pemasangan, tes, atau build gagal.
+
 ## 🧰 Pengembangan lokal
 
 Persyaratan umum:
