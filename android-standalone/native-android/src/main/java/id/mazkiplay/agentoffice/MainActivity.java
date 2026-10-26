@@ -7,6 +7,9 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(MazkiplaySecureStoragePlugin.class);
+        registerPlugin(MazkiplayLocalLLMPlugin.class);
+        registerPlugin(MazkiplayDeviceBridgePlugin.class);
+        registerPlugin(MazkiplayNotificationsPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

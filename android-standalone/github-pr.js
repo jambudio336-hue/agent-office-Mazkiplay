@@ -73,6 +73,30 @@ function encodeContent(value) {
 function filePath(path) {
   return path.trim().split("/").map(encodeURIComponent).join("/");
 }
+function detectPotentialSecrets(files) {
+  const patterns = [
+    ["private key", /-----BEGIN (?:RSA |OPENSSH |EC |DSA |PGP )?PRIVATE KEY-----/],
+    ["GitHub fine-grained token", /\bgithub_pat_[A-Za-z0-9_]{20,}\b/],
+    ["GitHub access token", /\bgh[pousr]_[A-Za-z0-9]{30,}\b/],
+    ["AWS access key", /\bAKIA[0-9A-Z]{16}\b/],
+    ["OpenAI project key", /\bsk-proj-[A-Za-z0-9_-]{30,}\b/],
+    ["Google API key", /\bAIza[0-9A-Za-z_-]{30,}\b/]
+  ];
+  const findings = [];
+  for (const file of files) {
+    for (const [label, pattern] of patterns) {
+      if (pattern.test(String(file.content || ""))) findings.push({ path: file.path, label });
+    }
+  }
+  return findings;
+}
+function rejectPotentialSecrets(files, report) {
+  const findings = detectPotentialSecrets(files);
+  if (!findings.length) return false;
+  const summary = [...new Set(findings.map(item => item.label + " pada " + item.path))].slice(0, 8);
+  report("Pengiriman dibatalkan: pemindai lokal mendeteksi pola yang menyerupai rahasia: " + summary.join("; ") + ". Hapus rahasia dari file dan rotasi kredensial jika pernah terpublikasi.", true);
+  return true;
+}
 async function loadExistingFile() {
   const repo = $("github-pr-repo").value.trim();
   const base = $("github-pr-base").value.trim();
@@ -146,6 +170,7 @@ $("github-pr-create").addEventListener("click", async () => {
   if (!path || !content.trim() || !title || !message) return status("Path, isi file, judul PR, dan pesan commit wajib diisi.", true);
   if (!loaded || loaded.repo !== repo || loaded.base !== base || loaded.path !== path) return status("Muat file dari branch dasar terlebih dahulu agar SHA file tervalidasi.", true);
   if (content.length > 1000000) return status("Isi file melebihi batas 1 MB.", true);
+  if (rejectPotentialSecrets([{ path, content }], status)) return;
   if (!confirm("Buat branch baru, commit isi file ini, lalu buka DRAFT pull request? Branch dasar tidak akan diubah langsung.")) return;
   button.disabled = true;
   button.textContent = "Membuat draft PR…";
@@ -315,6 +340,7 @@ $("multi-pr-create").addEventListener("click", async () => {
   if (!title || !message) return multiStatus("Judul PR dan pesan commit wajib diisi.", true);
   if (!multiLoaded.length) return multiStatus("Muat file terlebih dahulu.", true);
   if (multiLoaded.some(file => !safeRepoPath(file.path) || !file.currentContent.trim())) return multiStatus("Ada path atau isi file yang tidak valid.", true);
+  if (rejectPotentialSecrets(multiLoaded.map(file => ({ path: file.path, content: file.currentContent })), multiStatus)) return;
   if (!confirm("Kirim " + multiLoaded.length + " file sebagai commit pada branch baru lalu buka Draft PR? Tidak ada merge otomatis.")) return;
   button.disabled = true;
   button.textContent = "Mengirim patch…";

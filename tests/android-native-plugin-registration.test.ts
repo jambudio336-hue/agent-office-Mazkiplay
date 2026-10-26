@@ -1,0 +1,119 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+
+const activity = readFileSync(new URL('../android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MainActivity.java', import.meta.url), 'utf8');
+const llm = readFileSync(new URL('../android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplayLocalLLMPlugin.kt', import.meta.url), 'utf8');
+const html = readFileSync(new URL('../android-standalone/index.html', import.meta.url), 'utf8');
+const app = readFileSync(new URL('../android-standalone/app.js', import.meta.url), 'utf8');
+
+test('Capacitor registers both encrypted secret storage and local LLM plugins', () => {
+  assert.match(activity, /registerPlugin\(MazkiplaySecureStoragePlugin\.class\)/);
+  assert.match(activity, /registerPlugin\(MazkiplayLocalLLMPlugin\.class\)/);
+});
+
+test('native local LLM exposes the methods used by the UI bridge', () => {
+  for (const method of ['getStatus', 'downloadModel', 'prepareModel', 'generate', 'resetConversation']) {
+    assert.match(llm, new RegExp('fun ' + method + '\\(call: PluginCall\\)'));
+  }
+  for (const method of ['getStatus', 'downloadModel', 'prepareModel', 'generate', 'resetConversation']) {
+    assert.ok(app.includes(method), 'UI bridge should reference native method ' + method);
+  }
+  assert.match(html, /id="local-llm-download"/);
+  assert.match(html, /id="local-llm-prepare"/);
+  assert.match(html, /id="local-llm-reset"/);
+});
+
+test('model downloads reject unexpected sizes and do not expose partial files as ready', () => {
+  assert.match(llm, /MIN_MODEL_BYTES/);
+  assert.match(llm, /MAX_MODEL_BYTES/);
+  assert.match(llm, /\.part/);
+  assert.match(llm, /downloaded !in MIN_MODEL_BYTES\.\.MAX_MODEL_BYTES/);
+  assert.match(llm, /partial\.delete\(\)/);
+});
+
+test('native inference is bounded and explicitly reports offline model identity', () => {
+  assert.match(llm, /prompt\.length > 4000/);
+  assert.match(llm, /result\.put\("offline", true\)/);
+  assert.match(llm, /result\.put\("model", "Qwen3 0\.6B INT4"\)/);
+});
+
+test('Capacitor registers the native device bridge and notification plugin', () => {
+  assert.ok(activity.includes('registerPlugin(MazkiplayDeviceBridgePlugin.class)'));
+  assert.ok(activity.includes('registerPlugin(MazkiplayNotificationsPlugin.class)'));
+  const notificationPlugin = readFileSync(new URL('../android-standalone/native-android/src/main/java/id/mazkiplay/agentoffice/MazkiplayNotificationsPlugin.java', import.meta.url), 'utf8');
+  assert.ok(notificationPlugin.includes('@CapacitorPlugin(name = "MazkiplayNotifications"'));
+  assert.ok(notificationPlugin.includes('requestPermission(PluginCall call)'));
+  assert.ok(notificationPlugin.includes('public void notify(PluginCall call)'));
+  assert.ok(notificationPlugin.includes('POST_NOTIFICATIONS'));
+});
+
+test('Android workflow packages the notification bridge and declares runtime permission', () => {
+  const workflow = readFileSync(new URL('../.github/workflows/android-apk.yml', import.meta.url), 'utf8');
+  assert.ok(workflow.includes('MazkiplayNotificationsPlugin.java'));
+  assert.ok(workflow.includes('android.permission.POST_NOTIFICATIONS'));
+  assert.ok(workflow.includes('npm run typecheck'));
+  assert.ok(workflow.includes('npm test'));
+});
+
+test('standalone app wires persistent theme, Indonesian live clock, and native notification UI', () => {
+  const styles = readFileSync(new URL('../android-standalone/styles.css', import.meta.url), 'utf8');
+  assert.ok(html.includes('id="theme-toggle"'));
+  assert.ok(html.includes('id="live-date"'));
+  assert.ok(html.includes('id="live-time"'));
+  assert.ok(app.includes("localStorage.getItem('mazkiplay-theme'"));
+  assert.ok(app.includes("localStorage.setItem('mazkiplay-theme',next)"));
+  assert.ok(app.includes("Intl.DateTimeFormat('id-ID'"));
+  assert.ok(app.includes('setInterval(tickClock,1000)'));
+  assert.ok(app.includes('MazkiplayNotifications'));
+  assert.ok(app.includes('notification-permission'));
+  assert.ok(app.includes('notification-test'));
+  assert.ok(styles.includes('data-theme="light"'));
+});
+
+test('interrupted tasks are recovered on startup instead of remaining stuck as running', () => {
+  const startup = app.slice(app.indexOf('if(!Array.isArray(data.tasks))'), app.indexOf('if(!data.providers'));
+  assert.ok(startup.includes('for(const task of data.tasks)'));
+  assert.ok(startup.includes('if(task&&task.running)'));
+  assert.ok(startup.includes('task.running=false'));
+  assert.ok(startup.includes('Tugas terhenti ketika aplikasi ditutup atau dihentikan'));
+});
+
+
+test('task execution records attempts and timestamps, and failed tasks offer a retry action', () => {
+  assert.ok(app.includes('t.attempts=(Number.isInteger(t.attempts)?t.attempts:0)+1'));
+  assert.ok(app.includes('t.updatedAt=new Date().toISOString()'));
+  assert.ok(app.includes('(t.error?"↻ Coba lagi":"▶ Jalankan AI")'));
+  assert.ok(app.includes('if(!t||t.running)return'));
+});
+
+test('task cards expose attempt metadata and preserve the previous output as a restorable checkpoint', () => {
+  assert.ok(app.includes('data-restore-output'));
+  assert.ok(app.includes('t.previousOutput=t.output'));
+  assert.ok(app.includes('task.previousOutput'));
+  assert.ok(app.includes('task.updatedAt=new Date().toISOString()'));
+  assert.ok(app.includes('task-metadata'));
+  const styles = readFileSync(new URL('../android-standalone/styles.css', import.meta.url), 'utf8');
+  assert.ok(styles.includes('.task-metadata'));
+  assert.ok(styles.includes('.task-result-actions'));
+});
+
+
+test('task results offer a copy action with a clipboard fallback for Android WebView', () => {
+  assert.ok(app.includes('data-copy-result='));
+  assert.ok(app.includes('navigator.clipboard.writeText(task.output)'));
+  assert.ok(app.includes('document.execCommand("copy")'));
+  assert.ok(app.includes('Tidak bisa menyalin otomatis'));
+});
+
+
+test('Task Board exposes QA, security, web, and Android templates and sends template instructions to the model', () => {
+  assert.ok(html.includes('data-task-template="qa"'));
+  assert.ok(html.includes('data-task-template="security"'));
+  assert.ok(html.includes('data-task-template="web"'));
+  assert.ok(html.includes('data-task-template="android"'));
+  assert.ok(app.includes('const TASK_TEMPLATES={qa:'));
+  assert.ok(app.includes('INSTRUKSI TEMPLATE KHUSUS:'));
+  assert.ok(app.includes('t.prompt'));
+  assert.ok(app.includes('Batas 500 tugas tercapai'));
+});
