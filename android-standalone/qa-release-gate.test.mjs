@@ -47,7 +47,9 @@ test("provider secrets restore from Android Keystore after restart without persi
 
 test("clear-data removes all known app-owned local stores and reloads module state", () => {
   const clearHandler = app.slice(app.indexOf('$("clear-data").onclick=async()=>{'), app.indexOf('window.addEventListener("mazkiplay:plugin-context"'));
-  for (const key of ["mazkiplay-agent-office-v1", "mazkiplay-plugin-manager-v1", "mazkiplay-canvas-workspace-v2", "mazkiplay-self-improvement-v1", "mazkiplay-performance-v1", "mazkiplay-theme"]) {
+  assert.ok(app.includes('const KEY="mazkiplay-agent-office-v1"'), "main app store key must remain covered");
+  assert.ok(clearHandler.includes("[KEY,"), "clear-data must remove the main app store");
+  for (const key of ["mazkiplay-plugin-manager-v1", "mazkiplay-canvas-workspace-v2", "mazkiplay-self-improvement-v1", "mazkiplay-performance-v1", "mazkiplay-theme"]) {
     assert.ok(clearHandler.includes(key), `clear-data must remove ${key}`);
   }
   assert.ok(clearHandler.includes("window.location.reload()"), "reload resets module state after storage is cleared");
