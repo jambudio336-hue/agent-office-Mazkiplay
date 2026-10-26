@@ -443,8 +443,12 @@ async function callModelWithFallback(providerId,prompt,role,maxTokens=1200){
  }
 }
 
+let activeTaskRuns=0;
+const MAX_CONCURRENT_TASK_RUNS=2;
 async function runTask(id){
  const t=data.tasks.find(x=>x.id===id);if(!t||t.running)return;
+ if(activeTaskRuns>=MAX_CONCURRENT_TASK_RUNS){status("Dua tugas AI sedang berjalan. Tunggu salah satunya selesai sebelum menjalankan tugas lain.",true);return;}
+ activeTaskRuns++;
  const worker=data.workers.find(w=>w.id===t.workerId),providerId=worker?.provider||$("provider").value;
  t.running=true;t.error="";if(t.output)t.previousOutput=t.output;t.output="";t.attempts=(Number.isInteger(t.attempts)?t.attempts:0)+1;t.updatedAt=new Date().toISOString();save();render();
  window.dispatchEvent(new CustomEvent("mazkiplay:office-task",{detail:{status:"running",task:t.text,worker:worker?.name||"AI Agent",role:worker?.role||"Asisten umum"}}));
@@ -452,7 +456,7 @@ async function runTask(id){
   const prompt="Kerjakan permintaan berikut dengan hasil yang bisa ditinjau. Untuk coding, berikan ringkasan pendek, daftar file beserta isi kode yang relevan, langkah pemasangan, cara uji, dan risiko/asumsi. Jika informasi kurang, sebutkan asumsi. Jangan mengklaim perubahan file atau pengujian sudah dilakukan. Jawaban AI bukan berarti tugas sudah benar-benar selesai; pengguna akan menandai selesai setelah memeriksa hasil.\n\nTUGAS: "+t.text+(t.prompt?"\n\nINSTRUKSI TEMPLATE KHUSUS:\n"+t.prompt:"")+(t.context?"\n\nKONTEKS REPOSITORY/FILE:\n"+t.context:"");
   t.output=data.aiMode==="local"?await generateLocalAnswer(prompt,worker?.role||"Asisten umum"):await callModelWithFallback(providerId,prompt,worker?.role||"Asisten umum");
   t.done=false;t.updatedAt=new Date().toISOString();
- }catch(err){t.error=err?.message||"Gagal menjalankan tugas AI";t.updatedAt=new Date().toISOString();}finally{t.running=false;t.updatedAt=new Date().toISOString();save();render();window.dispatchEvent(new CustomEvent("mazkiplay:office-task",{detail:{status:t.error?"error":"done",task:t.text,worker:worker?.name||"AI Agent",role:worker?.role||"Asisten umum",error:t.error||""}}))}
+ }catch(err){t.error=err?.message||"Gagal menjalankan tugas AI";t.updatedAt=new Date().toISOString();}finally{activeTaskRuns=Math.max(0,activeTaskRuns-1);t.running=false;t.updatedAt=new Date().toISOString();save();render();window.dispatchEvent(new CustomEvent("mazkiplay:office-task",{detail:{status:t.error?"error":"done",task:t.text,worker:worker?.name||"AI Agent",role:worker?.role||"Asisten umum",error:t.error||""}}))}
 }
 let missionRunnerActive=false;
 const MISSION_STAGES=[
