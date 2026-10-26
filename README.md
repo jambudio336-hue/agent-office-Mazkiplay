@@ -37,7 +37,7 @@ Tujuannya adalah memberi satu tempat untuk mengatur pekerjaan AI tanpa berpura-p
 | Modul | Fungsi | Status/catatan |
 |---|---|---|
 | Kantor virtual | Ruang Developer Lab, Riset, Rapat, dan Security Center | Animasi visual; bukan bukti eksekusi AI |
-| Pekerja & Task Board | Membuat profil pekerja dan menugaskan tugas | Eksekusi bergantung pada provider yang dikonfigurasi |
+| Pekerja & Task Board | Membuat profil pekerja, menugaskan tugas, memulihkan hasil sebelumnya, dan menjalankan hingga dua tugas AI bersamaan | Eksekusi bergantung pada provider yang dikonfigurasi; batas konkurensi berlaku per proses aplikasi |
 | AI Mission Control | Memecah tujuan menjadi 4 tahap berurutan, meneruskan konteks, menampilkan progres, dan mendukung jeda/ulang tahap gagal | Hasil AI tetap perlu ditinjau; tidak menerapkan patch atau menjalankan tes secara otomatis |
 | QA Lab / Release Gate | Memeriksa status GitHub Actions untuk commit branch terbaru dan mencatat checklist uji manual | Membutuhkan token GitHub dengan izin Actions: read; checklist perangkat diisi operator berdasarkan bukti nyata |
 | AI generatif lokal | Integrasi eksperimen Qwen3 0.6B INT4 | Unduhan model besar; performa tergantung RAM/chipset dan kompatibilitas runtime |
