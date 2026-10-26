@@ -44,3 +44,8 @@ test("provider secrets restore from Android Keystore after restart without persi
   assert.ok(app.includes('delete copy.key'));
   assert.ok(app.includes('filter(p=>p&&p.model&&p.url).length'), "configured providers should remain visible without plaintext keys in local state");
 });
+
+test("provider benchmark also restores its key from secure storage", () => {
+  assert.ok(app.includes('if(!p.key&&id!=="custom"){try{p.key=await readProviderSecret(id)||"";}catch{p.key="";}}'));
+  assert.ok(app.includes('API key tidak tersedia. Masukkan key atau periksa penyimpanan aman Android.'));
+});
