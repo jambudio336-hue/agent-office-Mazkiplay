@@ -44,6 +44,11 @@ jobs:
           npm test
           npm run build
 
+      - name: Validasi skrip instalasi localhost
+        run: |
+          bash -n scripts/install-local.sh
+          bash -n scripts/install-termux.sh
+
       - name: Siapkan aset intro gambar dan audio
         timeout-minutes: 8
         run: |
