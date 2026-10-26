@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
-ROOT="$(cd -- "$(dirname -- "\${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 command -v node >/dev/null || { echo "Pasang Node.js 20+ terlebih dahulu." >&2; exit 1; }
 command -v npm >/dev/null || { echo "npm tidak ditemukan." >&2; exit 1; }
