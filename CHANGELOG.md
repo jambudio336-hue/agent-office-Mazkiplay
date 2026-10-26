@@ -1,3 +1,15 @@
+## [Unreleased] — Provider recovery and interface polish
+
+### Fixed
+- Benchmark provider kini memulihkan kredensial dari Android Keystore seperti alur chat, pencarian model, dan pengujian koneksi.
+- Memperjelas error ketika kredensial aman tidak tersedia.
+
+### Improved
+- Penyempurnaan visual antarmuka yang sudah ada: hierarki panel, ruang layar mobile, target sentuh, status tombol nonaktif, dan header yang lebih konsisten.
+- Menghormati preferensi reduced motion dan menjaga tema terang tetap terbaca.
+
+---
+
 ## [Unreleased] — Provider credential recovery fix
 
 ### Fixed
