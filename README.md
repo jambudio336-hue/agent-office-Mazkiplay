@@ -7,9 +7,11 @@
 
 *"Whatever you do, work heartily, as for the Lord and not for men."* — Colossians 3:23 (ESV)
 
-# 🏢 Agent Office
+# 🛡️ Mazkiplay Hacker AI
 
-**A 3D office your team shares with its coding agents.**
+**AI Cybersecurity Workbench — mobile companion, authorized security workflows, code auditing, OSINT, and evidence-based reports.**
+
+Mazkiplay Hacker AI evolves the existing Agent Office codebase into a security-focused assistant. The current Android APK is a remote client for `/lite`; it does not run pentesting tools or AI workers locally. Real execution still requires a configured host, supported agent CLI, and explicit authorization for each target.
 
 Sit **Claude Code**, **Codex**, **OpenCode**, **Grok**, **Muse**, **DeepSeek Harness** and **Cursor** workers at desks, watch each one's terminal on the laptop in front of it,
 and jump into any of them together. Every GitHub repo is a floor of the building.
@@ -29,6 +31,10 @@ curl -fsSL https://raw.githubusercontent.com/AgentSystemLabs/agent-office/main/i
 </div>
 
 ---
+
+## Product direction: Mazkiplay Hacker AI
+
+The security-focused roadmap and safety boundaries are documented in [`docs/hacker-ai-roadmap.md`](docs/hacker-ai-roadmap.md). Existing office, worker, terminal, GitHub, and mobile functionality remains part of the foundation until each security module is implemented and tested.
 
 ## What it is
 
