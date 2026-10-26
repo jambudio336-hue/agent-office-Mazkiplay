@@ -184,7 +184,7 @@ jobs:
               </service>
           '''
           if 'android.permission.POST_NOTIFICATIONS' not in text:
-              text = text.replace('<application', '<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\\n    <application', 1)
+              text = text.replace('<application', '<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n    <application', 1)
           if 'id.mazkiplay.agentoffice.MazkiplayAccessibilityService' not in text:
               if '</application>' not in text:
                   raise SystemExit('Android manifest has no application element')
