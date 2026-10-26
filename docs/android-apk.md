@@ -1,6 +1,6 @@
-# APK Android
+# Mazkiplay Hacker AI — APK Android
 
-Repository ini sekarang memiliki aplikasi pendamping Android native untuk dashboard mobile Agent Office. APK membuka halaman kantor `/lite` di dalam Android WebView yang dibatasi ke server HTTPS. Alamat server yang dimasukkan di ponsel disimpan untuk pemakaian berikutnya. APK adalah klien jarak jauh; APK tidak menjalankan Node.js atau CLI penyedia AI di ponsel.
+Repository ini sekarang memiliki aplikasi pendamping Android native untuk dashboard mobile Mazkiplay Hacker AI. APK membuka halaman kantor `/lite` di dalam Android WebView yang dibatasi ke server HTTPS. Alamat server yang dimasukkan di ponsel disimpan untuk pemakaian berikutnya. APK adalah klien jarak jauh; APK tidak menjalankan Node.js atau CLI penyedia AI di ponsel.
 
 ## Lokasi karyawan AI berjalan
 
