@@ -134,7 +134,7 @@ jobs:
           NODE
 
       - name: Uji regresi modul Android mandiri
-        run: node --test android-standalone/performance-center.test.mjs android-standalone/mission-control.test.mjs android-standalone/qa-release-gate.test.mjs android-standalone/patch-lab.test.mjs
+        run: node --test android-standalone/performance-center.test.mjs android-standalone/mission-control.test.mjs android-standalone/qa-release-gate.test.mjs android-standalone/patch-lab.test.mjs android-standalone/task-runner.test.mjs
 
       - name: Siapkan Capacitor untuk aplikasi lokal
         run: |
