@@ -17,7 +17,7 @@ on:
         type: boolean
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build-apk:
@@ -274,22 +274,42 @@ jobs:
           mkdir -p ../apk-output
           cp app/build/outputs/apk/debug/app-debug.apk ../apk-output/Mazkiplay-Agent-Office.apk
 
-      - name: Simpan APK sebagai artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Mazkiplay-Agent-Office-Android-APK
-          path: apk-output/Mazkiplay-Agent-Office.apk
-          if-no-files-found: error
-          retention-days: 30
-
       - name: Siapkan checksum APK
         run: |
           cd apk-output
           sha256sum Mazkiplay-Agent-Office.apk > SHA256SUMS.txt
-          cat SHA256SUMS.txt
+          sha256sum --check SHA256SUMS.txt
+
+      - name: Simpan APK dan checksum sebagai artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mazkiplay-Agent-Office-Android-APK
+          path: |
+            apk-output/Mazkiplay-Agent-Office.apk
+            apk-output/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 30
+
+  publish-release:
+    name: Publikasikan preview release
+    needs: build-apk
+    if: inputs.publish_release || (github.event_name == 'push' && github.ref == 'refs/heads/feat/free-local-ai-mode')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Ambil APK dan checksum dari artifact terverifikasi
+        uses: actions/download-artifact@v4
+        with:
+          name: Mazkiplay-Agent-Office-Android-APK
+          path: apk-output
+
+      - name: Verifikasi checksum sebelum rilis
+        run: |
+          cd apk-output
+          sha256sum --check SHA256SUMS.txt
 
       - name: Publikasikan GitHub Release publik
-        if: inputs.publish_release || (github.event_name == 'push' && github.ref == 'refs/heads/feat/free-local-ai-mode')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -297,10 +317,12 @@ jobs:
           notes="Mazkiplay Agent Office — APK Android standalone. Berisi UI kantor, profil pekerja, Task Board, koneksi provider AI, AI lokal Qwen3 setelah model diunduh, GitHub workspace, dan modul monitor/perencana perbaikan. Provider cloud membutuhkan internet/API key dan dapat memakai kuota/biaya. AI tidak mengedit kode diam-diam; perubahan kode tetap perlu review, tes, dan build tervalidasi. Belum diverifikasi pada perangkat Android fisik; gunakan sebagai preview publik dan laporkan bug melalui Issues."
           if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
             gh release create "$tag" apk-output/Mazkiplay-Agent-Office.apk apk-output/SHA256SUMS.txt \
+              --target "$GITHUB_SHA" \
               --title "Mazkiplay Agent Office Android ${GITHUB_RUN_NUMBER} Preview" \
               --notes "$notes" --prerelease
           else
             gh release create "$tag" apk-output/Mazkiplay-Agent-Office.apk apk-output/SHA256SUMS.txt \
+              --target "$GITHUB_SHA" \
               --title "Mazkiplay Agent Office Android ${GITHUB_RUN_NUMBER}" \
               --notes "$notes" --latest
           fi
