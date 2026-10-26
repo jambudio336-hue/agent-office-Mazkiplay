@@ -312,6 +312,13 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Ambil metadata commit untuk GitHub Release
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
       - name: Ambil APK dan checksum dari artifact terverifikasi
         uses: actions/download-artifact@v4
         with:
