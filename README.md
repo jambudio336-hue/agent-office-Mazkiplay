@@ -176,3 +176,13 @@ Proyek ini merupakan fork/pengembangan dari **Agent Office** oleh AgentSystemLab
 Ilustrasi ikon karakter anime dark dibuat sebagai aset SVG orisinal dan header kantor memakai SVG dengan animasi. GitHub dapat menonaktifkan sebagian animasi pada konteks tertentu; buka aset SVG langsung untuk melihat animasinya jika didukung.
 
 > **Catatan ikon APK:** workflow Android APK mengonversi aset SVG menjadi PNG untuk seluruh density launcher dan memasang resource ikon pada proyek Android saat build. Tampilan ikon tetap perlu dikonfirmasi pada perangkat fisik karena launcher Android dapat menerapkan adaptive icon secara berbeda.
+
+
+## 🧠 Skill Registry dan Playbook Tugas
+
+Registry menyediakan playbook yang dapat dipilih untuk membantu menyusun instruksi tugas secara konsisten. Kategori mencakup full-stack web, Android/APK, pemrograman dan debugging, QA, rekayasa AI agent, DevOps/release, riset keamanan defensif, pentest berizin, perencanaan red/blue/purple team, analisis teknikal dan fundamental forex, kuantitatif/backtesting, pemasaran digital, SEO/e-commerce, analisis sumber publik, UI/UX/dokumentasi, grey-box/white-hat, serta riset aktor ancaman dan hacktivisme.
+
+- Playbook membantu membentuk prompt dan tugas; **tidak otomatis memberi agent kemampuan, akses API, izin perangkat, atau akses repository**.
+- Hasil coding dan security harus divalidasi dengan tes, bukti, serta tinjauan manusia. Pengujian keamanan hanya untuk sistem milik sendiri atau yang memiliki izin tertulis.
+- Analisis forex bukan sinyal transaksi yang dijamin. Data real-time memerlukan feed/API yang tersedia; hasil backtest bukan jaminan performa masa depan.
+- “Belajar mandiri” dibatasi pada peningkatan playbook, pencatatan hasil, dan evaluasi yang dapat ditinjau. Perubahan kode, akses baru, pengeluaran, publikasi, dan tindakan sensitif tetap memerlukan kontrol serta persetujuan yang sesuai.
