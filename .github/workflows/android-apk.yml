@@ -19,10 +19,10 @@ on:
 permissions:
   contents: read
 
-# Cancel obsolete builds on the same branch so stale APK builds do not exhaust CI capacity.
+# Keep the active build running; newer commits may wait, but must not cancel a build mid-release.
 concurrency:
   group: android-apk-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build-apk:
