@@ -1,3 +1,12 @@
+## [Unreleased] — Provider credential recovery fix
+
+### Fixed
+- Memulihkan API key provider dari Android Keystore saat memilih provider, menemukan model, menguji koneksi, atau mengirim permintaan AI setelah aplikasi dibuka ulang.
+- Memastikan indikator jumlah provider tetap mencerminkan konfigurasi tersimpan tanpa menaruh API key ke localStorage.
+- Menambahkan tes regresi untuk pemulihan rahasia dan batas penyimpanan key plaintext.
+
+---
+
 ## [Unreleased] — Patch Lab secret guard
 
 ### Security
