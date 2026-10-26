@@ -58,6 +58,7 @@ export default defineConfig({
         claim: resolve(import.meta.dirname, 'src/client/claim.html'),
         join: resolve(import.meta.dirname, 'src/client/join.html'),
         cloud: resolve(import.meta.dirname, 'src/client/cloud.html'),
+        dork: resolve(import.meta.dirname, 'src/client/dork.html'),
       },
     },
   },
