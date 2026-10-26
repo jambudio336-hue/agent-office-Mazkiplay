@@ -1,3 +1,18 @@
+## [Unreleased] — Skill Registry dan playbook lintas bidang
+
+### Added
+- Registry playbook tugas untuk 18 bidang: full-stack web, Android/APK, debugging, QA, AI agent, DevOps, keamanan defensif, pentest berizin, red/blue/purple team, analisis forex, kuantitatif/backtesting, digital marketing, SEO/e-commerce, analisis sumber publik, UI/UX/dokumentasi, grey-box/white-hat, dan riset aktor ancaman/hacktivisme.
+- Tes regresi root untuk memeriksa keberadaan playbook inti, penegasan otorisasi, kebutuhan bukti, dan kehati-hatian finansial.
+- Perbaikan frasa peringatan biaya provider agar sesuai dengan pemeriksaan QA.
+
+### Safety and limitations
+- Playbook adalah panduan tugas, bukan kemampuan/tool baru yang otomatis aktif. Koneksi provider, izin, dan eksekusi nyata tetap bergantung pada konfigurasi.
+- Riset keamanan dan pentest dibatasi pada aset yang dimiliki atau telah mendapat izin; playbook tidak mengizinkan akses tanpa otorisasi.
+- Analisis forex tidak menjamin keuntungan; data real-time membutuhkan feed yang terhubung.
+- Status APK terbaru harus dikonfirmasi dari run GitHub Actions yang sesuai dengan commit terbaru.
+
+---
+
 ## [Unreleased] — Model catalog and fallback reliability
 
 ### Improved
