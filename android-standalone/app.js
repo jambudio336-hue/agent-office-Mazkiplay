@@ -67,7 +67,7 @@ function taskStatusOf(t){if(t.running)return "running";if(t.error)return "error"
 function visibleTasks(){const q=taskSearchQuery.toLocaleLowerCase("id-ID");return data.tasks.filter(t=>{const status=taskStatusOf(t);const worker=data.workers.find(w=>w.id===t.workerId);const hay=[t.text,t.output,t.error,worker?.name,worker?.role].filter(Boolean).join(" ").toLocaleLowerCase("id-ID");return(!q||hay.includes(q))&&(taskStatusFilter==="all"||status===taskStatusFilter)})}
 function render(){
  $("worker-count").textContent=data.workers.length;$("task-count").textContent=data.tasks.length;
- $("provider-count").textContent=Object.values(data.providers).filter(p=>p&&p.key&&p.model).length;
+ $("provider-count").textContent=Object.values(data.providers).filter(p=>p&&p.model&&p.url).length;
  $("cap").textContent=data.workers.length+" / "+MAX;$("add-worker").disabled=data.workers.length>=MAX;
  $("workers").innerHTML=data.workers.length?data.workers.map(w=>'<div class="card"><div class="avatar">'+esc(w.name.slice(0,2).toUpperCase())+'</div><div class="meta"><b>'+esc(w.name)+'</b><small>'+esc(w.role)+' · '+esc((P[w.provider]||P.custom).label)+'</small>'+(w.task?'<small>Tugas awal: '+esc(w.task)+'</small>':'<small>Profil tersimpan lokal</small>')+'</div><button class="worker-rename" data-rename="'+esc(w.id)+'" aria-label="Ganti nama pekerja '+esc(w.name)+'">Nama</button><button class="remove" data-remove="'+esc(w.id)+'" aria-label="Hapus pekerja '+esc(w.name)+'">×</button></div>').join(""):'<div class="empty">Belum ada pekerja. Tambahkan anggota tim pertamamu.</div>';
  const assign=$("task-worker");if(assign){const previous=assign.value;assign.innerHTML=optionsForWorkers(previous);if([...assign.options].some(o=>o.value===previous))assign.value=previous}
@@ -184,7 +184,8 @@ function renderModelOptions() {
 async function discoverModels() {
  const id = $("provider").value;
  const p = P[id];
- const key = $("api-key").value.trim() || data.providers[id]?.key || "";
+ let key = $("api-key").value.trim() || data.providers[id]?.key || "";
+ if (!key && id !== "custom") key = await readProviderSecret(id) || "";
  if (!key && id !== "custom") throw Error("Masukkan API key provider terlebih dahulu.");
  let url = "", headers = { "Accept": "application/json" };
  if (id === "openrouter") {
@@ -245,7 +246,7 @@ $("free-models-only").addEventListener("change", () => {
   modelDiscoveryStatus("Filter diperbarui. Daftar harga dan ketersediaan dapat berubah.");
  }
 });
-function loadProvider(){const id=$("provider").value,p=P[id],s=data.providers[id]||{};$("api-key").value=s.key||"";$("model-id").value=s.model||(id==="openrouter"?"openrouter/free":p.model);$("endpoint").value=s.url||p.url;$("endpoint").readOnly=id!=="custom";$("endpoint-label").style.display=id==="custom"?"grid":"none";renderModelOptions();modelDiscoveryStatus("Provider dipilih: "+p.label+". Tekan Cari model tersedia untuk mengambil daftar terbaru.")}
+async function loadProvider(){const id=$("provider").value,p=P[id],s=data.providers[id]||{};$("api-key").value=s.key||"";$("model-id").value=s.model||(id==="openrouter"?"openrouter/free":p.model);$("endpoint").value=s.url||p.url;$("endpoint").readOnly=id!=="custom";$("endpoint-label").style.display=id==="custom"?"grid":"none";renderModelOptions();modelDiscoveryStatus("Provider dipilih: "+p.label+". Tekan Cari model tersedia untuk mengambil daftar terbaru.");if(!$("api-key").value&&id!=="custom"){try{const saved=await readProviderSecret(id);if(saved&&$("provider").value===id){$("api-key").value=saved;data.providers[id]={...data.providers[id],key:saved};}}catch{}}}
 $("provider").onchange=loadProvider;
 $("provider-form").onsubmit=async e=>{
  e.preventDefault();const id=$("provider").value,p={key:$("api-key").value.trim(),model:$("model-id").value.trim(),url:$("endpoint").value.trim(),format:P[id].format};
@@ -267,7 +268,8 @@ async function request(url,options){
  const r=await fetch(url,options);let d={};try{d=await r.json()}catch{}return{ok:r.ok,status:r.status,data:d}
 }
 async function callModel(providerId,prompt,role,maxTokens=1200){
- const p=data.providers[providerId]||{};
+ const p={...(data.providers[providerId]||{})};
+ if(!p.key&&providerId!=="custom"){try{p.key=await readProviderSecret(providerId)||"";}catch{p.key="";}}
  if((!p.key&&providerId!=="custom")||!p.model||!p.url)throw Error("Provider "+(P[providerId]?.label||providerId)+" belum dikonfigurasi. Simpan API key (kecuali endpoint custom/local), model, dan endpoint.");
  let headers={"Content-Type":"application/json"},body;
  const roleGuidance={
@@ -613,7 +615,8 @@ $("free-chat-form").addEventListener("submit",async e=>{
 });
 $("test-provider").onclick=async()=>{
  const id=$("provider").value,p={key:$("api-key").value.trim(),model:$("model-id").value.trim(),url:$("endpoint").value.trim(),format:P[$("provider").value].format};
- if(!p.key&&id!=="custom")return status("Masukkan API key terlebih dahulu.",true);if(!p.url||!p.model)return status("Model dan endpoint wajib diisi.",true);
+ if(!p.key&&id!=="custom"){try{p.key=await readProviderSecret(id)||"";}catch{p.key="";}}
+ if(!p.key&&id!=="custom")return status("API key belum tersedia. Masukkan key atau simpan konfigurasi provider terlebih dahulu.",true);if(!p.url||!p.model)return status("Model dan endpoint wajib diisi.",true);
  const b=$("test-provider"),previous=data.providers[id];b.disabled=true;b.textContent="Menguji…";data.providers[id]=p;
  try{
   const answer=await callModel(id,"Balas singkat hanya dengan: koneksi berhasil.","penguji koneksi");
