@@ -45,6 +45,14 @@ test("provider secrets restore from Android Keystore after restart without persi
   assert.ok(app.includes('filter(p=>p&&p.model&&p.url).length'), "configured providers should remain visible without plaintext keys in local state");
 });
 
+test("clear-data removes all known app-owned local stores and reloads module state", () => {
+  const clearHandler = app.slice(app.indexOf('$("clear-data").onclick=async()=>{'), app.indexOf('window.addEventListener("mazkiplay:plugin-context"'));
+  for (const key of ["mazkiplay-agent-office-v1", "mazkiplay-plugin-manager-v1", "mazkiplay-canvas-workspace-v2", "mazkiplay-self-improvement-v1", "mazkiplay-performance-v1", "mazkiplay-theme"]) {
+    assert.ok(clearHandler.includes(key), `clear-data must remove ${key}`);
+  }
+  assert.ok(clearHandler.includes("window.location.reload()"), "reload resets module state after storage is cleared");
+});
+
 test("provider benchmark also restores its key from secure storage", () => {
   assert.ok(app.includes('if(!p.key&&id!=="custom"){try{p.key=await readProviderSecret(id)||"";}catch{p.key="";}}'));
   assert.ok(app.includes('API key tidak tersedia. Masukkan key atau periksa penyimpanan aman Android.'));
