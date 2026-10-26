@@ -30,6 +30,13 @@ test("branch and repository paths are validated before write operations", () => 
   assert.ok(source.includes('part !== ".."'));
 });
 
+test("high-confidence secret patterns block single- and multi-file writes", () => {
+  assert.ok(source.includes("function detectPotentialSecrets(files)"));
+  assert.ok(source.includes("function rejectPotentialSecrets(files, report)"));
+  assert.ok(source.includes('if (rejectPotentialSecrets([{ path, content }], status)) return;'));
+  assert.ok(source.includes("rejectPotentialSecrets(multiLoaded.map(file => ({ path: file.path, content: file.currentContent })), multiStatus)"));
+  for (const pattern of ["github_pat_", "AKIA", "sk-proj-", "PRIVATE KEY"]) assert.ok(source.includes(pattern), `missing secret pattern ${pattern}`);
+});
 test("multi-file patch bounds file count and context size", () => {
   assert.ok(source.includes("paths.length > 5"));
   assert.ok(source.includes("total > 18000"));
