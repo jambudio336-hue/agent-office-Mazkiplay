@@ -21,25 +21,24 @@ const presets:Record<Preset,string[]> = {
  custom:['']
 };
 function cleanDomain(raw:string):string {
- const value=raw.trim().replace(/^https?:\\/\\//i,'').replace(/\\/.*$/,'').replace(/:\\d+$/,'').toLowerCase();
+ const value=raw.trim().replace(/^https?:\/\//i,'').replace(/\/.*$/,'').replace(/:\d+$/,'').toLowerCase();
  if(!value) return '';
- if(value.length>253 || !/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$/.test(value)) {
+ if(value.length>253 || !/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/.test(value)) {
    throw new Error('Domain tidak valid. Masukkan hostname seperti example.com, tanpa path.');
  }
  return value;
 }
 function safeExtra(raw:string):string {
  const value=raw.trim();
- if(/[\\r\\n<>]/.test(value) || value.length>160) throw new Error('Operator tambahan tidak valid atau terlalu panjang.');
- // Keep this a search query builder, not a URL/command input. Exclude URL schemes and control chars.
- if(/https?:\\/\\/|javascript:|data:/i.test(value)) throw new Error('Masukkan operator pencarian, bukan URL.');
+ if(/[\r\n<>]/.test(value) || value.length>160) throw new Error('Operator tambahan tidak valid atau terlalu panjang.');
+ if(/https?:\/\/|javascript:|data:/i.test(value)) throw new Error('Masukkan operator pencarian, bukan URL.');
  return value;
 }
 function buildQueries():string[] {
  const domain=cleanDomain(domainInput.value);
  const preset=presetInput.value as Preset;
  const keyword=keywordInput.value.trim();
- if(keyword.length>100 || /[\\r\\n<>]/.test(keyword)) throw new Error('Kata kunci terlalu panjang atau berisi karakter yang tidak didukung.');
+ if(keyword.length>100 || /[\r\n<>]/.test(keyword)) throw new Error('Kata kunci terlalu panjang atau berisi karakter yang tidak didukung.');
  const filetype=filetypeInput.value;
  const base=domain ? 'site:'+domain : '';
  const generated=presets[preset].map(part=>{
