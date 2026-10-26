@@ -87,7 +87,7 @@ npm run typecheck
 - Ringkasan layar diminta secara eksplisit. Kolom yang dikenali sebagai password dikecualikan, tetapi jangan tampilkan informasi sensitif saat menggunakan fitur ini.
 - Device Bridge saat ini **tidak** otomatis mengklik tombol, mengetik ke aplikasi lain, mendaftar akun, melewati CAPTCHA, atau mengirim isi layar ke server.
 - Jangan memasukkan rahasia ke provider AI cloud kecuali kamu memahami kebijakan privasi dan pemrosesannya.
-- Buat cadangan sebelum menguji build eksperimental.
+- Pencadangan Android otomatis dinonaktifkan untuk mencegah pemulihan data terenkripsi tanpa kunci Android Keystore. Gunakan fitur ekspor cadangan manual untuk menyimpan pekerja dan tugas; API key tidak ikut diekspor.
 
 Laporkan kerentanan secara bertanggung jawab melalui halaman [Issues](https://github.com/jambudio336-hue/agent-office-Mazkiplay/issues) tanpa mempublikasikan kredensial atau data pribadi.
 
@@ -96,9 +96,10 @@ Laporkan kerentanan secara bertanggung jawab melalui halaman [Issues](https://gi
 - [x] Dashboard kantor dan Task Board
 - [x] Integrasi awal workspace GitHub dan Plugin Hub
 - [x] Fondasi native Device Bridge dengan izin eksplisit
-- [ ] Menuntaskan validasi build Android dan uji pada perangkat fisik
+- [x] Validasi CI Android: pemeriksaan sintaks/struktur, tes regresi, kompilasi APK, checksum, dan preview release
+- [ ] Instalasi dan uji fitur inti pada perangkat Android fisik
 - [ ] Memperluas pengujian Canvas, navigasi, dan penyimpanan lokal
-- [ ] Memperbaiki alur koneksi provider serta pesan error agar dapat ditindaklanjuti
+- [x] Pemulihan kredensial provider dari Android Keystore serta pesan error yang dapat ditindaklanjuti
 - [ ] Menambah otomasi lintas aplikasi yang aman, transparan, dan hanya dengan persetujuan pengguna
 
 ## ⚡ Pusat Performa & Diagnostik
@@ -133,7 +134,15 @@ Badge build di bagian atas mengacu pada workflow; statusnya dapat berubah. Selal
 - [Pull Request pengembangan #5](https://github.com/jambudio336-hue/agent-office-Mazkiplay/pull/5)
 - [Proyek upstream Agent Office](https://github.com/AgentSystemLabs/agent-office)
 
-## ⚙️ Batasan operasional yang transparan\n\n- Tugas hanya benar-benar dieksekusi ketika pengguna menekan tombol jalankan dan model AI tersedia.\n- Profil karyawan adalah pengatur peran/penugasan, bukan proses otonom yang selalu berjalan di latar belakang.\n- Tampilan ruang, meja, dan avatar adalah representasi visual antarmuka, bukan simulasi yang diklaim sebagai pekerja nyata.\n- Pengeditan repository, aksesibilitas Android, dan tindakan lintas aplikasi memerlukan integrasi, izin, dan konfirmasi yang sesuai.\n- Jangan menandai output AI sebagai perubahan file atau pengujian sukses sebelum diverifikasi.\n\n## 🙌 Kredit dan lisensi
+## ⚙️ Batasan operasional yang transparan
+
+- Tugas hanya benar-benar dijalankan ketika pengguna menekan tombol jalankan dan model AI tersedia.
+- Profil karyawan adalah pengatur peran/penugasan, bukan proses otonom yang selalu berjalan di latar belakang.
+- Tampilan ruang, meja, dan avatar adalah representasi visual antarmuka, bukan simulasi pekerja digital yang bekerja mandiri.
+- Pengeditan repository, aksesibilitas Android, dan tindakan lintas aplikasi memerlukan integrasi, izin, serta konfirmasi yang sesuai.
+- Jangan menandai output AI sebagai perubahan file atau pengujian sukses sebelum hasilnya diverifikasi.
+
+## 🙌 Kredit dan lisensi
 
 Proyek ini merupakan fork/pengembangan dari **Agent Office** oleh AgentSystemLabs. Lisensi MIT dan atribusi upstream dipertahankan; lihat [LICENSE](LICENSE) untuk ketentuan lengkap. Perubahan dan fitur khusus Mazkiplay harus dibaca bersama lisensi dependensi serta model yang digunakan.
 
@@ -157,4 +166,4 @@ Proyek ini merupakan fork/pengembangan dari **Agent Office** oleh AgentSystemLab
 
 Ilustrasi ikon karakter anime dark dibuat sebagai aset SVG orisinal dan header kantor memakai SVG dengan animasi. GitHub dapat menonaktifkan sebagian animasi pada konteks tertentu; buka aset SVG langsung untuk melihat animasinya jika didukung.
 
-> **Catatan ikon APK:** aset karakter sudah ditambahkan ke repository. Ikon launcher Android perlu dikonversi ke PNG/adaptive icon dan dipasang pada resource Android yang dipakai workflow build sebelum APK dirilis; penambahan SVG ini sendiri belum mengganti ikon APK terpasang.
+> **Catatan ikon APK:** workflow Android APK mengonversi aset SVG menjadi PNG untuk seluruh density launcher dan memasang resource ikon pada proyek Android saat build. Tampilan ikon tetap perlu dikonfirmasi pada perangkat fisik karena launcher Android dapat menerapkan adaptive icon secara berbeda.

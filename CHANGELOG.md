@@ -1,3 +1,18 @@
+## [Unreleased] — CI release and security hardening
+
+### Fixed
+- Memperbaiki publikasi GitHub Release: job rilis melakukan checkout commit target sebelum menjalankan GitHub CLI.
+- Memperbaiki newline pada pembentukan AndroidManifest agar deklarasi izin tetap menjadi XML valid ketika ditambahkan oleh workflow.
+- Menonaktifkan pencadangan Android otomatis untuk menghindari pemulihan data rahasia terenkripsi tanpa kunci Android Keystore.
+
+### Improved
+- Build Android lama pada branch yang sama dibatalkan untuk menghindari penumpukan runner CI.
+- Langkah pemasangan paket aset memiliki retry, timeout jaringan, dan batas waktu.
+- Pemeriksaan integritas mencakup keberadaan aset HTML, parsing entrypoint JavaScript, keunikan ID HTML, dan referensi DOM.
+- Rilis hanya dipublikasikan setelah build sukses, artefak diunduh, dan checksum SHA-256 diverifikasi ulang.
+
+---
+
 ## [Unreleased] — Provider recovery and interface polish
 
 ### Fixed
