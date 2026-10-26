@@ -337,5 +337,5 @@
   if (!state.activeDays.includes(day())) { state.activeDays.push(day()); state.activeDays = state.activeDays.slice(-365); save(); }
   autoEvolve(false);
   render();
-  status("Monitor dan siklus evolusi lokal aktif. Usulan dibuat dari bukti lokal; kode tidak diubah dan log tidak dikirim otomatis.");
+  status("Monitor dan siklus evolusi lokal aktif. Usulan dibuat dari bukti lokal; tidak ada kode yang diubah otomatis dan tidak ada pengiriman log otomatis.");
 })();
