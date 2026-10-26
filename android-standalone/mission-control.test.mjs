@@ -45,7 +45,7 @@ test("pause and interrupted mission recovery are represented explicitly", () => 
 test("results are gated for human review and UI styling is present", () => {
   assert.ok(app.includes('mission.status="needs-review"'));
   assert.ok(app.includes("Semua tahap menghasilkan jawaban. Periksa setiap hasil di Task Board"));
-  assert.ok(html.includes("tidak menerapkan patch ke repository secara otomatis"));
+  assert.ok(html.includes("tidak mengedit repository secara otomatis"));
   assert.ok(css.includes(".mission-control"));
   assert.ok(css.includes(".mission-progress"));
 });
