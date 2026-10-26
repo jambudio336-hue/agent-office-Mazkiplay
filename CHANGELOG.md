@@ -1,3 +1,18 @@
+## [Unreleased] — Model catalog and fallback reliability
+
+### Improved
+- Menambahkan CyberNeurova OpenRoute sebagai provider OpenAI-compatible dengan penemuan model dari endpoint resmi `/v1/models`.
+- Memperjelas perbedaan AI lokal tanpa API key, OpenRouter Free Router yang tetap memerlukan key, dan provider cloud berbayar.
+- Menambahkan fallback OpenRouter: bila model pilihan gagal, aplikasi mencoba `openrouter/free` sebelum fallback lintas-provider opsional.
+- Memperjelas placeholder API key provider dan opsi Claude Opus/Sonnet/Haiku yang mengikuti katalog/akses akun.
+- Menambahkan tes regresi untuk katalog CyberNeurova, fallback model gratis, dan penjelasan mode lokal.
+
+### Notes
+- CyberNeurova OpenRoute memakai kredit bayar-per-pemakaian; tidak ditandai sebagai layanan gratis.
+- Daftar model OpenRouter dan provider lain bersifat dinamis; model yang terlihat tidak menjamin kuota, akses, atau ketersediaan pada setiap permintaan.
+
+---
+
 ## [Unreleased] — CI release and security hardening
 
 ### Fixed

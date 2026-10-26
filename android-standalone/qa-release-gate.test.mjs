@@ -82,3 +82,24 @@ test("HTML IDs are unique and all app/patch DOM references resolve", () => {
     }
   }
 });
+
+test("provider catalog includes CyberNeurova OpenRoute with a model discovery endpoint", () => {
+  assert.ok(app.includes('cyberneurova:{label:"CyberNeurova OpenRoute"'));
+  assert.ok(app.includes('https://openroute.cyberneurova.com/v1/models'));
+  assert.ok(html.includes('<option value="cyberneurova">CyberNeurova OpenRoute</option>'));
+  assert.ok(app.includes('headers.Authorization = "Bearer " + key'));
+});
+
+test("OpenRouter free model fallback is attempted after a selected model fails", () => {
+  assert.ok(app.includes('providerId==="openrouter"&&data.providers.openrouter?.model&&data.providers.openrouter.model!=="openrouter/free"'));
+  assert.ok(app.includes('callModel("openrouter",prompt,role,maxTokens,"openrouter/free")'));
+  assert.ok(app.includes("async function discoverModels()"));
+  assert.ok(app.includes('model.id.endsWith(":free")'));
+});
+
+test("key-free local mode is distinguished from hosted free models", () => {
+  assert.ok(html.includes("Qwen3 0.6B setelah model diunduh"));
+  assert.ok(html.includes("tetap memerlukan akun/API key OpenRouter"));
+  assert.ok(html.includes("bukan model gratis"));
+  assert.ok(app.includes('Mode Gratis Lokal aktif. APK Android memakai Qwen3 lokal'));
+});

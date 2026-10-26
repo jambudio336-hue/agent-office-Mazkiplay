@@ -5,6 +5,7 @@ const P={
  gemini:{label:"Google Gemini",url:"https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",model:"gemini-2.5-flash",format:"openai"},
  deepseek:{label:"DeepSeek",url:"https://api.deepseek.com/chat/completions",model:"deepseek-chat",format:"openai"},
  anthropic:{label:"Anthropic Claude",url:"https://api.anthropic.com/v1/messages",model:"claude-3-5-haiku-latest",format:"anthropic"},
+ cyberneurova:{label:"CyberNeurova OpenRoute",url:"https://openroute.cyberneurova.com/v1/chat/completions",model:"cyberneurova/glm5.3",format:"openai"},
  custom:{label:"Endpoint custom",url:"",model:"",format:"openai"}
 };
 const $=id=>document.getElementById(id);
@@ -205,6 +206,9 @@ async function discoverModels() {
   headers["x-api-key"] = key;
   headers["anthropic-version"] = "2023-06-01";
   headers["anthropic-dangerous-direct-browser-access"] = "true";
+ } else if (id === "cyberneurova") {
+  url = "https://openroute.cyberneurova.com/v1/models";
+  headers.Authorization = "Bearer " + key;
  } else {
   let base = $("endpoint").value.trim().replace(/\/+$/, "");
   if (!base) throw Error("Isi endpoint kompatibel OpenAI terlebih dahulu.");
@@ -246,7 +250,7 @@ $("free-models-only").addEventListener("change", () => {
   modelDiscoveryStatus("Filter diperbarui. Daftar harga dan ketersediaan dapat berubah.");
  }
 });
-async function loadProvider(){const id=$("provider").value,p=P[id],s=data.providers[id]||{};$("api-key").value=s.key||"";$("model-id").value=s.model||(id==="openrouter"?"openrouter/free":p.model);$("endpoint").value=s.url||p.url;$("endpoint").readOnly=id!=="custom";$("endpoint-label").style.display=id==="custom"?"grid":"none";renderModelOptions();modelDiscoveryStatus("Provider dipilih: "+p.label+". Tekan Cari model tersedia untuk mengambil daftar terbaru.");if(!$("api-key").value&&id!=="custom"){try{const saved=await readProviderSecret(id);if(saved&&$("provider").value===id){$("api-key").value=saved;data.providers[id]={...data.providers[id],key:saved};}}catch{}}}
+async function loadProvider(){const id=$("provider").value,p=P[id],s=data.providers[id]||{};$("api-key").value=s.key||"";$("api-key").placeholder=id==="openrouter"?"sk-or-v1-…":id==="anthropic"?"sk-ant-…":id==="cyberneurova"?"sk-cnor-…":"API key dari provider yang dipilih";$("model-id").value=s.model||(id==="openrouter"?"openrouter/free":p.model);$("endpoint").value=s.url||p.url;$("endpoint").readOnly=id!=="custom";$("endpoint-label").style.display=id==="custom"?"grid":"none";renderModelOptions();modelDiscoveryStatus("Provider dipilih: "+p.label+". Tekan Cari model tersedia untuk mengambil daftar terbaru.");if(!$("api-key").value&&id!=="custom"){try{const saved=await readProviderSecret(id);if(saved&&$("provider").value===id){$("api-key").value=saved;data.providers[id]={...data.providers[id],key:saved};}}catch{}}}
 $("provider").onchange=loadProvider;
 $("provider-form").onsubmit=async e=>{
  e.preventDefault();const id=$("provider").value,p={key:$("api-key").value.trim(),model:$("model-id").value.trim(),url:$("endpoint").value.trim(),format:P[id].format};
@@ -267,8 +271,9 @@ async function request(url,options){
  if(http?.request){const r=await http.request({url,method:options.method||"GET",headers:options.headers,data:options.body?JSON.parse(options.body):undefined,connectTimeout:20000,readTimeout:60000});return{ok:r.status>=200&&r.status<300,status:r.status,data:r.data}}
  const r=await fetch(url,options);let d={};try{d=await r.json()}catch{}return{ok:r.ok,status:r.status,data:d}
 }
-async function callModel(providerId,prompt,role,maxTokens=1200){
+async function callModel(providerId,prompt,role,maxTokens=1200,modelOverride=""){
  const p={...(data.providers[providerId]||{})};
+ if(modelOverride)p.model=modelOverride;
  if(!p.key&&providerId!=="custom"){try{p.key=await readProviderSecret(providerId)||"";}catch{p.key="";}}
  if((!p.key&&providerId!=="custom")||!p.model||!p.url)throw Error("Provider "+(P[providerId]?.label||providerId)+" belum dikonfigurasi. Simpan API key (kecuali endpoint custom/local), model, dan endpoint.");
  let headers={"Content-Type":"application/json"},body;
@@ -404,8 +409,16 @@ function updateAiModeStatus(){
 async function callModelWithFallback(providerId,prompt,role,maxTokens=1200){
  try{return await callModel(providerId,prompt,role,maxTokens);}
  catch(primaryError){
-  if(!data.autoProviderFallback)throw primaryError;
   const failures=[(P[providerId]?.label||providerId)+": "+(primaryError?.message||"gagal")];
+  if(providerId==="openrouter"&&data.providers.openrouter?.model&&data.providers.openrouter.model!=="openrouter/free"){
+   try{
+    const answer=await callModel("openrouter",prompt,role,maxTokens,"openrouter/free");
+    data.lastSuccessfulProvider="openrouter";save();
+    status("Model OpenRouter pilihan gagal; permintaan berhasil dialihkan ke router model gratis otomatis.",false);
+    return "【FALLBACK MODEL: openrouter/free】\n"+answer;
+   }catch(freeError){failures.push("OpenRouter Free Router: "+(freeError?.message||"gagal").slice(0,180));primaryError=new Error(failures.join(" | "));}
+  }
+  if(!data.autoProviderFallback)throw primaryError;
   const candidates=Object.keys(data.providers).filter(id=>id!==providerId).sort((a,b)=>{
    if(a===data.lastSuccessfulProvider)return -1;
    if(b===data.lastSuccessfulProvider)return 1;

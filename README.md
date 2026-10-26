@@ -41,7 +41,7 @@ Tujuannya adalah memberi satu tempat untuk mengatur pekerjaan AI tanpa berpura-p
 | AI Mission Control | Memecah tujuan menjadi 4 tahap berurutan, meneruskan konteks, menampilkan progres, dan mendukung jeda/ulang tahap gagal | Hasil AI tetap perlu ditinjau; tidak menerapkan patch atau menjalankan tes secara otomatis |
 | QA Lab / Release Gate | Memeriksa status GitHub Actions untuk commit branch terbaru dan mencatat checklist uji manual | Membutuhkan token GitHub dengan izin Actions: read; checklist perangkat diisi operator berdasarkan bukti nyata |
 | AI generatif lokal | Integrasi eksperimen Qwen3 0.6B INT4 | Unduhan model besar; performa tergantung RAM/chipset dan kompatibilitas runtime |
-| Provider AI | Konfigurasi provider yang didukung aplikasi | API key/provider dapat memiliki batas dan biaya sendiri |
+| Provider AI | OpenRouter, OpenAI, Google Gemini, DeepSeek, Anthropic Claude, CyberNeurova OpenRoute, dan endpoint OpenAI-compatible | Model cloud membutuhkan API key; harga/kuota mengikuti provider. Model Claude Opus/Sonnet/Haiku dan katalog lainnya mengikuti akses akun dan daftar API terbaru |
 | GitHub Workspace | Membaca konteks repository dan alur usulan patch/Draft PR | Izin token minimum; tinjau perubahan sebelum dikirim |
 | Patch Lab | Usulan AI satu/multi-file, editor tinjauan, branch terpisah, commit, Draft PR, dan pemindai pola rahasia lokal | Maksimum 5 file / 18.000 karakter konteks; pemindai berbasis pola bukan jaminan; tidak merge otomatis |
 | Canvas / workspace kode | Mengedit berkas lokal, preview HTML yang didukung, dan ekspor | Preview bukan sandbox keamanan untuk kode yang tidak tepercaya |
@@ -78,6 +78,15 @@ npm run typecheck
 ```
 
 > Perintah dan dependensi dapat berbeda pada cabang eksperimen. Periksa bagian `scripts` pada `package.json` sebelum menjalankan perintah. Build APK publik yang digunakan proyek ini dijalankan melalui GitHub Actions.
+
+## 🤖 Model AI dan biaya
+
+- **Tanpa API key:** mode lokal Android memakai Qwen3 0.6B INT4 setelah diunduh ke perangkat (sekitar 347 MiB). Tidak ada biaya API; kecepatan/kualitas bergantung pada RAM, chipset, dan kompatibilitas. Preview browser hanya memakai AI Lite berbasis aturan, bukan LLM generatif.
+- **OpenRouter Free Router:** `openrouter/free` memilih model gratis yang tersedia secara otomatis. Model gratis OpenRouter tetap memerlukan akun dan API key OpenRouter serta internet; kuota dan ketersediaan dapat berubah. Daftar model dapat dimuat ulang dari API.
+- **OpenAI, Gemini, DeepSeek, dan Anthropic Claude:** masukkan API key provider, lalu gunakan **Cari model tersedia**. Claude Opus, Sonnet, dan Haiku muncul jika tersedia untuk key/akun tersebut. Jangan menganggap model berbayar gratis hanya karena bisa dipilih.
+- **CyberNeurova OpenRoute:** endpoint kompatibel OpenAI di `https://openroute.cyberneurova.com/v1`; memerlukan API key `sk-cnor-...` dan saldo bayar-per-pemakaian. Ini bukan opsi tanpa biaya.
+- **Endpoint custom:** mendukung server OpenAI-compatible tepercaya; endpoint lokal tanpa key bergantung pada konfigurasi server lokal dan izin jaringan.
+- **Fallback:** model OpenRouter spesifik yang gagal dicoba ulang melalui `openrouter/free`; fallback lintas provider bersifat opsional karena provider cadangan bisa menghabiskan kuota atau biaya.
 
 ## 🔐 Privasi dan keamanan
 
