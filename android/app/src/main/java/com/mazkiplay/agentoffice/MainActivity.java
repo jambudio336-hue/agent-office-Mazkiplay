@@ -67,7 +67,7 @@ public final class MainActivity extends Activity {
         toolbar.setBackgroundColor(NAVY);
 
         TextView title = new TextView(this);
-        title.setText("M4zK1pL4Y Office");
+        title.setText("Mazkiplay Pentester AI");
         title.setTextColor(CREAM);
         title.setTextSize(16);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
@@ -206,7 +206,7 @@ public final class MainActivity extends Activity {
         }
         String path = uri.getPath();
         if (!TextUtils.isEmpty(path) && !"/".equals(path)) {
-            throw new IllegalArgumentException("Masukkan alamat dasar server saja, tanpa path. Aplikasi akan membuka /lite.");
+            throw new IllegalArgumentException("Masukkan alamat dasar server saja, tanpa path. Aplikasi akan membuka /chat.");
         }
         int port = uri.getPort();
         if (port == 0 || port > 65535) {
@@ -223,8 +223,8 @@ public final class MainActivity extends Activity {
         if (webView == null || TextUtils.isEmpty(serverOrigin)) {
             return;
         }
-        showStatus("Menghubungkan ke kantor…");
-        webView.loadUrl(serverOrigin + "/lite");
+        showStatus("Menghubungkan ke Mazkiplay AI…");
+        webView.loadUrl(serverOrigin + "/chat.html");
     }
 
     private void showStatus(String message) {
