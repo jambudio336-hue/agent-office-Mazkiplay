@@ -79,6 +79,11 @@ public final class MainActivity extends Activity {
         serverButton.setOnClickListener(view -> showServerDialog(false));
         toolbar.addView(serverButton, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(48)));
 
+        Button termuxButton = toolbarButton("Termux");
+        termuxButton.setContentDescription("Hubungkan dengan Termux");
+        termuxButton.setOnClickListener(view -> showTermuxBridgeDialog());
+        toolbar.addView(termuxButton, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(48)));
+
         Button refreshButton = toolbarButton("↻");
         refreshButton.setContentDescription("Muat ulang kantor");
         refreshButton.setOnClickListener(view -> {
@@ -131,6 +136,39 @@ public final class MainActivity extends Activity {
         setContentView(shell);
 
         android.webkit.CookieManager.getInstance().setAcceptCookie(true);
+    }
+
+
+    private void showTermuxBridgeDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Koneksi native Termux")
+                .setMessage("Fitur ini mengirim satu perintah uji tetap (echo) ke Termux. Ini hanya membuktikan bahwa permintaan berhasil dikirim; aplikasi belum dapat membaca stdout/stderr atau exit code.\\n\\nPastikan Termux dari sumber tepercaya terpasang dan opsi Allow external apps diaktifkan di pengaturan Termux. Tidak ada perintah bebas atau akses root yang dijalankan.")
+                .setNegativeButton("Batal", null)
+                .setPositiveButton("Kirim uji koneksi", (dialog, which) -> runTermuxConnectionTest())
+                .show();
+    }
+
+    private void runTermuxConnectionTest() {
+        Intent intent = new Intent("com.termux.RUN_COMMAND");
+        intent.setClassName("com.termux", "com.termux.app.RunCommandService");
+        intent.putExtra("com.termux.RUN_COMMAND_PATH", "/data/data/com.termux/files/usr/bin/echo");
+        intent.putExtra("com.termux.RUN_COMMAND_ARGUMENTS", new String[]{"Mazkiplay Pentester AI: Termux bridge request"});
+        intent.putExtra("com.termux.RUN_COMMAND_WORKDIR", "/data/data/com.termux/files/home");
+        intent.putExtra("com.termux.RUN_COMMAND_BACKGROUND", false);
+        try {
+            startService(intent);
+            new AlertDialog.Builder(this)
+                    .setTitle("Permintaan dikirim")
+                    .setMessage("Android menerima permintaan pengiriman ke layanan Termux. Ini belum mengonfirmasi bahwa perintah selesai, dan output belum dapat dibaca di APK.")
+                    .setPositiveButton("Mengerti", null)
+                    .show();
+        } catch (SecurityException | IllegalStateException | ActivityNotFoundException error) {
+            new AlertDialog.Builder(this)
+                    .setTitle("Termux belum terhubung")
+                    .setMessage("Tidak dapat mengirim perintah. Periksa apakah Termux terpasang, Allow external apps aktif, dan versi Termux kompatibel. Detail: " + error.getClass().getSimpleName())
+                    .setPositiveButton("Tutup", null)
+                    .show();
+        }
     }
 
     private Button toolbarButton(String label) {
