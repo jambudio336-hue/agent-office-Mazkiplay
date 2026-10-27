@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Toast;
 
 public final class TermuxResultReceiver extends BroadcastReceiver {
     public static final String ACTION_RESULT = "com.mazkiplay.agentoffice.TERMUX_RESULT";
@@ -13,34 +12,41 @@ public final class TermuxResultReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (intent == null) return;
-        Bundle result = intent.getBundleExtra("com.termux plugin result bundle");
-        if (result == null) {
-            result = intent.getBundleExtra("com.termux.RUN_COMMAND_RESULT");
+        Bundle result = null;
+        Bundle extras = intent == null ? null : intent.getExtras();
+        if (extras != null) {
+            for (String key : extras.keySet()) {
+                Object value = extras.get(key);
+                if (value instanceof Bundle) {
+                    result = (Bundle) value;
+                    break;
+                }
+            }
         }
-        if (result == null) {
-            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-                    .edit()
-                    .putBoolean(KEY_PENDING_RESULT, true)
-                    .putString("termux-stdout", "")
-                    .putString("termux-stderr", "Termux tidak mengirim bundle hasil. Periksa versi Termux dan izin RUN_COMMAND.")
-                    .putInt("termux-exit-code", -1)
-                    .putString("termux-error", "Missing result bundle")
-                    .apply();
+        String stdout = "";
+        String stderr = "";
+        String error = "";
+        int exitCode = -1;
+        if (result != null) {
+            for (String key : result.keySet()) {
+                Object value = result.get(key);
+                String normalized = key.toLowerCase(java.util.Locale.ROOT);
+                if (normalized.contains("stdout") && value != null) stdout = String.valueOf(value);
+                else if (normalized.contains("stderr") && value != null) stderr = String.valueOf(value);
+                else if ((normalized.contains("exit_code") || normalized.contains("exitcode")) && value instanceof Number) exitCode = ((Number) value).intValue();
+                else if ((normalized.endsWith("errmsg") || normalized.contains("error_message")) && value != null) error = String.valueOf(value);
+            }
         } else {
-            String stdout = result.getString("com.termux.RUN_COMMAND_RESULT_STDOUT", "");
-            String stderr = result.getString("com.termux.RUN_COMMAND_RESULT_STDERR", "");
-            int exitCode = result.getInt("com.termux.RUN_COMMAND_RESULT_EXIT_CODE", -1);
-            String error = result.getString("com.termux.RUN_COMMAND_RESULT_ERRMSG", "");
-            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-                    .edit()
-                    .putBoolean(KEY_PENDING_RESULT, true)
-                    .putString("termux-stdout", stdout == null ? "" : stdout)
-                    .putString("termux-stderr", stderr == null ? "" : stderr)
-                    .putInt("termux-exit-code", exitCode)
-                    .putString("termux-error", error == null ? "" : error)
-                    .apply();
+            error = "Termux tidak mengirim bundle hasil. Periksa versi Termux (0.109+) dan izin RUN_COMMAND.";
         }
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean(KEY_PENDING_RESULT, true)
+                .putString("termux-stdout", stdout)
+                .putString("termux-stderr", stderr)
+                .putInt("termux-exit-code", exitCode)
+                .putString("termux-error", error)
+                .apply();
         Intent resultBroadcast = new Intent(ACTION_RESULT);
         resultBroadcast.setPackage(context.getPackageName());
         context.sendBroadcast(resultBroadcast);
