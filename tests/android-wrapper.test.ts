@@ -43,3 +43,15 @@ test('Android project pins compatible SDK and Gradle versions and publishes a de
   assert.match(workflow, /upload-artifact@v4/);
   assert.match(workflow, /app-debug\.apk/);
 });
+
+test('Native Termux integration sends only a fixed connection-test command', () => {
+  const activity = read('android/app/src/main/java/com/mazkiplay/agentoffice/MainActivity.java');
+  const manifest = read('android/app/src/main/AndroidManifest.xml');
+  assert.ok(manifest.includes('com.termux.permission.RUN_COMMAND'));
+  assert.ok(manifest.includes('<package android:name="com.termux" />'));
+  assert.ok(activity.includes('com.termux.app.RunCommandService'));
+  assert.ok(activity.includes('com.termux.RUN_COMMAND_PATH'));
+  assert.ok(activity.includes('/usr/bin/echo'));
+  assert.ok(activity.includes('belum dapat membaca stdout/stderr'));
+  assert.ok(activity.includes('Kirim uji koneksi'));
+});
