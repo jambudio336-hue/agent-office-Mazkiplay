@@ -431,3 +431,11 @@ Every change to the app that lands on `main` is published as a GitHub release by
 ### Mobile PWA scope
 
 On Android, open `/lite` from the secure office URL and use the browser's **Install app** or **Add to Home screen** action. This repository provides an installable web/PWA front end, not a native APK. The dashboard sends prompts to workers running on the office host; role and skill notes are browser-local prompt context, not enforced permissions. Browser notifications require the page to be connected and granted notification permission; a server push service for reliable background delivery and Android remote-device control are not included. Provider credentials and any local model runtime belong on the office host/provider CLI and are not stored in the browser dashboard. An offline model works only when a compatible local provider and its downloaded model are installed on that host.
+
+## Mazkiplay Pentester AI provider modes
+
+The security chat client supports a user-configured OpenRouter/OpenAI-compatible endpoint, a local OpenAI-compatible model server, and a basic offline rules mode. OpenRouter and other hosted APIs require the user's own key. The local endpoint requires a separately installed and running local LLM (for example, Qwen in a compatible runtime) and does not send a provider API key. Offline rules mode needs no network or key but is not an LLM and cannot execute commands or validate vulnerabilities.
+
+See [Android and AI provider setup](docs/android-apk.md), [Termux bridge status](docs/termux-shell-bridge.md), and [authorized bug-hunting/reporting workflow](docs/bug-hunting-agent.md).
+
+The Android companion is a remote WebView client. It requires an HTTPS Agent Office server and is not a standalone on-device AI runtime. GitHub Actions builds an installable debug-signed APK for testing; it is not a production-signed Play Store package.
