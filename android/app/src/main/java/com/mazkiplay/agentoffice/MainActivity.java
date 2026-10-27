@@ -396,11 +396,15 @@ public final class MainActivity extends Activity {
         String stderr = prefs.getString("termux-stderr", "");
         String error = prefs.getString("termux-error", "");
         int exitCode = prefs.getInt("termux-exit-code", -1);
+        boolean truncated = prefs.getBoolean("termux-output-truncated", false);
+        int internalErrorCode = prefs.getInt("termux-internal-error-code", 0);
         StringBuilder output = new StringBuilder();
         output.append("Exit code: ").append(exitCode).append("\n\n");
         output.append("STDOUT:\n").append(TextUtils.isEmpty(stdout) ? "(kosong)" : stdout);
         if (!TextUtils.isEmpty(stderr)) output.append("\n\nSTDERR:\n").append(stderr);
         if (!TextUtils.isEmpty(error)) output.append("\n\nStatus Termux: ").append(error);
+        if (internalErrorCode != 0) output.append("\nKode error internal: ").append(internalErrorCode);
+        if (truncated) output.append("\n\nPERINGATAN: Output terpotong. Jalankan ulang dengan output lebih kecil.");
         EditText outputView = new EditText(this);
         outputView.setText(output.toString());
         outputView.setTextIsSelectable(true);
