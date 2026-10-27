@@ -81,4 +81,4 @@ Implement each tool as a typed operation with validated arguments; never let mod
 
 ## Status
 
-This document defines implementation requirements. The bridge, command executor, UI, and tests still need to be implemented and validated in source code before this feature can be advertised as available.
+A minimal native Android connection-test action is implemented in MainActivity: it sends one fixed, non-mutating echo command through Termux's com.termux.RUN_COMMAND service after the user confirms. The app declares com.termux.permission.RUN_COMMAND and package visibility for com.termux. The UI explicitly says dispatch is not proof of command completion.\n\nStill not implemented: reliable stdout/stderr and exit-code return, process identifiers/cancellation, long-running process lifecycle, general validated command execution, workspace SAF integration, and root authorization. Do not advertise full terminal/root control until those pieces and device-level tests are complete. Termux must be installed from a trusted source and its Allow external apps setting enabled.
