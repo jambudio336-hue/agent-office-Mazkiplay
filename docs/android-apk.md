@@ -32,3 +32,12 @@ Saat pertama dibuka, masukkan alamat HTTPS kantor, misalnya `https://agent-offic
 Server yang hanya mendengarkan di `127.0.0.1` pada laptop tidak dapat dijangkau sebagai `localhost` milik ponsel. Berikan kantor alamat HTTPS valid yang bisa dijangkau ponsel, misalnya melalui deployment server atau Tailscale Serve. Sertifikat self-signed atau kedaluwarsa sengaja ditolak. Jangan membuka kantor langsung ke internet publik tanpa HTTPS dan kontrol akses.
 
 APK memerlukan koneksi jaringan. APK belum menyediakan notifikasi push latar belakang, dan proses AI tidak di-host di ponsel. Biarkan komputer/server host hidup agar pekerjaan yang ditugaskan bisa terus berjalan.
+
+## AI provider modes in the chat client
+
+The web chat settings offer three kinds of operation:
+- **OpenRouter/OpenAI/custom online API:** requires a user-supplied API key. Free model availability and limits depend on the provider and can change.
+- **Local LLM endpoint:** no provider API key is sent when using the `local` mode. A compatible model server must already be running and reachable from the same Android device, for example a llama.cpp server exposed at `http://127.0.0.1:8080/v1`. The user must install/download the runtime and model separately. On Ollama, configure its actual local endpoint and model ID instead. WebView/browser local-network and CORS restrictions may require server configuration; this is not yet validated on a physical phone.
+- **Offline basic mode:** runs a small rule-based helper in the client with no network and no API key. It is not an LLM, does not run commands, and is not a substitute for Qwen or another language model.
+
+No hosted LLM can be promised to work online for free without credentials or a service budget. The client must not claim a request was sent to a model if it used the offline rules. The local-model path is a configured endpoint only; automatic model installation, model download management, and the complete Termux execution/result loop are still separate work.
