@@ -60,6 +60,7 @@ export default defineConfig({
         cloud: resolve(import.meta.dirname, 'src/client/cloud.html'),
         dork: resolve(import.meta.dirname, 'src/client/dork.html'),
         osint: resolve(import.meta.dirname, 'src/client/osint.html'),
+        chat: resolve(import.meta.dirname, 'src/client/chat.html'),
       },
     },
   },
