@@ -63,4 +63,8 @@ test('Native Termux bridge requires confirmation and requests stdout, stderr, an
   assert.ok(receiver.includes('termux-stdout'));
   assert.ok(receiver.includes('termux-stderr'));
   assert.ok(receiver.includes('termux-exit-code'));
+  assert.ok(receiver.includes('com.termux.plugin_result_bundle'));
+  assert.ok(receiver.includes('termux-output-truncated'));
+  assert.ok(receiver.includes('stdout_original_length'));
+  assert.ok(activity.includes('PERINGATAN: Output terpotong'));
 });
