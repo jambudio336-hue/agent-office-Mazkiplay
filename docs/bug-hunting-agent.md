@@ -56,3 +56,28 @@ The agent must explain each proposed tool and command before execution. It must 
 5. A fake/nonexistent tool, disconnected Termux, permission denial, timeout, and malformed result produce honest errors.
 6. Findings cite concrete evidence and distinguish confirmed vulnerabilities from hypotheses.
 7. Reports redact secrets and include tested/not-tested coverage.
+
+## High-impact vulnerability coverage
+The test planner should prioritize findings with potentially severe confidentiality, integrity, or availability impact, while choosing the least invasive verification method permitted by the engagement. Map checks to the current OWASP Web Security Testing Guide and OWASP Top 10; do not treat the checklist as proof that a flaw exists.
+
+### Priority areas
+- **Remote Code Execution (RCE) and command injection:** review exposed functionality that invokes operating-system commands, unsafe template/expression evaluation, and dangerous deserialization or file-processing paths. Start with source/configuration review and non-executing indicators. Do not execute arbitrary commands on a live target or establish shells; use a deliberately vulnerable local lab or a specifically approved safe proof.
+- **Server-Side Request Forgery (SSRF):** inspect URL-fetching, webhook, import, preview and proxy features. Use only controlled endpoints provided for the engagement; never probe cloud metadata, internal networks or third-party destinations without explicit authorization.
+- **Authentication and session compromise:** assess account recovery, session invalidation, MFA enforcement and authorization boundaries using test accounts supplied for the engagement. Never attempt credential stuffing, password spraying or use leaked credentials.
+- **Broken access control / IDOR / privilege escalation:** compare access between two explicitly authorized test accounts and synthetic records; do not access or retain other users' real data.
+- **SQL/NoSQL/LDAP/template injection and unsafe deserialization:** inspect input handling and error behavior with low-impact checks. Confirm exploitability in source review or a controlled test environment before escalating severity.
+- **File upload, path traversal and arbitrary file read/write:** use harmless marker files and non-sensitive test fixtures; do not read secrets, overwrite production files or upload executable payloads to a live service.
+- **Sensitive data exposure / cryptographic failures:** check public responses, transport security, cookie attributes, storage/configuration exposed by the application and secret handling. Never copy or transmit discovered secrets; redact them immediately.
+- **Supply-chain and vulnerable components:** identify dependency versions from authorized manifests and public fingerprints, then verify advisories and applicability. A version match alone is only a lead, not confirmation.
+- **Cloud/storage/API misconfiguration, security bypasses and business-logic abuse:** inspect access policies and API authorization within the declared scope; use synthetic records and reversible operations only.
+- **High-impact chaining:** describe plausible chains (for example, access-control weakness plus sensitive action) as hypotheses until each link is supported by evidence.
+
+### Severity and evidence rules
+- Use CVSS as a documented aid where appropriate, alongside business impact, reachability, required privileges, user interaction, and compensating controls.
+- **Critical/High labels require evidence and a written rationale.** Separate confirmed, likely, and unverified findings; include confidence and the evidence supporting each conclusion.
+- Prove impact minimally. Prefer static/source analysis, staging, test fixtures, harmless canaries, and out-of-band callbacks to destructive payloads.
+- Never dump databases, retrieve private files, deploy a reverse shell, persist access, disable defenses, or run denial-of-service tests as a way to prove severity.
+- If a live test risks changing data, interrupting service, or crossing scope, stop and ask for explicit approval or recommend a staging reproduction.
+
+### Report requirements for a suspected RCE
+Record the affected in-scope endpoint and parameter, preconditions, relevant code/configuration or sanitized response evidence, exact safe verification method, impact rationale, confidence, and remediation. State clearly whether code execution was actually demonstrated in an authorized controlled environment; do not claim RCE from a scanner banner, stack trace, or unverified payload response alone.
