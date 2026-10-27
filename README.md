@@ -470,3 +470,11 @@ The security chat client supports a user-configured OpenRouter/OpenAI-compatible
 See [Android and AI provider setup](docs/android-apk.md), [Termux bridge status](docs/termux-shell-bridge.md), and [authorized bug-hunting/reporting workflow](docs/bug-hunting-agent.md).
 
 The Android companion is a remote WebView client. It requires an HTTPS Agent Office server and is not a standalone on-device AI runtime. GitHub Actions builds an installable debug-signed APK for testing; it is not a production-signed Play Store package.
+
+
+## Security Toolkit (client-side)
+
+- **Password generator:** creates random passwords locally using the browser cryptographic random generator.
+- **SHA-256 utility:** hashes entered text locally through Web Crypto when supported. A digest is not encryption and SHA-256 alone is not suitable for storing user passwords.
+- **URL encoder/decoder:** helps prepare and inspect URL components for debugging.
+- Utilities are optional helpers; they do not scan remote systems, transmit inputs to a server, or replace a professional security review.
