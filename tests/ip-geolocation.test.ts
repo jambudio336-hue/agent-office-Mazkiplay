@@ -31,3 +31,29 @@ test('motion effects respect reduced-motion preference', () => {
   assert.match(css, /@keyframes cyberPulse/);
   assert.match(css, /prefers-reduced-motion:\s*reduce/);
 });
+
+
+test('Security Toolkit utilities are available and documented', () => {
+  assert.match(html, /data-action="security-toolkit"/);
+  assert.match(chat, /function securityToolkitDialog\(/);
+  assert.match(chat, /crypto\.getRandomValues/);
+  assert.match(chat, /crypto\.subtle\.digest\('SHA-256'/);
+  assert.match(chat, /encodeURIComponent/);
+  assert.match(chat, /decodeURIComponent/);
+});
+
+test('Scope Manager, local Secret Scanner, and report generator are available', () => {
+  assert.match(html, /data-action="scope-manager"/);
+  assert.match(html, /data-action="secret-scanner"/);
+  assert.match(html, /data-action="report-generator"/);
+  assert.match(chat, /function scopeManagerDialog\(/);
+  assert.match(chat, /function secretScannerDialog\(/);
+  assert.match(chat, /function reportGeneratorDialog\(/);
+  assert.match(chat, /mazkiplay\.security\.scope\.v1/);
+  assert.match(chat, /crypto|Private key PEM/);
+  assert.match(chat, /text\/markdown;charset=utf-8/);
+  assert.match(readme, /Scope Manager/);
+  assert.match(readme, /Secret Scanner/);
+  assert.match(readme, /Security Report Generator/);
+  assert.match(changelog, /Security Workspace/);
+});
