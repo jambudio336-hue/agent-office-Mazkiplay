@@ -118,8 +118,8 @@ function dorkBuilderDialog(){
  const results=layer.querySelector('#dork-results') as HTMLDivElement;
  layer.querySelector('[data-close]')!.addEventListener('click',closeDialog);
  layer.querySelector('#dork-generate')!.addEventListener('click',()=>{
-  const domain=domainInput.value.trim().toLowerCase().replace(/^https?:\\/\\//,'').replace(/\\/$/,'');
-  if(!domain||domain.includes('/')||domain.includes(' ')||! /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$/.test(domain)){
+  const domain=domainInput.value.trim().toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');
+  if(!domain||domain.includes('/')||domain.includes(' ')||! /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/.test(domain)){
    alert('Masukkan nama domain yang valid, misalnya contoh.co.id. Jangan masukkan URL lengkap atau path.');return;
   }
   const groups:Record<string,string[]>={
