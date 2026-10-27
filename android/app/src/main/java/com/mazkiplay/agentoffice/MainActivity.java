@@ -93,7 +93,7 @@ public final class MainActivity extends Activity {
 
         FrameLayout content = new FrameLayout(this);
         webView = new WebView(this);
-        webView.setBackgroundColor(Color.WHITE);
+        webView.setBackgroundColor(Color.rgb(5, 11, 16));
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
