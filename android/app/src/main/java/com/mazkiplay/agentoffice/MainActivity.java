@@ -356,6 +356,66 @@ public final class MainActivity extends Activity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if (termuxResultReceiver == null) {
+            termuxResultReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    showTermuxResultIfPending();
+                }
+            };
+            IntentFilter filter = new IntentFilter(TERMUX_RESULT_ACTION);
+            if (Build.VERSION.SDK_INT >= 33) {
+                registerReceiver(termuxResultReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+            } else {
+                registerReceiver(termuxResultReceiver, filter);
+            }
+        }
+        showTermuxResultIfPending();
+    }
+
+    @Override
+    protected void onPause() {
+        if (termuxResultReceiver != null) {
+            try {
+                unregisterReceiver(termuxResultReceiver);
+            } catch (IllegalArgumentException ignored) {
+                // Receiver was already unregistered by Android lifecycle changes.
+            }
+            termuxResultReceiver = null;
+        }
+        super.onPause();
+    }
+
+    private void showTermuxResultIfPending() {
+        android.content.SharedPreferences prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
+        if (!prefs.getBoolean(TermuxResultReceiver.KEY_PENDING_RESULT, false) || isFinishing()) return;
+        prefs.edit().putBoolean(TermuxResultReceiver.KEY_PENDING_RESULT, false).apply();
+        String stdout = prefs.getString("termux-stdout", "");
+        String stderr = prefs.getString("termux-stderr", "");
+        String error = prefs.getString("termux-error", "");
+        int exitCode = prefs.getInt("termux-exit-code", -1);
+        StringBuilder output = new StringBuilder();
+        output.append("Exit code: ").append(exitCode).append("\n\n");
+        output.append("STDOUT:\n").append(TextUtils.isEmpty(stdout) ? "(kosong)" : stdout);
+        if (!TextUtils.isEmpty(stderr)) output.append("\n\nSTDERR:\n").append(stderr);
+        if (!TextUtils.isEmpty(error)) output.append("\n\nStatus Termux: ").append(error);
+        EditText outputView = new EditText(this);
+        outputView.setText(output.toString());
+        outputView.setTextIsSelectable(true);
+        outputView.setFocusable(true);
+        outputView.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        outputView.setMinLines(5);
+        outputView.setMaxLines(14);
+        new AlertDialog.Builder(this)
+                .setTitle(exitCode == 0 ? "Output Termux • berhasil" : "Output Termux • periksa hasil")
+                .setView(outputView)
+                .setPositiveButton("Tutup", null)
+                .show();
+    }
+
+    @Override
     protected void onDestroy() {
         if (webView != null) {
             webView.destroy();
