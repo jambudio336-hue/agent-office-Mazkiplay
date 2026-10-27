@@ -55,7 +55,8 @@ public final class MainActivity extends Activity {
 
         serverOrigin = getSharedPreferences(PREFS, MODE_PRIVATE).getString(KEY_SERVER_ORIGIN, null);
         if (TextUtils.isEmpty(serverOrigin)) {
-            showServerDialog(true);
+            // First launch must never be blocked by a required server dialog.
+            showOfflineHome();
         } else {
             loadOffice();
         }
@@ -94,7 +95,7 @@ public final class MainActivity extends Activity {
         refreshButton.setContentDescription("Muat ulang kantor");
         refreshButton.setOnClickListener(view -> {
             if (TextUtils.isEmpty(serverOrigin)) {
-                showServerDialog(true);
+                showOfflineHome();
             } else {
                 webView.reload();
             }
@@ -300,8 +301,35 @@ public final class MainActivity extends Activity {
                 .toString();
     }
 
+    private void showOfflineHome() {
+        if (webView == null) return;
+        hideStatus();
+        String html = "<!doctype html><html lang='id'><head><meta name='viewport' content='width=device-width, initial-scale=1'>" +
+                "<meta charset='utf-8'><style>" +
+                "body{margin:0;background:#080b14;color:#f4f2ff;font:16px system-ui,sans-serif}" +
+                ".wrap{max-width:680px;margin:0 auto;padding:28px 20px}" +
+                ".brand{color:#a99aff;font-size:12px;font-weight:800;letter-spacing:2px}" +
+                "h1{font-size:30px;line-height:1.15;margin:14px 0}p{color:#bdc3d7;line-height:1.6}" +
+                ".card{margin-top:24px;padding:20px;border:1px solid #2a3045;border-radius:18px;background:#111626}" +
+                ".pill{display:inline-block;color:#f8c96b;background:#382d19;padding:6px 10px;border-radius:20px;font-size:12px}" +
+                "button{width:100%;padding:15px;margin-top:12px;border:0;border-radius:12px;background:#8b7cff;color:#090916;font-weight:800;font-size:16px}" +
+                ".secondary{background:#222a3e;color:#f4f2ff}.small{font-size:13px;color:#929bb4}" +
+                "</style></head><body><main class='wrap'>" +
+                "<div class='brand'>M4ZK1PLAY • AGENT OFFICE</div>" +
+                "<h1>Kantor AI Anda,<br>siap saat Anda siap.</h1>" +
+                "<p>Aplikasi berhasil dibuka. Hubungkan ke server Agent Office saat Anda ingin membuka dashboard dan menjalankan agen AI jarak jauh.</p>" +
+                "<section class='card'><span class='pill'>BELUM TERHUBUNG</span>" +
+                "<h2>Mulai gunakan Agent Office</h2>" +
+                "<p>Alamat server tidak perlu diisi saat pertama kali membuka aplikasi. Pengaturan koneksi tersedia di sini atau lewat menu Server di atas.</p>" +
+                "<button onclick=\"window.location.href='agentoffice://connect'\">Hubungkan ke server</button>" +
+                "<p class='small'>Koneksi server membutuhkan alamat HTTPS yang aktif. Mode lokal ini adalah layar awal, bukan mesin AI offline.</p>" +
+                "</section></main></body></html>";
+        webView.loadDataWithBaseURL("https://offline.agent-office.invalid/", html, "text/html", "UTF-8", null);
+    }
+
     private void loadOffice() {
         if (webView == null || TextUtils.isEmpty(serverOrigin)) {
+            showOfflineHome();
             return;
         }
         showStatus("Menghubungkan ke Mazkiplay AI…");
@@ -434,6 +462,11 @@ public final class MainActivity extends Activity {
             Uri uri = request.getUrl();
             if (isOfficeOrigin(uri)) {
                 return false;
+            }
+            if (request.isForMainFrame() && "agentoffice".equalsIgnoreCase(uri.getScheme())
+                    && "connect".equalsIgnoreCase(uri.getHost())) {
+                showServerDialog(false);
+                return true;
             }
             if (request.isForMainFrame()) {
                 openExternalPage(uri);
