@@ -13,6 +13,8 @@ on:
     paths:
       - 'src/**'
       - 'bin/**'
+      - 'tests/**'
+      - 'install.sh'
       - 'package.json'
       - 'package-lock.json'
       - 'tsconfig*.json'
