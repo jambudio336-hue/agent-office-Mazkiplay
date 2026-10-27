@@ -13,6 +13,19 @@
 
 Mazkiplay Hacker AI evolves the existing Agent Office codebase into a security-focused assistant. The current Android APK is a remote client for `/lite`; it does not run pentesting tools or AI workers locally. Real execution still requires a configured host, supported agent CLI, and explicit authorization for each target.
 
+## Android G0DM0D3 mobile mode
+
+The Android client now includes the upstream G0DM0D3 standalone frontend as an in-app mode. Use the **G0DM0D3** tab to open the embedded HTML interface, or **Office** to return to the remote Mazkiplay Agent Office dashboard. The navigation uses equal-width controls for narrow screens, and the **License** tab shows the third-party attribution and license information.
+
+- Embedded frontend: `android/app/src/main/assets/g0dm0d3/index.html`
+- Upstream project: https://github.com/elder-plinius/G0DM0D3
+- License and import notice: `THIRD_PARTY_LICENSES/G0DM0D3-LICENSE` and `THIRD_PARTY_LICENSES/G0DM0D3-NOTICE.md`
+- Only the standalone frontend is bundled. The optional upstream Express API server is not embedded.
+- Configure your own supported AI provider or local endpoint. Provider charges, limits, moderation, and privacy policies still apply.
+- The WebView uses a synthetic HTTPS origin for the embedded page and keeps direct file access disabled. API keys stored by the upstream frontend may be held in WebView storage; do not use shared/untrusted devices.
+
+Because G0DM0D3 is licensed under AGPL-3.0, redistributors must preserve its license notices and comply with applicable corresponding-source obligations. See the third-party license files before publishing modified builds.
+
 Sit **Claude Code**, **Codex**, **OpenCode**, **Grok**, **Muse**, **DeepSeek Harness** and **Cursor** workers at desks, watch each one's terminal on the laptop in front of it,
 and jump into any of them together. Every GitHub repo is a floor of the building.
 
