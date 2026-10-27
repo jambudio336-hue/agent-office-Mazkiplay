@@ -3,6 +3,10 @@ package com.mazkiplay.agentoffice;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.IntentFilter;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.Color;
@@ -34,6 +38,8 @@ public final class MainActivity extends Activity {
     private static final String KEY_SERVER_ORIGIN = "server-origin";
     private static final int NAVY = Color.rgb(17, 19, 47);
     private static final int CREAM = Color.rgb(255, 241, 222);
+    private static final String TERMUX_RESULT_ACTION = "com.mazkiplay.agentoffice.TERMUX_RESULT";
+    private BroadcastReceiver termuxResultReceiver;
 
     private String serverOrigin;
     private WebView webView;
@@ -140,32 +146,69 @@ public final class MainActivity extends Activity {
 
 
     private void showTermuxBridgeDialog() {
+        EditText commandInput = new EditText(this);
+        commandInput.setSingleLine(false);
+        commandInput.setMinLines(2);
+        commandInput.setHint("Contoh: pwd && ls");
+        commandInput.setText("pwd");
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(20), dp(4), dp(20), 0);
+        TextView warning = new TextView(this);
+        warning.setText("Perintah akan dijalankan di lingkungan Termux milik perangkat ini. Periksa perintah sebelum menjalankan. Jangan masukkan password, token, atau perintah yang tidak Anda pahami. Setiap eksekusi memerlukan konfirmasi.");
+        warning.setTextColor(CREAM);
+        warning.setPadding(0, 0, 0, dp(10));
+        box.addView(warning);
+        box.addView(commandInput, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         new AlertDialog.Builder(this)
-                .setTitle("Koneksi native Termux")
-                .setMessage("Fitur ini mengirim satu perintah uji tetap (echo) ke Termux. Ini hanya membuktikan bahwa permintaan berhasil dikirim; aplikasi belum dapat membaca stdout/stderr atau exit code.\\n\\nPastikan Termux dari sumber tepercaya terpasang dan opsi Allow external apps diaktifkan di pengaturan Termux. Tidak ada perintah bebas atau akses root yang dijalankan.")
+                .setTitle("Termux • perintah lokal")
+                .setView(box)
                 .setNegativeButton("Batal", null)
-                .setPositiveButton("Kirim uji koneksi", (dialog, which) -> runTermuxConnectionTest())
+                .setPositiveButton("Tinjau perintah", (dialog, which) -> {
+                    String command = commandInput.getText().toString().trim();
+                    if (command.isEmpty()) {
+                        Toast.makeText(this, "Perintah tidak boleh kosong.", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    new AlertDialog.Builder(this)
+                            .setTitle("Konfirmasi eksekusi")
+                            .setMessage("Jalankan perintah berikut di Termux?\n\n" + command + "\n\nPerintah ini berjalan dengan hak akses akun Termux Anda.")
+                            .setNegativeButton("Kembali", null)
+                            .setPositiveButton("Jalankan", (d, w) -> runTermuxCommand(command))
+                            .show();
+                })
                 .show();
     }
 
-    private void runTermuxConnectionTest() {
+    private void runTermuxCommand(String command) {
         Intent intent = new Intent("com.termux.RUN_COMMAND");
         intent.setClassName("com.termux", "com.termux.app.RunCommandService");
-        intent.putExtra("com.termux.RUN_COMMAND_PATH", "/data/data/com.termux/files/usr/bin/echo");
-        intent.putExtra("com.termux.RUN_COMMAND_ARGUMENTS", new String[]{"Mazkiplay Pentester AI: Termux bridge request"});
+        intent.putExtra("com.termux.RUN_COMMAND_PATH", "/data/data/com.termux/files/usr/bin/bash");
+        intent.putExtra("com.termux.RUN_COMMAND_ARGUMENTS", new String[]{"-lc", command});
         intent.putExtra("com.termux.RUN_COMMAND_WORKDIR", "/data/data/com.termux/files/home");
-        intent.putExtra("com.termux.RUN_COMMAND_BACKGROUND", false);
+        intent.putExtra("com.termux.RUN_COMMAND_BACKGROUND", true);
+        intent.putExtra("com.termux.RUN_COMMAND_LABEL", "Mazkiplay Pentester AI");
+        intent.putExtra("com.termux.RUN_COMMAND_DESCRIPTION", "Perintah lokal yang dikonfirmasi pengguna.");
+        int flags = PendingIntent.FLAG_ONE_SHOT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            flags |= PendingIntent.FLAG_MUTABLE;
+        }
+        Intent resultIntent = new Intent(this, TermuxResultReceiver.class);
+        resultIntent.setAction(TERMUX_RESULT_ACTION);
+        resultIntent.setPackage(getPackageName());
+        PendingIntent resultPendingIntent = PendingIntent.getBroadcast(this, (int) (System.currentTimeMillis() & 0x7fffffff), resultIntent, flags);
+        intent.putExtra("com.termux.RUN_COMMAND_PENDING_INTENT", resultPendingIntent);
         try {
             startService(intent);
             new AlertDialog.Builder(this)
-                    .setTitle("Permintaan dikirim")
-                    .setMessage("Android menerima permintaan pengiriman ke layanan Termux. Ini belum mengonfirmasi bahwa perintah selesai, dan output belum dapat dibaca di APK.")
-                    .setPositiveButton("Mengerti", null)
+                    .setTitle("Perintah dikirim")
+                    .setMessage("Perintah dikirim ke Termux. Output dan exit code akan ditampilkan saat Termux mengembalikan hasil. Perlu Termux versi 0.109+ dan izin yang sesuai.")
+                    .setPositiveButton("OK", null)
                     .show();
         } catch (SecurityException | IllegalStateException | ActivityNotFoundException error) {
             new AlertDialog.Builder(this)
                     .setTitle("Termux belum terhubung")
-                    .setMessage("Tidak dapat mengirim perintah. Periksa apakah Termux terpasang, Allow external apps aktif, dan versi Termux kompatibel. Detail: " + error.getClass().getSimpleName())
+                    .setMessage("Gagal mengirim perintah. Periksa Termux, izin Run commands in Termux environment, dan opsi allow-external-apps. Detail: " + error.getClass().getSimpleName())
                     .setPositiveButton("Tutup", null)
                     .show();
         }
