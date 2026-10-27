@@ -118,8 +118,8 @@ function dorkBuilderDialog(){
  const results=layer.querySelector('#dork-results') as HTMLDivElement;
  layer.querySelector('[data-close]')!.addEventListener('click',closeDialog);
  layer.querySelector('#dork-generate')!.addEventListener('click',()=>{
-  const domain=domainInput.value.trim().toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');
-  if(!domain||domain.includes('/')||domain.includes(' ')||! /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/.test(domain)){
+  let domain=domainInput.value.trim().toLowerCase(); if(domain.startsWith('https://'))domain=domain.slice(8); else if(domain.startsWith('http://'))domain=domain.slice(7); while(domain.endsWith('/'))domain=domain.slice(0,-1);
+  const labels=domain.split('.'); if(!domain||domain.length>253||domain.includes('/')||domain.includes(' ')||labels.length<2||!labels.every(part=>/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(part))||! /^[a-z]{2,63}$/.test(labels[labels.length-1])){
    alert('Masukkan nama domain yang valid, misalnya contoh.co.id. Jangan masukkan URL lengkap atau path.');return;
   }
   const groups:Record<string,string[]>={
