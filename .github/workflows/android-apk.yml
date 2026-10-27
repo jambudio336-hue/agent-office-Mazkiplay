@@ -1,6 +1,16 @@
 name: Android APK
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - 'README.md'
+      - 'docs/features.md'
+      - 'docs/android-apk.md'
+      - 'docs/termux-shell-bridge.md'
+      - 'tests/android-wrapper.test.ts'
+      - '.github/workflows/android-apk.yml'
   pull_request:
     paths:
       - 'android/**'
@@ -40,3 +50,25 @@ jobs:
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
+
+  publish-test-release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build-debug-apk
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: m4zkiplay-agent-office-android-debug
+          path: release
+      - name: Publish installable test APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: android-test-${{ github.run_number }}
+        run: |
+          gh release create "$TAG" release/app-debug.apk \
+            --target "$GITHUB_SHA" \
+            --title "Mazkiplay Pentester AI Android test build ${{ github.run_number }}" \
+            --notes "Installable debug-signed test APK for device validation. Not a production-signed release. Verify the source commit and test before relying on security features." \
+            --latest=false
