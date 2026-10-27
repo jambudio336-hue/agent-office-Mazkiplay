@@ -13,7 +13,7 @@ test('Google Dork Builder is visible and only creates passive search URLs', () =
   assert.match(chat, /function dorkBuilderDialog\(/);
   assert.match(chat, /https:\/\/www\.google\.com\/search\?q=/);
   assert.match(chat, /encodeURIComponent\(query\)/);
-  assert.match(chat, /site:\+domain/);
+  assert.match(chat, /map\(q=>'site:'\+domain\+' '\+q\)/);
   assert.match(chat, /domain\.includes\('\/'\)/);
   assert.match(chat, /tidak mengakses server/);
   assert.match(css, /\.dork-results/);
