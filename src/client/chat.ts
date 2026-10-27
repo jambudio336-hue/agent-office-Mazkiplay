@@ -1,5 +1,5 @@
 type ChatMsg={role:'user'|'assistant';content:string;files?:FileItem[];at:number};
-type FileItem={name:string;type:string;size:number;url?:string;dataUrl?:string;text?:string};
+type FileItem={name:string;type:string;size:number;url?:string;dataUrl?:string;frames?:string[];text?:string};
 const $=<T extends HTMLElement>(id:string)=>document.getElementById(id) as T;
 const WELCOME_KEY='mazkiplay.disclaimer.accepted.v1', SETTINGS_KEY='mazkiplay.ai.settings.v1', HISTORY_KEY='mazkiplay.chat.history.v1';
 type Settings={provider:'openrouter'|'openai'|'custom';apiKey:string;model:string;baseUrl:string;name:string;tone:string;language:string};
