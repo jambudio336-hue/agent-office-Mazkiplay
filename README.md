@@ -478,3 +478,10 @@ The Android companion is a remote WebView client. It requires an HTTPS Agent Off
 - **SHA-256 utility:** hashes entered text locally through Web Crypto when supported. A digest is not encryption and SHA-256 alone is not suitable for storing user passwords.
 - **URL encoder/decoder:** helps prepare and inspect URL components for debugging.
 - Utilities are optional helpers; they do not scan remote systems, transmit inputs to a server, or replace a professional security review.
+
+## Security Workspace tools
+
+- **Scope Manager:** keep a local inventory of authorized targets, pending approvals, exclusions, and test notes. This is a checklist, not an ownership or authorization verifier.
+- **Secret Scanner:** locally scans pasted source/config text for common credential patterns and masks some matches in results. False positives and false negatives are possible; rotate any exposed active credential.
+- **Security Report Generator:** drafts a Markdown report from manually supplied scope, summary, and findings. It never claims an automatic scan was performed.
+- All three tools are client-side helpers. They do not execute remote scans or send their input to a remote scanning service.
