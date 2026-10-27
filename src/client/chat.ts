@@ -1,3 +1,4 @@
+export {};
 type ChatMsg={role:'user'|'assistant';content:string;files?:FileItem[];at:number};
 type FileItem={name:string;type:string;size:number;url?:string;dataUrl?:string;frames?:string[];text?:string};
 const $=<T extends HTMLElement>(id:string)=>document.getElementById(id) as T;
