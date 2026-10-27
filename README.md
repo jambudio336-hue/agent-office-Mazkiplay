@@ -37,6 +37,10 @@ curl -fsSL https://raw.githubusercontent.com/AgentSystemLabs/agent-office/main/i
 
 ## 🛡️ Mazkiplay Security Modules
 
+- **Social Engineering Awareness Lab** (`/social-lab.html`): local tabletop scenarios for urgency scams, OTP requests, suspicious delivery links, unknown USB devices, and pretexting. Includes defensive indicators and a response-readiness checklist; no real messages are sent and no credentials are collected.
+- **Digital Forensics Workbench** (`/forensics.html`): hashes files selected by the user with SHA-256, records browser-visible metadata, extracts common IOC patterns from pasted text locally, and exports a manifest/timeline. It does not inspect the whole device or recover deleted files.
+- **Jarvis Voice Assistant** (`/jarvis.html`): animated robot avatar with speech-reactive mouth, speech recognition where browser-supported, and Indonesian text-to-speech using voices installed on the device. Voice quality and female Indonesian voice availability depend on the operating system/browser; this is not guaranteed to be a 100% human voice.
+
 > **Status:** work in progress. Menu availability does not mean a scanner or native tool is installed or has executed.
 
 - **Google Dork Builder:** creates passive Google search queries for a domain you are authorized to assess. It opens Google results only; it does not scan the target server or prove exposure.
