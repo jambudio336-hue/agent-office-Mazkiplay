@@ -53,14 +53,14 @@ jobs:
 
   publish-public-release:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: build-debug-apk
+    needs: build-release-apk
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: m4zkiplay-agent-office-android-debug
+          name: m4zkiplay-agent-office-android-release
           path: release
       - name: Publish installable release APK
         env:
