@@ -21,6 +21,10 @@ android {
 
     buildTypes {
         release {
+            // Build the optimized release variant. Use the standard debug keystore
+            // only for public test distribution when no private signing key is configured.
+            // Production distribution should replace this with a private release key.
+            signingConfig = signingConfigs.getByName("debug")
             isMinifyEnabled = false
         }
     }
