@@ -1,4 +1,4 @@
-name: Android APK
+name: Android APK Public Release
 
 on:
   push:
@@ -65,10 +65,10 @@ jobs:
       - name: Publish installable test APK
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: android-test-${{ github.run_number }}
+          TAG: android-v0.1.${{ github.run_number }}
         run: |
           gh release create "$TAG" release/app-debug.apk \
             --target "$GITHUB_SHA" \
-            --title "Mazkiplay Pentester AI Android test build ${{ github.run_number }}" \
-            --notes "Installable debug-signed test APK for device validation. Not a production-signed release. Verify the source commit and test before relying on security features." \
+            --title "Mazkiplay Agent Office Android v0.1.${{ github.run_number }}" \
+            --notes "Publicly downloadable Android APK built from main for installation and device testing. This APK is debug-signed, not production-signed; Android may show an installation warning. Verify the source commit and test before relying on security features." \
             --latest=false
