@@ -14,7 +14,7 @@ test('Android companion points to the mobile office and accepts only HTTPS origi
   const manifest = read('android/app/src/main/AndroidManifest.xml');
   assert.match(activity, /normalizeServerOrigin/);
   assert.match(activity, /https/);
-  assert.match(activity, /serverOrigin \+ "\/lite"/);
+  assert.match(activity, /serverOrigin \\+ "\/chat\.html"/);
   assert.match(activity, /isOfficeOrigin/);
   assert.match(manifest, /android\.permission\.INTERNET/);
   assert.match(manifest, /android:usesCleartextTraffic="false"/);
