@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#090d12" />
+  <title>Mazkiplay Pentester AI — Google Dorking</title>
+  <style>
+    :root{color-scheme:dark;--bg:#090d12;--panel:#101820;--line:#263641;--text:#e8f0f4;--muted:#9db0bc;--green:#7cffb2;--blue:#79baff}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#13212b,var(--bg) 65%);color:var(--text);font:15px/1.5 system-ui,sans-serif}
+    main{max-width:900px;margin:auto;padding:20px 16px 44px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .brand{font-weight:800;letter-spacing:.02em}.brand span{color:var(--green)}a{color:var(--blue)}.panel{margin-top:18px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+    h1{font-size:clamp(1.5rem,4vw,2.25rem);margin:18px 0 6px}h2{font-size:1.1rem;margin:0 0 12px}.muted{color:var(--muted)}label{display:block;font-weight:650;margin:12px 0 6px}
+    input,select,textarea{width:100%;border:1px solid #344956;background:#091117;color:var(--text);border-radius:9px;padding:11px;font:inherit}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;margin-top:10px}
+    .checks label{font-weight:500;margin:0;display:flex;gap:8px;align-items:center}.checks input{width:auto}
+    button{border:1px solid #3b5a68;border-radius:10px;padding:10px 14px;color:var(--text);background:#172630;font-weight:700;cursor:pointer}
+    button.primary{background:var(--green);color:#07110b;border-color:var(--green)}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+    .result{border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:10px;overflow-wrap:anywhere}.result code{display:block;color:var(--green);white-space:pre-wrap;overflow-wrap:anywhere;margin-bottom:10px}
+    .notice{border-left:3px solid var(--green);padding:8px 12px;background:#0b1a15;color:#cce9d8;border-radius:4px}.status{min-height:1.5em;color:var(--green)}
+    footer{margin-top:18px;font-size:.9rem;color:var(--muted)}.hidden{display:none}
+  </style>
+</head>
+<body>
+<main>
+  <div class="top"><div class="brand">MAZKIPLAY <span>PENTESTER AI</span></div><a href="/lite">← Dashboard</a></div>
+  <h1>Google Dorking Workbench</h1>
+  <p class="muted">Bangun query pencarian yang dapat direproduksi. Hasil berasal dari Google; halaman ini tidak mengklaim bahwa hasil pencarian adalah kerentanan terkonfirmasi.</p>
+  <div class="panel">
+    <h2>Target dan pola pencarian</h2>
+    <div class="notice">Gunakan domain yang kamu miliki atau punya izin untuk diperiksa. Query hanya mencari indeks publik; jangan mengakses atau mengunduh data sensitif yang ditemukan.</div>
+    <label for="domain">Domain scope (opsional, mis. example.com)</label>
+    <input id="domain" autocomplete="url" placeholder="example.com" />
+    <div class="grid">
+      <div><label for="preset">Preset</label><select id="preset">
+        <option value="indexed">Halaman terindeks</option><option value="documents">Dokumen publik</option><option value="login">Halaman login yang dipublikasikan</option><option value="subdomains">Referensi subdomain</option><option value="technology">Petunjuk teknologi / konfigurasi</option><option value="custom">Operator manual</option>
+      </select></div>
+      <div><label for="keyword">Kata kunci tambahan (opsional)</label><input id="keyword" placeholder="mis. docs atau staging" /></div>
+      <div><label for="filetype">Jenis dokumen (opsional)</label><select id="filetype"><option value="">Tidak dibatasi</option><option>pdf</option><option>docx</option><option>xlsx</option><option>txt</option><option>xml</option><option>json</option></select></div>
+    </div>
+    <div id="custom-wrap" class="hidden"><label for="custom">Operator tambahan (tanpa target atau URL)</label><input id="custom" placeholder='mis. intitle:"documentation" -inurl:archive' /></div>
+    <div class="actions"><button class="primary" id="generate">Generate query</button><button id="clear">Reset</button></div>
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+  </div>
+  <div class="panel"><h2>Query siap digunakan</h2><p class="muted">Pilih “Cari di Google” untuk membuka query pada Google Search. Query yang dibuat tidak menjalankan scan aktif.</p><div id="results"><p class="muted">Isi preset lalu tekan Generate query.</p></div></div>
+  <footer>Privasi: query dibuat di browser. Halaman ini tidak meminta API key dan tidak mengambil data dari target secara otomatis.</footer>
+</main>
+<script type="module" src="./dork.ts"></script>
+</body></html>

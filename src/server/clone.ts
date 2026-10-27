@@ -170,7 +170,10 @@ export class CloneRun {
     // One an office before this one started: nothing says when it exits but its pid going away.
     if (!this.child && !alive(this.pid)) return this.end(null);
     const { text, size } = this.read();
-    const stallMs = this.opts.stallMs ?? STALL_MS;
+    // A clone adopted after an office restart may be between quiet phases (for example,
+    // Git can be checking out files without writing progress). Give adopted processes a
+    // longer observation window so a restart does not turn a healthy clone into a false stall.
+    const stallMs = (this.opts.stallMs ?? STALL_MS) * (this.child ? 1 : 2);
     if (size !== this.size) {
       this.size = size;
       this.grewAt = Date.now();

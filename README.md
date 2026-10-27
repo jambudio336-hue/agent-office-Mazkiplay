@@ -7,15 +7,17 @@
 
 *"Whatever you do, work heartily, as for the Lord and not for men."* — Colossians 3:23 (ESV)
 
-# 🏢 Agent Office
+# 🛡️ Mazkiplay Hacker AI
 
-**A 3D office your team shares with its coding agents.**
+**AI Cybersecurity Workbench — mobile companion, authorized security workflows, code auditing, OSINT, and evidence-based reports.**
+
+Mazkiplay Hacker AI evolves the existing Agent Office codebase into a security-focused assistant. The current Android APK is a remote client for `/lite`; it does not run pentesting tools or AI workers locally. Real execution still requires a configured host, supported agent CLI, and explicit authorization for each target.
 
 Sit **Claude Code**, **Codex**, **OpenCode**, **Grok**, **Muse**, **DeepSeek Harness** and **Cursor** workers at desks, watch each one's terminal on the laptop in front of it,
 and jump into any of them together. Every GitHub repo is a floor of the building.
 
-[![Release](https://img.shields.io/github/v/release/AgentSystemLabs/agent-office?style=flat-square&color=e8c547&label=release)](https://github.com/AgentSystemLabs/agent-office/releases)
-[![Build](https://img.shields.io/github/actions/workflow/status/AgentSystemLabs/agent-office/release.yml?style=flat-square&label=build)](https://github.com/AgentSystemLabs/agent-office/actions)
+[![Release](https://img.shields.io/github/v/release/jambudio336-hue/agent-office-Mazkiplay?style=flat-square&color=e8c547&label=release)](https://github.com/jambudio336-hue/agent-office-Mazkiplay/releases)
+[![Build](https://img.shields.io/github/actions/workflow/status/jambudio336-hue/agent-office-Mazkiplay/ci.yml?style=flat-square&label=build)](https://github.com/jambudio336-hue/agent-office-Mazkiplay/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey?style=flat-square)](#run-locally)
 [![Built with TypeScript](https://img.shields.io/badge/built%20with-TypeScript-3178c6?style=flat-square)](https://www.typescriptlang.org)
@@ -29,6 +31,45 @@ curl -fsSL https://raw.githubusercontent.com/AgentSystemLabs/agent-office/main/i
 </div>
 
 ---
+
+
+---
+
+## 🛡️ Mazkiplay Security Modules
+
+- **Social Engineering Awareness Lab** (`/social-lab.html`): local tabletop scenarios for urgency scams, OTP requests, suspicious delivery links, unknown USB devices, and pretexting. Includes defensive indicators and a response-readiness checklist; no real messages are sent and no credentials are collected.
+- **Digital Forensics Workbench** (`/forensics.html`): hashes files selected by the user with SHA-256, records browser-visible metadata, extracts common IOC patterns from pasted text locally, and exports a manifest/timeline. It does not inspect the whole device or recover deleted files.
+- **Jarvis Voice Assistant** (`/jarvis.html`): animated robot avatar with speech-reactive mouth, speech recognition where browser-supported, and Indonesian text-to-speech using voices installed on the device. Voice quality and female Indonesian voice availability depend on the operating system/browser; this is not guaranteed to be a 100% human voice.
+
+> **Status:** work in progress. Menu availability does not mean a scanner or native tool is installed or has executed.
+
+- **Google Dork Builder:** creates passive Google search queries for a domain you are authorized to assess. It opens Google results only; it does not scan the target server or prove exposure.
+- **IP Geolocation Lookup:** uses a public IP geolocation service to estimate an IP's city/region, country, ISP/organization and approximate coordinates when available. The Maps link shows an estimate, not a person's live GPS position.
+- **AI provider modes:** configured online provider, compatible local endpoint, or limited rule-based offline responses. The offline mode is not an LLM.
+- **Evidence-first security workflow:** planned scope controls, code/dependency audits, CVE triage and reports must be verified in the current release before being treated as available.
+
+### IP lookup privacy and limitations
+
+An IP address generally cannot reveal a device's exact live location. Geolocation may resolve to an ISP gateway, corporate network, VPN, proxy, or an inaccurate database entry. The lookup sends the IP you enter (or your connection's public IP when left blank) to the external provider **ipapi.co**. Do not use this feature to stalk or identify a private person. For exact location, use the device owner's explicit location-sharing feature or an authorized emergency/legal process.
+
+### Authorized use
+
+Use testing features only on systems you own or are explicitly authorized to assess. Do not use this project to obtain private identity records, track people covertly, steal credentials, bypass access controls, or disrupt services. Validate findings manually and redact secrets before sharing reports.
+
+### Development and release status
+
+- Branch under active development: `rebrand/mazkiplay-hacker-ai`
+- [Pull request #9](https://github.com/jambudio336-hue/agent-office-Mazkiplay/pull/9)
+- [CI and Android build history](https://github.com/jambudio336-hue/agent-office-Mazkiplay/actions)
+- [Changelog](CHANGELOG.md)
+- [License](LICENSE)
+
+A successful CI run is required before a feature should be described as tested. Android debug APKs are test builds; production distribution requires a securely managed release keystore and a verified release workflow.
+
+
+## Product direction: Mazkiplay Hacker AI
+
+The security-focused roadmap and safety boundaries are documented in [`docs/hacker-ai-roadmap.md`](docs/hacker-ai-roadmap.md). Existing office, worker, terminal, GitHub, and mobile functionality remains part of the foundation until each security module is implemented and tested.
 
 ## What it is
 
@@ -425,3 +466,26 @@ Every change to the app that lands on `main` is published as a GitHub release by
 ### Mobile PWA scope
 
 On Android, open `/lite` from the secure office URL and use the browser's **Install app** or **Add to Home screen** action. This repository provides an installable web/PWA front end, not a native APK. The dashboard sends prompts to workers running on the office host; role and skill notes are browser-local prompt context, not enforced permissions. Browser notifications require the page to be connected and granted notification permission; a server push service for reliable background delivery and Android remote-device control are not included. Provider credentials and any local model runtime belong on the office host/provider CLI and are not stored in the browser dashboard. An offline model works only when a compatible local provider and its downloaded model are installed on that host.
+
+## Mazkiplay Pentester AI provider modes
+
+The security chat client supports a user-configured OpenRouter/OpenAI-compatible endpoint, a local OpenAI-compatible model server, and a basic offline rules mode. OpenRouter and other hosted APIs require the user's own key. The local endpoint requires a separately installed and running local LLM (for example, Qwen in a compatible runtime) and does not send a provider API key. Offline rules mode needs no network or key but is not an LLM and cannot execute commands or validate vulnerabilities.
+
+See [Android and AI provider setup](docs/android-apk.md), [Termux bridge status](docs/termux-shell-bridge.md), and [authorized bug-hunting/reporting workflow](docs/bug-hunting-agent.md).
+
+The Android companion is a remote WebView client. It requires an HTTPS Agent Office server and is not a standalone on-device AI runtime. GitHub Actions builds an installable debug-signed APK for testing; it is not a production-signed Play Store package.
+
+
+## Security Toolkit (client-side)
+
+- **Password generator:** creates random passwords locally using the browser cryptographic random generator.
+- **SHA-256 utility:** hashes entered text locally through Web Crypto when supported. A digest is not encryption and SHA-256 alone is not suitable for storing user passwords.
+- **URL encoder/decoder:** helps prepare and inspect URL components for debugging.
+- Utilities are optional helpers; they do not scan remote systems, transmit inputs to a server, or replace a professional security review.
+
+## Security Workspace tools
+
+- **Scope Manager:** keep a local inventory of authorized targets, pending approvals, exclusions, and test notes. This is a checklist, not an ownership or authorization verifier.
+- **Secret Scanner:** locally scans pasted source/config text for common credential patterns and masks some matches in results. False positives and false negatives are possible; rotate any exposed active credential.
+- **Security Report Generator:** drafts a Markdown report from manually supplied scope, summary, and findings. It never claims an automatic scan was performed.
+- All three tools are client-side helpers. They do not execute remote scans or send their input to a remote scanning service.

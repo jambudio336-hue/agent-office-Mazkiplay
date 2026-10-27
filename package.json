@@ -1,7 +1,7 @@
 {
-  "name": "agent-office",
+  "name": "mazkiplay-hacker-ai",
   "version": "0.1.0",
-  "description": "A cartoon 3D multiplayer office where your team spawns Claude Code workers at desks, shares live terminals, talks over voice, and tracks GitHub issues and PRs.",
+  "description": "Mazkiplay Hacker AI: an AI-assisted cybersecurity workbench with remote mobile dashboard, coding agents, live terminals, and authorized security workflows.",
   "type": "module",
   "bin": {
     "agent-office": "bin/agent-office.js"

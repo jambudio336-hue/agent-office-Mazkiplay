@@ -3,6 +3,10 @@ package com.mazkiplay.agentoffice;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.IntentFilter;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.Color;
@@ -34,6 +38,8 @@ public final class MainActivity extends Activity {
     private static final String KEY_SERVER_ORIGIN = "server-origin";
     private static final int NAVY = Color.rgb(17, 19, 47);
     private static final int CREAM = Color.rgb(255, 241, 222);
+    private static final String TERMUX_RESULT_ACTION = "com.mazkiplay.agentoffice.TERMUX_RESULT";
+    private BroadcastReceiver termuxResultReceiver;
 
     private String serverOrigin;
     private WebView webView;
@@ -67,7 +73,7 @@ public final class MainActivity extends Activity {
         toolbar.setBackgroundColor(NAVY);
 
         TextView title = new TextView(this);
-        title.setText("M4zK1pL4Y Office");
+        title.setText("Mazkiplay Pentester AI");
         title.setTextColor(CREAM);
         title.setTextSize(16);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
@@ -78,6 +84,11 @@ public final class MainActivity extends Activity {
         serverButton.setContentDescription("Ganti alamat server Agent Office");
         serverButton.setOnClickListener(view -> showServerDialog(false));
         toolbar.addView(serverButton, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(48)));
+
+        Button termuxButton = toolbarButton("Termux");
+        termuxButton.setContentDescription("Hubungkan dengan Termux");
+        termuxButton.setOnClickListener(view -> showTermuxBridgeDialog());
+        toolbar.addView(termuxButton, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(48)));
 
         Button refreshButton = toolbarButton("↻");
         refreshButton.setContentDescription("Muat ulang kantor");
@@ -93,7 +104,7 @@ public final class MainActivity extends Activity {
 
         FrameLayout content = new FrameLayout(this);
         webView = new WebView(this);
-        webView.setBackgroundColor(Color.WHITE);
+        webView.setBackgroundColor(Color.rgb(5, 11, 16));
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
@@ -131,6 +142,76 @@ public final class MainActivity extends Activity {
         setContentView(shell);
 
         android.webkit.CookieManager.getInstance().setAcceptCookie(true);
+    }
+
+
+    private void showTermuxBridgeDialog() {
+        EditText commandInput = new EditText(this);
+        commandInput.setSingleLine(false);
+        commandInput.setMinLines(2);
+        commandInput.setHint("Contoh: pwd && ls");
+        commandInput.setText("pwd");
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(20), dp(4), dp(20), 0);
+        TextView warning = new TextView(this);
+        warning.setText("Perintah akan dijalankan di lingkungan Termux milik perangkat ini. Periksa perintah sebelum menjalankan. Jangan masukkan password, token, atau perintah yang tidak Anda pahami. Setiap eksekusi memerlukan konfirmasi.");
+        warning.setTextColor(CREAM);
+        warning.setPadding(0, 0, 0, dp(10));
+        box.addView(warning);
+        box.addView(commandInput, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        new AlertDialog.Builder(this)
+                .setTitle("Termux • perintah lokal")
+                .setView(box)
+                .setNegativeButton("Batal", null)
+                .setPositiveButton("Tinjau perintah", (dialog, which) -> {
+                    String command = commandInput.getText().toString().trim();
+                    if (command.isEmpty()) {
+                        Toast.makeText(this, "Perintah tidak boleh kosong.", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    new AlertDialog.Builder(this)
+                            .setTitle("Konfirmasi eksekusi")
+                            .setMessage("Jalankan perintah berikut di Termux?\n\n" + command + "\n\nPerintah ini berjalan dengan hak akses akun Termux Anda.")
+                            .setNegativeButton("Kembali", null)
+                            .setPositiveButton("Jalankan", (d, w) -> runTermuxCommand(command))
+                            .show();
+                })
+                .show();
+    }
+
+    private void runTermuxCommand(String command) {
+        Intent intent = new Intent("com.termux.RUN_COMMAND");
+        intent.setClassName("com.termux", "com.termux.app.RunCommandService");
+        intent.putExtra("com.termux.RUN_COMMAND_PATH", "/data/data/com.termux/files/usr/bin/bash");
+        intent.putExtra("com.termux.RUN_COMMAND_ARGUMENTS", new String[]{"-lc", command});
+        intent.putExtra("com.termux.RUN_COMMAND_WORKDIR", "/data/data/com.termux/files/home");
+        intent.putExtra("com.termux.RUN_COMMAND_BACKGROUND", true);
+        intent.putExtra("com.termux.RUN_COMMAND_LABEL", "Mazkiplay Pentester AI");
+        intent.putExtra("com.termux.RUN_COMMAND_DESCRIPTION", "Perintah lokal yang dikonfirmasi pengguna.");
+        int flags = PendingIntent.FLAG_ONE_SHOT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            flags |= PendingIntent.FLAG_MUTABLE;
+        }
+        Intent resultIntent = new Intent(this, TermuxResultReceiver.class);
+        resultIntent.setAction(TERMUX_RESULT_ACTION);
+        resultIntent.setPackage(getPackageName());
+        PendingIntent resultPendingIntent = PendingIntent.getBroadcast(this, (int) (System.currentTimeMillis() & 0x7fffffff), resultIntent, flags);
+        intent.putExtra("com.termux.RUN_COMMAND_PENDING_INTENT", resultPendingIntent);
+        try {
+            startService(intent);
+            new AlertDialog.Builder(this)
+                    .setTitle("Perintah dikirim")
+                    .setMessage("Perintah dikirim ke Termux. Output dan exit code akan ditampilkan saat Termux mengembalikan hasil. Perlu Termux versi 0.109+ dan izin yang sesuai.")
+                    .setPositiveButton("OK", null)
+                    .show();
+        } catch (SecurityException | IllegalStateException | ActivityNotFoundException error) {
+            new AlertDialog.Builder(this)
+                    .setTitle("Termux belum terhubung")
+                    .setMessage("Gagal mengirim perintah. Periksa Termux, izin Run commands in Termux environment, dan opsi allow-external-apps. Detail: " + error.getClass().getSimpleName())
+                    .setPositiveButton("Tutup", null)
+                    .show();
+        }
     }
 
     private Button toolbarButton(String label) {
@@ -206,7 +287,7 @@ public final class MainActivity extends Activity {
         }
         String path = uri.getPath();
         if (!TextUtils.isEmpty(path) && !"/".equals(path)) {
-            throw new IllegalArgumentException("Masukkan alamat dasar server saja, tanpa path. Aplikasi akan membuka /lite.");
+            throw new IllegalArgumentException("Masukkan alamat dasar server saja, tanpa path. Aplikasi akan membuka /chat.");
         }
         int port = uri.getPort();
         if (port == 0 || port > 65535) {
@@ -223,8 +304,8 @@ public final class MainActivity extends Activity {
         if (webView == null || TextUtils.isEmpty(serverOrigin)) {
             return;
         }
-        showStatus("Menghubungkan ke kantor…");
-        webView.loadUrl(serverOrigin + "/lite");
+        showStatus("Menghubungkan ke Mazkiplay AI…");
+        webView.loadUrl(serverOrigin + "/chat.html");
     }
 
     private void showStatus(String message) {
@@ -272,6 +353,70 @@ public final class MainActivity extends Activity {
         } else {
             super.onBackPressed();
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (termuxResultReceiver == null) {
+            termuxResultReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    showTermuxResultIfPending();
+                }
+            };
+            IntentFilter filter = new IntentFilter(TERMUX_RESULT_ACTION);
+            if (Build.VERSION.SDK_INT >= 33) {
+                registerReceiver(termuxResultReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+            } else {
+                registerReceiver(termuxResultReceiver, filter);
+            }
+        }
+        showTermuxResultIfPending();
+    }
+
+    @Override
+    protected void onPause() {
+        if (termuxResultReceiver != null) {
+            try {
+                unregisterReceiver(termuxResultReceiver);
+            } catch (IllegalArgumentException ignored) {
+                // Receiver was already unregistered by Android lifecycle changes.
+            }
+            termuxResultReceiver = null;
+        }
+        super.onPause();
+    }
+
+    private void showTermuxResultIfPending() {
+        android.content.SharedPreferences prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
+        if (!prefs.getBoolean(TermuxResultReceiver.KEY_PENDING_RESULT, false) || isFinishing()) return;
+        prefs.edit().putBoolean(TermuxResultReceiver.KEY_PENDING_RESULT, false).apply();
+        String stdout = prefs.getString("termux-stdout", "");
+        String stderr = prefs.getString("termux-stderr", "");
+        String error = prefs.getString("termux-error", "");
+        int exitCode = prefs.getInt("termux-exit-code", -1);
+        boolean truncated = prefs.getBoolean("termux-output-truncated", false);
+        int internalErrorCode = prefs.getInt("termux-internal-error-code", 0);
+        StringBuilder output = new StringBuilder();
+        output.append("Exit code: ").append(exitCode).append("\n\n");
+        output.append("STDOUT:\n").append(TextUtils.isEmpty(stdout) ? "(kosong)" : stdout);
+        if (!TextUtils.isEmpty(stderr)) output.append("\n\nSTDERR:\n").append(stderr);
+        if (!TextUtils.isEmpty(error)) output.append("\n\nStatus Termux: ").append(error);
+        if (internalErrorCode != 0) output.append("\nKode error internal: ").append(internalErrorCode);
+        if (truncated) output.append("\n\nPERINGATAN: Output terpotong. Jalankan ulang dengan output lebih kecil.");
+        EditText outputView = new EditText(this);
+        outputView.setText(output.toString());
+        outputView.setTextIsSelectable(true);
+        outputView.setFocusable(true);
+        outputView.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        outputView.setMinLines(5);
+        outputView.setMaxLines(14);
+        new AlertDialog.Builder(this)
+                .setTitle(exitCode == 0 ? "Output Termux • berhasil" : "Output Termux • periksa hasil")
+                .setView(outputView)
+                .setPositiveButton("Tutup", null)
+                .show();
     }
 
     @Override

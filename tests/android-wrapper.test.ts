@@ -14,7 +14,7 @@ test('Android companion points to the mobile office and accepts only HTTPS origi
   const manifest = read('android/app/src/main/AndroidManifest.xml');
   assert.match(activity, /normalizeServerOrigin/);
   assert.match(activity, /https/);
-  assert.match(activity, /serverOrigin \+ "\/lite"/);
+  assert.match(activity, /serverOrigin \+ "\/chat\.html"/);
   assert.match(activity, /isOfficeOrigin/);
   assert.match(manifest, /android\.permission\.INTERNET/);
   assert.match(manifest, /android:usesCleartextTraffic="false"/);
@@ -42,4 +42,29 @@ test('Android project pins compatible SDK and Gradle versions and publishes a de
   assert.match(workflow, /assembleDebug/);
   assert.match(workflow, /upload-artifact@v4/);
   assert.match(workflow, /app-debug\.apk/);
+});
+
+test('Native Termux bridge requires confirmation and requests stdout, stderr, and exit code', () => {
+  const activity = read('android/app/src/main/java/com/mazkiplay/agentoffice/MainActivity.java');
+  const receiver = read('android/app/src/main/java/com/mazkiplay/agentoffice/TermuxResultReceiver.java');
+  const manifest = read('android/app/src/main/AndroidManifest.xml');
+  assert.ok(manifest.includes('com.termux.permission.RUN_COMMAND'));
+  assert.ok(manifest.includes('<package android:name="com.termux" />'));
+  assert.ok(manifest.includes('android:name=".TermuxResultReceiver"'));
+  assert.ok(activity.includes('com.termux.app.RunCommandService'));
+  assert.ok(activity.includes('com.termux.RUN_COMMAND_PATH'));
+  assert.ok(activity.includes('com.termux.RUN_COMMAND_PENDING_INTENT'));
+  assert.ok(activity.includes('Tinjau perintah'));
+  assert.ok(activity.includes('Konfirmasi eksekusi'));
+  assert.ok(activity.includes('STDOUT:'));
+  assert.ok(activity.includes('STDERR:'));
+  assert.ok(activity.includes('Exit code:'));
+  assert.ok(receiver.includes('getBundleExtra') || receiver.includes('instanceof Bundle'));
+  assert.ok(receiver.includes('termux-stdout'));
+  assert.ok(receiver.includes('termux-stderr'));
+  assert.ok(receiver.includes('termux-exit-code'));
+  assert.ok(receiver.includes('com.termux.plugin_result_bundle'));
+  assert.ok(receiver.includes('termux-output-truncated'));
+  assert.ok(receiver.includes('stdout_original_length'));
+  assert.ok(activity.includes('PERINGATAN: Output terpotong'));
 });
