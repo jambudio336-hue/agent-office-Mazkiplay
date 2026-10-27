@@ -81,3 +81,34 @@ The test planner should prioritize findings with potentially severe confidential
 
 ### Report requirements for a suspected RCE
 Record the affected in-scope endpoint and parameter, preconditions, relevant code/configuration or sanitized response evidence, exact safe verification method, impact rationale, confidence, and remediation. State clearly whether code execution was actually demonstrated in an authorized controlled environment; do not claim RCE from a scanner banner, stack trace, or unverified payload response alone.
+
+
+## Professional report and downloadable PDF
+Every completed assessment should offer an exportable report generated from structured findings and verified execution evidence, not free-form AI claims alone. PDF generation is a product requirement; until the export pipeline is implemented and tested in the APK, do not advertise it as available.
+
+### Report contents
+1. Cover page: report title, unique report ID, assessment date/time and timezone, report version, confidentiality label, and author/tool identity.
+2. Executive summary: scope, overall risk posture, finding counts by severity, most important business impacts, and prioritized actions.
+3. Scope and methodology: authorized domains and exclusions, test window, tools and versions actually used, OWASP WSTG version/reference, test profile, and material limitations.
+4. Findings summary: unique finding ID, title, severity, confidence, affected asset, status, and remediation priority.
+5. Detailed finding per issue: category (including SQL injection, reflected/stored/DOM XSS, IDOR/BOLA, broken access control, RCE/command injection, SSRF, authentication/session issues, file/path issues, deserialization, API authorization, cloud/configuration exposure, dependency vulnerabilities, and newly identified classes); affected URL/component and sanitized parameter; prerequisites; reproducible steps using safe evidence; expected vs actual result; redacted request/response or source-code excerpt; impact and attack preconditions; root-cause analysis where known; severity rationale and CVSS vector/score only when defensible; remediation and retest guidance; confidence and verification status; relevant references.
+6. Coverage and limitations: tests performed, tests not performed, inaccessible areas, errors/timeouts, and unverified leads.
+7. Remediation roadmap: immediate containment, short-term fix, longer-term prevention, and retest checklist.
+8. Appendix: sanitized command/output evidence, timestamps, tool versions, glossary, and references.
+
+### Evidence and quality gates
+- Keep finding data in a structured format so the same data can produce in-app details, JSON export, and PDF.
+- Deduplicate findings and retain an audit link to the exact approved command/result where available.
+- Mark each finding as **Confirmed**, **Likely**, **Potential**, **False Positive**, or **Not Reproducible**; never silently promote a hypothesis to confirmed.
+- Critical/High ratings require a stated rationale grounded in demonstrated impact and exposure. Do not invent CVSS values, evidence, timestamps, test coverage, or tool versions.
+- Redact credentials, session cookies, API keys, personal data, and sensitive response content before saving, displaying, or exporting.
+- Include report generation timestamp and a note that results reflect the tested scope and point in time, not a guarantee that no other vulnerabilities exist.
+
+### PDF export UX and implementation requirements
+- Provide a visible **Buat Laporan** action after an assessment and a **Unduh PDF** action when generation succeeds.
+- Let the user preview the report, choose which findings to include, and set a report title and confidentiality label.
+- Generate a valid, searchable, selectable-text PDF with Indonesian language support, page numbers, table of contents for long reports, consistent typography, severity indicators that also remain understandable in grayscale, wrapped tables, and headers/footers.
+- Use Android's Storage Access Framework or a user-selected save location; request only necessary permissions. Confirm the exact saved location and expose a share action only after successful export.
+- Handle empty findings, long evidence, malformed Unicode, storage denial, insufficient space, and generation failures without crashing or showing a fake download link.
+- Validate PDF integrity, page breaks, redaction, and output content in automated tests and on a physical Android device.
+- The PDF is a report of findings and evidence, not an exploit bundle. Do not embed live secrets or destructive payloads.
