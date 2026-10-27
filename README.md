@@ -16,8 +16,8 @@ Mazkiplay Hacker AI evolves the existing Agent Office codebase into a security-f
 Sit **Claude Code**, **Codex**, **OpenCode**, **Grok**, **Muse**, **DeepSeek Harness** and **Cursor** workers at desks, watch each one's terminal on the laptop in front of it,
 and jump into any of them together. Every GitHub repo is a floor of the building.
 
-[![Release](https://img.shields.io/github/v/release/AgentSystemLabs/agent-office?style=flat-square&color=e8c547&label=release)](https://github.com/AgentSystemLabs/agent-office/releases)
-[![Build](https://img.shields.io/github/actions/workflow/status/AgentSystemLabs/agent-office/release.yml?style=flat-square&label=build)](https://github.com/AgentSystemLabs/agent-office/actions)
+[![Release](https://img.shields.io/github/v/release/jambudio336-hue/agent-office-Mazkiplay?style=flat-square&color=e8c547&label=release)](https://github.com/jambudio336-hue/agent-office-Mazkiplay/releases)
+[![Build](https://img.shields.io/github/actions/workflow/status/jambudio336-hue/agent-office-Mazkiplay/ci.yml?style=flat-square&label=build)](https://github.com/jambudio336-hue/agent-office-Mazkiplay/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey?style=flat-square)](#run-locally)
 [![Built with TypeScript](https://img.shields.io/badge/built%20with-TypeScript-3178c6?style=flat-square)](https://www.typescriptlang.org)
@@ -31,6 +31,37 @@ curl -fsSL https://raw.githubusercontent.com/AgentSystemLabs/agent-office/main/i
 </div>
 
 ---
+
+
+---
+
+## 🛡️ Mazkiplay Security Modules
+
+> **Status:** work in progress. Menu availability does not mean a scanner or native tool is installed or has executed.
+
+- **Google Dork Builder:** creates passive Google search queries for a domain you are authorized to assess. It opens Google results only; it does not scan the target server or prove exposure.
+- **IP Geolocation Lookup:** uses a public IP geolocation service to estimate an IP's city/region, country, ISP/organization and approximate coordinates when available. The Maps link shows an estimate, not a person's live GPS position.
+- **AI provider modes:** configured online provider, compatible local endpoint, or limited rule-based offline responses. The offline mode is not an LLM.
+- **Evidence-first security workflow:** planned scope controls, code/dependency audits, CVE triage and reports must be verified in the current release before being treated as available.
+
+### IP lookup privacy and limitations
+
+An IP address generally cannot reveal a device's exact live location. Geolocation may resolve to an ISP gateway, corporate network, VPN, proxy, or an inaccurate database entry. The lookup sends the IP you enter (or your connection's public IP when left blank) to the external provider **ipapi.co**. Do not use this feature to stalk or identify a private person. For exact location, use the device owner's explicit location-sharing feature or an authorized emergency/legal process.
+
+### Authorized use
+
+Use testing features only on systems you own or are explicitly authorized to assess. Do not use this project to obtain private identity records, track people covertly, steal credentials, bypass access controls, or disrupt services. Validate findings manually and redact secrets before sharing reports.
+
+### Development and release status
+
+- Branch under active development: `rebrand/mazkiplay-hacker-ai`
+- [Pull request #9](https://github.com/jambudio336-hue/agent-office-Mazkiplay/pull/9)
+- [CI and Android build history](https://github.com/jambudio336-hue/agent-office-Mazkiplay/actions)
+- [Changelog](CHANGELOG.md)
+- [License](LICENSE)
+
+A successful CI run is required before a feature should be described as tested. Android debug APKs are test builds; production distribution requires a securely managed release keystore and a verified release workflow.
+
 
 ## Product direction: Mazkiplay Hacker AI
 
