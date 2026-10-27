@@ -30,3 +30,10 @@ All notable changes to Mazkiplay Pentester AI are documented here. This project 
 - Added a client-side Security Toolkit dialog with cryptographically generated passwords, local SHA-256 text hashing, and URL encode/decode helpers.
 - Added responsive tool cards and clear limitations/security guidance.
 - Inputs stay in the browser for these utilities; no remote scanning or upload is performed by the toolkit.
+
+## Unreleased — Security Workspace
+
+- Added a local Scope Manager for documenting authorized targets and exclusions.
+- Added a client-side Secret Scanner for common credential patterns with basic redaction in result snippets.
+- Added a Markdown Security Report Generator with copy/download actions and explicit verification disclaimers.
+- Updated README and changelog for the new tools.
