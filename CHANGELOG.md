@@ -23,3 +23,10 @@ All notable changes to Mazkiplay Pentester AI are documented here. This project 
 
 ### Validation status
 - CI validation is running for the active development branch. Do not treat this entry as a successful release announcement until the workflow completes successfully.
+
+
+## Unreleased — 2026-10-27 (Security Toolkit)
+
+- Added a client-side Security Toolkit dialog with cryptographically generated passwords, local SHA-256 text hashing, and URL encode/decode helpers.
+- Added responsive tool cards and clear limitations/security guidance.
+- Inputs stay in the browser for these utilities; no remote scanning or upload is performed by the toolkit.
