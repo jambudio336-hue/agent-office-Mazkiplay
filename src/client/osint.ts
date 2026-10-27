@@ -31,3 +31,5 @@ async function run(){
 }
 byId<HTMLButtonElement>('run').addEventListener('click',()=>{void run().catch(e=>status.textContent='Pemeriksaan gagal: '+(e instanceof Error?e.message:'kesalahan tidak diketahui'))});
 byId<HTMLButtonElement>('clear').addEventListener('click',()=>{domainInput.value='';rdap.replaceChildren(node('p','muted','Belum dijalankan.'));dns.replaceChildren(node('p','muted','Belum dijalankan.'));links.replaceChildren(node('p','muted','Jalankan pemeriksaan untuk menyiapkan tautan referensi.'));status.textContent=''});
+
+export {};
