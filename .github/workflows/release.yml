@@ -70,8 +70,9 @@ jobs:
           # Installs get exactly the dependency versions tested here.
           cp package-lock.json npm-shrinkwrap.json
           npm pkg set 'files[]=npm-shrinkwrap.json'
-          npm pack --ignore-scripts
-          mv "agent-office-$version.tgz" agent-office.tgz
+          tarball="$(npm pack --ignore-scripts --silent | tail -n 1)"
+          test -f "$tarball"
+          mv "$tarball" agent-office.tgz
           tar -tzf agent-office.tgz | grep -qx 'package/npm-shrinkwrap.json'
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
