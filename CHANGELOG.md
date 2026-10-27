@@ -5,6 +5,9 @@ All notable changes to Mazkiplay Pentester AI are documented here. This project 
 ## [Unreleased] — 2026-10-27
 
 ### Added
+- Social Engineering Awareness Lab with local-only tabletop scenarios, red-flag explanations, and a readiness checklist; it does not send phishing messages or collect credentials.
+- Digital Forensics Workbench for user-selected files: browser-visible metadata, SHA-256 hashes, local text IOC extraction, timeline notes, and JSON/text exports.
+- Jarvis voice-first page with an animated robot avatar, browser speech recognition where supported, Indonesian text-to-speech, voice selection/rate/pitch controls, and safe navigation to local tools.
 - Google Dork Builder for passive, domain-scoped Google queries with domain validation, copy actions, and direct search links.
 - IP Geolocation Lookup using ipapi.co for approximate public-IP metadata and optional approximate-coordinate links to Google Maps.
 - Responsive cyber-style motion effects with a `prefers-reduced-motion` accessibility fallback.
@@ -22,7 +25,7 @@ All notable changes to Mazkiplay Pentester AI are documented here. This project 
 - Existing MIT license terms are retained from the upstream project; see [LICENSE](LICENSE).
 
 ### Validation status
-- CI validation is running for the active development branch. Do not treat this entry as a successful release announcement until the workflow completes successfully.
+- These pages are new development-branch additions. Browser speech support and available Indonesian voices depend on the user's browser/OS; no claim of native-device-wide control or production readiness is made.
 
 
 ## Unreleased — 2026-10-27 (Security Toolkit)
