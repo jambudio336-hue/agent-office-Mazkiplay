@@ -68,3 +68,11 @@ test('Native Termux bridge requires confirmation and requests stdout, stderr, an
   assert.ok(receiver.includes('stdout_original_length'));
   assert.ok(activity.includes('PERINGATAN: Output terpotong'));
 });
+
+test('Android first launch opens a local welcome screen and makes server setup optional', () => {
+  const activity = read('android/app/src/main/java/com/mazkiplay/agentoffice/MainActivity.java');
+  assert.match(activity, /showOfflineHome\(\)/);
+  assert.match(activity, /loadDataWithBaseURL/);
+  assert.match(activity, /agentoffice:\/\/connect/);
+  assert.match(activity, /First launch must never be blocked by a required server dialog/);
+});
