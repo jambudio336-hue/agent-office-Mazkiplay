@@ -50,6 +50,7 @@ public final class MainActivity extends Activity {
     private TextView statusMessage;
     private Button officeTab;
     private Button godmodeTab;
+    private Button licenseTab;
     private boolean godmodeMode;
 
     @Override
@@ -128,6 +129,12 @@ public final class MainActivity extends Activity {
         godmodeTab.setContentDescription("Buka antarmuka AI G0DM0D3 yang disertakan di aplikasi");
         godmodeTab.setOnClickListener(view -> loadGodmode());
         navigation.addView(godmodeTab, new LinearLayout.LayoutParams(0, dp(40), 1));
+
+        licenseTab = toolbarButton("LICENSE");
+        licenseTab.setContentDescription("Informasi lisensi dan source code pihak ketiga");
+        licenseTab.setOnClickListener(view -> showLicenseDialog());
+        navigation.addView(licenseTab, new LinearLayout.LayoutParams(0, dp(40), 1));
+
         shell.addView(navigation, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(48)));
         updateNavigationTabs();
 
@@ -395,13 +402,31 @@ public final class MainActivity extends Activity {
     }
 
     private void updateNavigationTabs() {
-        if (officeTab == null || godmodeTab == null) return;
+        if (officeTab == null || godmodeTab == null || licenseTab == null) return;
         int active = Color.rgb(0, 255, 65);
         int inactive = Color.rgb(25, 31, 39);
         officeTab.setBackgroundColor(godmodeMode ? inactive : active);
         officeTab.setTextColor(godmodeMode ? CREAM : Color.rgb(5, 10, 8));
         godmodeTab.setBackgroundColor(godmodeMode ? active : inactive);
         godmodeTab.setTextColor(godmodeMode ? Color.rgb(5, 10, 8) : CREAM);
+        licenseTab.setBackgroundColor(inactive);
+        licenseTab.setTextColor(CREAM);
+    }
+
+    private void showLicenseDialog() {
+        String notice = "G0DM0D3 standalone frontend\n"
+                + "Source: https://github.com/elder-plinius/G0DM0D3\n"
+                + "License: GNU Affero General Public License v3.0 (AGPL-3.0)\n\n"
+                + "This app includes a modified/combined copy of the upstream standalone HTML frontend. "
+                + "The corresponding source and license notice are available in the Mazkiplay Agent Office repository under THIRD_PARTY_LICENSES and android/app/src/main/assets/g0dm0d3.\n\n"
+                + "The software is provided AS IS, without warranty. AI provider usage and costs are governed by the provider you configure. Keep API keys private.";
+        new AlertDialog.Builder(this)
+                .setTitle("Third-party licenses")
+                .setMessage(notice)
+                .setNegativeButton("Tutup", null)
+                .setPositiveButton("Buka source", (dialog, which) ->
+                        openExternalPage(Uri.parse("https://github.com/elder-plinius/G0DM0D3")))
+                .show();
     }
 
     private void showStatus(String message) {
