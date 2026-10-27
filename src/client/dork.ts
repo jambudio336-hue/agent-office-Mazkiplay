@@ -90,3 +90,5 @@ byId<HTMLButtonElement>('clear').addEventListener('click',()=>{
  customWrap.classList.add('hidden');results.replaceChildren(el('p','muted','Isi preset lalu tekan Generate query.'));status.textContent='';
 });
 render();
+
+export {};
