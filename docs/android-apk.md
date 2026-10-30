@@ -41,3 +41,9 @@ The web chat settings offer three kinds of operation:
 - **Offline basic mode:** runs a small rule-based helper in the client with no network and no API key. It is not an LLM, does not run commands, and is not a substitute for Qwen or another language model.
 
 No hosted LLM can be promised to work online for free without credentials or a service budget. The client must not claim a request was sent to a model if it used the offline rules. The local-model path is a configured endpoint only; automatic model installation, model download management, and the complete Termux execution/result loop are still separate work.
+
+## Catatan rilis Mazkiplay JARVIS (30 Oktober 2026)
+
+Halaman web `/jarvis.html` kini memakai antarmuka suara tanpa transkrip atau balon chat yang terlihat. Gaya respons default diarahkan ke Bahasa Indonesia santai dengan sapaan gue–lu dan panggilan bro yang wajar. Halaman ini membaca konfigurasi provider/model dari penyimpanan browser Agent Office (`mazkiplay.ai.settings.v1`) dan memerlukan izin mikrofon, browser yang mendukung Web Speech API, koneksi/provider AI yang dikonfigurasi, serta suara Bahasa Indonesia yang tersedia pada perangkat.
+
+**Batas integrasi Android:** APK native saat ini tetap merupakan klien jarak jauh yang membuka `/chat.html` pada server HTTPS. APK tidak membundel halaman web/server dan belum menjadikan `/jarvis.html` sebagai layar awal atau menyediakan pengujian mikrofon native khusus untuk halaman JARVIS. Untuk memakai JARVIS, halaman web harus tersedia pada server Agent Office yang terhubung dan dibuka melalui browser yang mendukung fitur suara. Build APK di GitHub Actions adalah varian release yang ditandatangani dengan debug keystore untuk distribusi uji, bukan signing key produksi.
