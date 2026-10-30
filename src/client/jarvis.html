@@ -54,17 +54,17 @@ function speak(text){
  u.onerror=()=>{stage.classList.remove('speaking');if(active&&!manuallyStopped)startRecognition()};
  speechSynthesis.speak(u);
 }
-function sayError(){speak('Maaf, Captain. Saya belum bisa memproses permintaan itu. Periksa koneksi dan pengaturan model AI.')}
+function sayError(){speak('Waduh bro, gue belum bisa memproses pertanyaan lu. Coba periksa koneksi internet dan pengaturan model AI, ya.')}
 async function ask(text){
  if(busy)return;busy=true;stage.classList.remove('listening');
  if(recognition){try{recognition.stop()}catch{}}
  try{
-  if(settings.provider==='offline'){speak('Mode AI offline dasar belum mendukung percakapan bebas. Hubungkan model AI agar saya bisa menjawab pertanyaan dengan lengkap.');return}
-  if(settings.provider!=='local'&&!settings.apiKey){speak('Model AI belum dikonfigurasi. Masukkan API key melalui pengaturan aplikasi utama terlebih dahulu.');return}
+  if(settings.provider==='offline'){speak('Bro, mode offline dasar belum bisa diajak ngobrol bebas. Hubungkan model AI dulu supaya gue bisa jawab pertanyaan lu dengan lebih lengkap.');return}
+  if(settings.provider!=='local'&&!settings.apiKey){speak('Bro, model AI-nya belum diatur. Masukkan API key lewat pengaturan aplikasi utama dulu, ya.');return}
   const base=settings.provider==='openai'?'https://api.openai.com/v1':(settings.baseUrl||'https://openrouter.ai/api/v1');
-  if(!settings.model){speak('Model AI belum dipilih.');return}
+  if(!settings.model){speak('Bro, model AI-nya belum dipilih. Atur modelnya dulu, ya.');return}
   history.push({role:'user',content:text});if(history.length>16)history.splice(0,history.length-16);
-  const messages=[{role:'system',content:'Nama kamu Mazkiplay, asisten suara JARVIS. Berbicaralah alami dalam Bahasa Indonesia seperti asisten pria muda, ringkas namun lengkap. Jawaban akan dibacakan dengan suara, jadi jangan gunakan markdown, daftar simbol, emoji, atau format visual. Sapa pengguna dengan Captain bila sesuai. Jangan mengaku telah melakukan tindakan yang belum dilakukan. Untuk keamanan siber, bantu hanya kegiatan legal dan berizin.'},...history];
+  const messages=[{role:'system',content:'Nama kamu Mazkiplay, asisten suara JARVIS sekaligus teman ngobrol pengguna. Selalu gunakan Bahasa Indonesia santai, akrab, ramah, dan natural dengan gaya bicara 'gue' dan 'lu' (contoh: 'Oke bro, gue bantu jelasin ya'). Jangan gunakan 'saya', 'Anda', 'Captain', atau gaya bahasa formal kecuali pengguna secara khusus memintanya. Panggil pengguna 'bro' sesekali secara wajar, jangan berlebihan. Jawab seperti teman yang cerdas, helpful, dan friendly; tetap jujur, tegas, dan akurat. Jawaban akan dibacakan dengan suara, jadi gunakan kalimat lisan yang enak didengar, tanpa markdown, daftar simbol, emoji, judul, atau format visual. Jangan mengaku telah melakukan tindakan yang belum dilakukan. Untuk keamanan siber, bantu hanya kegiatan legal dan berizin.'},...history];
   const response=await fetch(base.replace(/\/$/, '')+'/chat/completions',{method:'POST',headers:{'Content-Type':'application/json',...(settings.apiKey?{'Authorization':'Bearer '+settings.apiKey}:{}),...(settings.provider==='openrouter'?{'HTTP-Referer':location.origin,'X-Title':'Mazkiplay JARVIS'}:{})},body:JSON.stringify({model:settings.model,messages,temperature:.65})});
   const data=await response.json().catch(()=>({}));
   if(!response.ok)throw new Error(data.error?.message||'AI request failed');
@@ -77,19 +77,19 @@ async function ask(text){
 }
 function startRecognition(){
  if(!active||manuallyStopped||busy)return;
- if(!SpeechRecognition){speak('Fitur pengenalan suara tidak didukung browser ini. Gunakan Chrome Android terbaru dan izinkan akses mikrofon.');active=false;return}
+ if(!SpeechRecognition){speak('Bro, browser ini belum mendukung pengenalan suara. Coba pakai Chrome Android terbaru dan izinkan akses mikrofon, ya.');active=false;return}
  if(recognition){try{recognition.abort()}catch{}}
  recognition=new SpeechRecognition();recognition.lang='id-ID';recognition.continuous=false;recognition.interimResults=false;recognition.maxAlternatives=1;
  recognition.onstart=()=>{stage.classList.add('listening');stage.classList.remove('speaking')};
  recognition.onresult=e=>{const text=e.results?.[e.results.length-1]?.[0]?.transcript?.trim();if(text)ask(text)};
- recognition.onerror=e=>{stage.classList.remove('listening');if(e.error==='not-allowed'||e.error==='service-not-allowed'){active=false;manuallyStopped=true;speak('Izin mikrofon belum diberikan. Silakan izinkan mikrofon pada pengaturan browser.')}else if(active&&!manuallyStopped&&!busy){setTimeout(startRecognition,700)}};
+ recognition.onerror=e=>{stage.classList.remove('listening');if(e.error==='not-allowed'||e.error==='service-not-allowed'){active=false;manuallyStopped=true;speak('Bro, izin mikrofonnya belum diberikan. Izinkan akses mikrofon di pengaturan browser dulu, ya.')}else if(active&&!manuallyStopped&&!busy){setTimeout(startRecognition,700)}};
  recognition.onend=()=>{stage.classList.remove('listening');if(active&&!manuallyStopped&&!busy&&!speechSynthesis.speaking)setTimeout(startRecognition,350)};
  try{recognition.start()}catch{if(active&&!manuallyStopped)setTimeout(startRecognition,900)}
 }
 async function start(){
  if(active)return;manuallyStopped=false;
  try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});stream.getTracks().forEach(t=>t.stop());active=true;startRecognition()}
- catch{active=false;speak('Akses mikrofon ditolak. Berikan izin mikrofon untuk mulai berbicara dengan saya.')}
+ catch{active=false;speak('Bro, akses mikrofonnya ditolak. Izinkan mikrofon dulu supaya lu bisa ngobrol sama gue.')}
 }
 function stop(){active=false;manuallyStopped=true;busy=false;stage.classList.remove('listening','speaking');if(recognition){try{recognition.abort()}catch{}}if('speechSynthesis'in window)speechSynthesis.cancel()}
 core.addEventListener('click',()=>active?stop():start());mic.addEventListener('click',start);stopButton.addEventListener('click',stop);
