@@ -32,6 +32,10 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 public final class MainActivity extends Activity {
     private static final String PREFS = "agent-office-mobile";
@@ -44,6 +48,10 @@ public final class MainActivity extends Activity {
     private String serverOrigin;
     private WebView webView;
     private TextView statusMessage;
+    private Button officeTab;
+    private Button godmodeTab;
+    private Button licenseTab;
+    private boolean godmodeMode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,7 +102,9 @@ public final class MainActivity extends Activity {
         Button refreshButton = toolbarButton("↻");
         refreshButton.setContentDescription("Muat ulang kantor");
         refreshButton.setOnClickListener(view -> {
-            if (TextUtils.isEmpty(serverOrigin)) {
+            if (godmodeMode) {
+                webView.reload();
+            } else if (TextUtils.isEmpty(serverOrigin)) {
                 showOfflineHome();
             } else {
                 webView.reload();
@@ -102,6 +112,31 @@ public final class MainActivity extends Activity {
         });
         toolbar.addView(refreshButton, new LinearLayout.LayoutParams(dp(48), dp(48)));
         shell.addView(toolbar, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(56)));
+
+        // Dedicated, equal-width navigation keeps labels visible on narrow Android screens.
+        LinearLayout navigation = new LinearLayout(this);
+        navigation.setOrientation(LinearLayout.HORIZONTAL);
+        navigation.setGravity(Gravity.CENTER_VERTICAL);
+        navigation.setPadding(dp(8), dp(4), dp(8), dp(4));
+        navigation.setBackgroundColor(Color.rgb(8, 10, 14));
+
+        officeTab = toolbarButton("OFFICE");
+        officeTab.setContentDescription("Buka dashboard Mazkiplay Agent Office");
+        officeTab.setOnClickListener(view -> loadOffice());
+        navigation.addView(officeTab, new LinearLayout.LayoutParams(0, dp(40), 1));
+
+        godmodeTab = toolbarButton("G0DM0D3");
+        godmodeTab.setContentDescription("Buka antarmuka AI G0DM0D3 yang disertakan di aplikasi");
+        godmodeTab.setOnClickListener(view -> loadGodmode());
+        navigation.addView(godmodeTab, new LinearLayout.LayoutParams(0, dp(40), 1));
+
+        licenseTab = toolbarButton("LICENSE");
+        licenseTab.setContentDescription("Informasi lisensi dan source code pihak ketiga");
+        licenseTab.setOnClickListener(view -> showLicenseDialog());
+        navigation.addView(licenseTab, new LinearLayout.LayoutParams(0, dp(40), 1));
+
+        shell.addView(navigation, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(48)));
+        updateNavigationTabs();
 
         FrameLayout content = new FrameLayout(this);
         webView = new WebView(this);
@@ -303,6 +338,8 @@ public final class MainActivity extends Activity {
 
     private void showOfflineHome() {
         if (webView == null) return;
+        godmodeMode = false;
+        updateNavigationTabs();
         hideStatus();
         String html = "<!doctype html><html lang='id'><head><meta name='viewport' content='width=device-width, initial-scale=1'>" +
                 "<meta charset='utf-8'><style>" +
@@ -328,12 +365,68 @@ public final class MainActivity extends Activity {
     }
 
     private void loadOffice() {
+        godmodeMode = false;
+        updateNavigationTabs();
         if (webView == null || TextUtils.isEmpty(serverOrigin)) {
             showOfflineHome();
             return;
         }
         showStatus("Menghubungkan ke Mazkiplay AI…");
         webView.loadUrl(serverOrigin + "/chat.html");
+    }
+
+    private void loadGodmode() {
+        if (webView == null) return;
+        godmodeMode = true;
+        updateNavigationTabs();
+        showStatus("Memuat G0DM0D3 dari source code yang disertakan…");
+        try (InputStream input = getAssets().open("g0dm0d3/index.html");
+             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[8192];
+            int count;
+            while ((count = input.read(buffer)) != -1) {
+                output.write(buffer, 0, count);
+            }
+            String html = output.toString(StandardCharsets.UTF_8.name());
+            // A stable HTTPS base origin enables same-origin storage while keeping file access disabled.
+            webView.loadDataWithBaseURL(
+                    "https://appassets.androidplatform.net/assets/g0dm0d3/",
+                    html,
+                    "text/html",
+                    "UTF-8",
+                    null
+            );
+        } catch (IOException error) {
+            showStatus("G0DM0D3 gagal dimuat. Periksa apakah asset disertakan dalam APK.");
+        }
+    }
+
+    private void updateNavigationTabs() {
+        if (officeTab == null || godmodeTab == null || licenseTab == null) return;
+        int active = Color.rgb(0, 255, 65);
+        int inactive = Color.rgb(25, 31, 39);
+        officeTab.setBackgroundColor(godmodeMode ? inactive : active);
+        officeTab.setTextColor(godmodeMode ? CREAM : Color.rgb(5, 10, 8));
+        godmodeTab.setBackgroundColor(godmodeMode ? active : inactive);
+        godmodeTab.setTextColor(godmodeMode ? Color.rgb(5, 10, 8) : CREAM);
+        licenseTab.setBackgroundColor(inactive);
+        licenseTab.setTextColor(CREAM);
+    }
+
+    private void showLicenseDialog() {
+        String notice = "G0DM0D3 standalone frontend\n"
+                + "Source: https://github.com/elder-plinius/G0DM0D3\n"
+                + "License: GNU Affero General Public License v3.0 (AGPL-3.0)\n\n"
+                + "This app includes a modified/combined copy of the upstream standalone HTML frontend. "
+                + "The corresponding source and license notice are available in the Mazkiplay Agent Office repository under THIRD_PARTY_LICENSES and android/app/src/main/assets/g0dm0d3.\n\n"
+                + "The software is provided AS IS, without warranty. AI provider usage and costs are governed by the provider you configure. Keep API keys private.";
+        new AlertDialog.Builder(this)
+                .setTitle("Third-party licenses")
+                .setMessage(notice)
+                .setNegativeButton("Tutup", null)
+                .setPositiveButton("Buka source", (dialog, which) ->
+                        openExternalPage(Uri.parse("https://github.com/elder-plinius/G0DM0D3")))
+                .show();
     }
 
     private void showStatus(String message) {
@@ -343,6 +436,13 @@ public final class MainActivity extends Activity {
 
     private void hideStatus() {
         statusMessage.setVisibility(View.GONE);
+    }
+
+    private boolean isGodmodeOrigin(Uri uri) {
+        return godmodeMode
+                && uri != null
+                && "https".equalsIgnoreCase(uri.getScheme())
+                && "appassets.androidplatform.net".equalsIgnoreCase(uri.getHost());
     }
 
     private boolean isOfficeOrigin(Uri uri) {
@@ -460,7 +560,7 @@ public final class MainActivity extends Activity {
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             Uri uri = request.getUrl();
-            if (isOfficeOrigin(uri)) {
+            if (isOfficeOrigin(uri) || isGodmodeOrigin(uri)) {
                 return false;
             }
             if (request.isForMainFrame() && "agentoffice".equalsIgnoreCase(uri.getScheme())
